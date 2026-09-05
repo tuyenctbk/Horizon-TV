@@ -165,7 +165,6 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
                                     onSelectUnitSystem(UnitSystem.METRIC)
-                                    if (!isCelsius) onToggleUnits()
                                 }
                                 .testTag("unit_celsius_button")
                         ) {
@@ -220,7 +219,6 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
                                     onSelectUnitSystem(UnitSystem.IMPERIAL)
-                                    if (!isFahrenheit) onToggleUnits()
                                 }
                                 .testTag("unit_fahrenheit_button")
                         ) {
