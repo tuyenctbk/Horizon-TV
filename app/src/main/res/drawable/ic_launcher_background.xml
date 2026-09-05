@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Deep studio midnight sapphire gradient -->
+    <path
+        android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#060C1B" />
+                <item android:offset="0.45" android:color="#0A1E3D" />
+                <item android:offset="0.85" android:color="#034E7B" />
+                <item android:offset="1.0" android:color="#0284C7" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Concentric radar range rings in subtle telemetry cyan -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E3A8A"
+        android:strokeWidth="1.2"
+        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E40AF"
+        android:strokeWidth="1.0"
+        android:pathData="M54,54m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#0284C7"
+        android:strokeWidth="0.8"
+        android:pathData="M54,54m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
+
+    <!-- Radar crosshair gridlines -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1D4ED8"
+        android:strokeWidth="0.8"
+        android:pathData="M54,12L54,96 M12,54L96,54" />
+
+</vector>

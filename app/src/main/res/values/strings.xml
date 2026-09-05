@@ -1,0 +1,335 @@
+<resources>
+    <string name="app_name">Horizon TV</string>
+
+    <!-- Common UI Strings -->
+    <string name="common_warning">Warning</string>
+    <string name="common_refresh">Refresh</string>
+    <string name="common_search">Search</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_city">City</string>
+    <string name="common_favorite">Favorite</string>
+    <string name="common_close">Close</string>
+    <string name="common_play_pause">Play or Pause</string>
+    <string name="common_live">LIVE</string>
+    <string name="common_active">ACTIVE</string>
+
+    <!-- Units -->
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_mph">mph</string>
+
+    <!-- Navigation & Header -->
+    <string name="nav_home">Home</string>
+    <string name="nav_live_tv">Live TV</string>
+    <string name="nav_forecast">Forecast</string>
+    <string name="nav_radar">Radar</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_vod">VOD Hub</string>
+    <string name="nav_settings">Settings</string>
+    <string name="brand_title">Horizon</string>
+    <string name="brand_subtitle">Weather TV</string>
+    <string name="badge_live_24_7">LIVE 24/7</string>
+    <string name="header_telemetry_status">Continuous Meteorological Telemetry</string>
+    <string name="header_remote">Remote</string>
+    <string name="header_active_alert">ACTIVE ALERT</string>
+
+    <!-- Persistent L-Bar -->
+    <string name="lbar_badge_live">LIVE</string>
+    <string name="lbar_title">HORIZON L-BAR</string>
+    <string name="lbar_ch">CH 104</string>
+    <string name="lbar_channel_tag">CH 104 • HORIZON 24/7 LIVE STREAM</string>
+    <string name="lbar_collapse">COLLAPSE</string>
+    <string name="lbar_expand">L-BAR</string>
+    <string name="lbar_feels_like">Feels like %1$s</string>
+    <string name="lbar_wind">Wind</string>
+    <string name="lbar_humidity">Humidity</string>
+    <string name="lbar_barometer">Barometer</string>
+    <string name="lbar_dew_point">Dew Point</string>
+    <string name="lbar_aqi">AQI</string>
+    <string name="lbar_uv_index">UV Index</string>
+    <string name="lbar_visibility">Visibility</string>
+    <string name="lbar_diurnal_outlook">DIURNAL OUTLOOK</string>
+    <string name="lbar_dispatch_title">HORIZON DISPATCH</string>
+    <string name="lbar_horizon_dispatch">HORIZON DISPATCH</string>
+    <string name="lbar_default_ticker">METEOROLOGICAL SENSORS NOMINAL • CONTINUOUS 24/7 DUAL-POL DOPPLER BROADCAST • NO ACTIVE WARNINGS IN VICINITY</string>
+    <string name="lbar_rain_suffix">%1$d%% Rain</string>
+
+    <!-- Emergency Broadcast Banner & Modal -->
+    <string name="emergency_broadcast">EMERGENCY BROADCAST</string>
+    <string name="emergency_exp">EXP: %1$s</string>
+    <string name="emergency_safety_protocol">SAFETY PROTOCOL</string>
+    <string name="emergency_dismiss">Dismiss</string>
+    <string name="emergency_bulletin">%1$s BULLETIN</string>
+    <string name="emergency_telemetry_title">METEOROLOGICAL TELEMETRY</string>
+    <string name="emergency_safety_title">CIVIL DEFENSE &amp; SAFETY INSTRUCTIONS</string>
+    <string name="emergency_effective">Effective: %1$s</string>
+    <string name="emergency_expires">Expires: %1$s</string>
+    <string name="emergency_acknowledge">ACKNOWLEDGE &amp; RETURN TO BROADCAST</string>
+
+    <string name="alert_warning">Warning</string>
+    <string name="alert_bulletin">%1$s BULLETIN</string>
+    <string name="alert_meteorological_telemetry">METEOROLOGICAL TELEMETRY</string>
+    <string name="alert_civil_defense">CIVIL DEFENSE &amp; SAFETY INSTRUCTIONS</string>
+    <string name="alert_effective">Effective: %1$s</string>
+    <string name="alert_acknowledge_advisory">ACKNOWLEDGE &amp; RETURN TO BROADCAST</string>
+
+    <string name="alert_test_title">TEST EMERGENCY BULLETIN: SEVERE SQUALL LINE</string>
+    <string name="alert_test_summary">This is a certified test of the Horizon TV Emergency Meteorological Broadcast Network. Atmospheric sensors have detected simulated microburst winds of 115 km/h with 45mm hail.</string>
+    <string name="alert_test_instructions">Take immediate shelter in an interior room on the lowest floor. Avoid windows. Stay tuned to Horizon TV 24/7.</string>
+
+    <!-- Floating PiP & Virtual Remote -->
+    <string name="pip_live">LIVE PiP</string>
+    <string name="pip_mute">Mute</string>
+    <string name="pip_expand">Expand</string>
+    <string name="pip_close">Close</string>
+    <string name="remote_title">TV REMOTE</string>
+    <string name="remote_close">Close Remote</string>
+    <string name="remote_up">Up</string>
+    <string name="remote_down">Down</string>
+    <string name="remote_left">Left</string>
+    <string name="remote_right">Right</string>
+    <string name="remote_dpad_up">Up</string>
+    <string name="remote_dpad_down">Down</string>
+    <string name="remote_dpad_left">Left</string>
+    <string name="remote_dpad_right">Right</string>
+    <string name="remote_ok">OK</string>
+    <string name="remote_home">Home</string>
+    <string name="remote_live_tv">Live TV</string>
+    <string name="remote_radar">Radar</string>
+    <string name="remote_search">Search</string>
+    <string name="remote_quick_channels">TELEVISION QUICK CHANNELS</string>
+    <string name="remote_instructions">Use D-Pad arrows and OK to control TV screen from 10-foot couch distance</string>
+
+    <!-- Home Dashboard -->
+    <string name="home_live_conditions">Live Meteorological Conditions</string>
+    <string name="home_last_updated">Last updated: %1$s</string>
+    <string name="home_wind_gusts">Wind Gusts</string>
+    <string name="home_uv_index_label">UV Index</string>
+    <string name="home_active_alert_banner_prefix">ACTIVE ALERT:</string>
+    <string name="home_hourly_synoptic_strip">12-HOUR SYNOPTIC TIMELINE STRIP</string>
+    <string name="home_saved_stations">BOOKMARKED TV STATIONS</string>
+    <string name="home_manage_stations">MANAGE</string>
+    <string name="home_vod_featured">VOD FEATURED DISPATCHES</string>
+    <string name="home_view_all_vod">VIEW ALL VOD</string>
+
+    <string name="home_view_protocol">VIEW PROTOCOL</string>
+    <string name="home_card_radar_title">Dual-Pol Radar</string>
+    <string name="home_card_radar_desc">Live reflectivity Doppler sweep</string>
+    <string name="home_badge_layers">4 LAYERS</string>
+    <string name="home_card_forecast_title">14-Day Outlook</string>
+    <string name="home_card_forecast_desc">Detailed synoptic models</string>
+    <string name="home_badge_days">14 DAYS</string>
+    <string name="home_card_vod_title">VOD Field Archive</string>
+    <string name="home_card_vod_desc">Storm chases &amp; climate studies</string>
+    <string name="home_badge_vod">1080P VOD</string>
+    <string name="home_carousel_title">BROADCAST SCHEDULE &amp; RADAR ROTATION</string>
+    <string name="home_carousel_switch">SWITCH VIEW</string>
+    <string name="home_featured_stories">FEATURED FIELD INVESTIGATIONS</string>
+    <string name="home_all_stories">ALL DISPATCHES</string>
+    <string name="home_live_badge">LIVE ON AIR</string>
+    <string name="home_studio_center">Horizon TV Studio Command • National Radar Operations</string>
+    <string name="home_meteorologist_duty">METEOROLOGIST ON DUTY</string>
+    <string name="home_continuous_broadcast">Continuous Multi-Region Radar &amp; Telemetry Feed</string>
+    <string name="home_switch_broadcast">SWITCH BROADCAST VIEW</string>
+    <string name="home_presented_by">PRESENTED BY DR. SARAH CHEN</string>
+    <string name="home_news_ticker_prefix">BROADCAST TICKER</string>
+    <string name="home_local_microclimate">LOCAL MICROCLIMATE TELEMETRY</string>
+    <string name="home_now_badge">NOW</string>
+    <string name="home_feels_like">Feels like %1$s</string>
+    <string name="home_wind_label">Wind Speed</string>
+    <string name="home_humidity_label">Humidity</string>
+    <string name="home_aqi_label">Air Quality</string>
+    <string name="home_diurnal_breakdown">DIURNAL BREAKDOWN (NEXT 12 HOURS)</string>
+    <string name="home_rain_chance">Rain %1$d%%</string>
+    <string name="home_wind">Wind</string>
+    <string name="home_humidity">Humidity</string>
+    <string name="home_barometer">Barometer</string>
+    <string name="home_dew_point">Dew Point</string>
+    <string name="home_air_quality">Air Quality</string>
+    <string name="home_audio">Audio</string>
+
+    <!-- Forecast Screen -->
+    <string name="forecast_title">Synoptic Atmospheric Forecast &amp; Micro-Telemetry</string>
+    <string name="forecast_subtitle">Full 14-day synoptic projections, hourly trend curves, and real-time micro-sensor data</string>
+    <string name="forecast_tab_five_day">5-Day Forecast</string>
+    <string name="forecast_tab_hourly">24-Hour Trends</string>
+    <string name="forecast_tab_astronomy">Celestial &amp; Lunar</string>
+    <string name="forecast_tab_telemetry">Real-Time Telemetry</string>
+    <string name="forecast_tab_extended">14-Day Outlook</string>
+    <string name="forecast_fourteen_day_header">14-DAY EXTENDED METEOROLOGICAL OUTLOOK</string>
+    <string name="forecast_meteorological_outlook">METEOROLOGICAL OUTLOOK</string>
+    <string name="forecast_numerical_prediction">Numerical Weather Prediction Models &amp; Real-Time Telemetry</string>
+    <string name="forecast_tab_5day">5-Day Forecast</string>
+    <string name="forecast_tab_36hour">24h Trends</string>
+    <string name="forecast_tab_24hour">Celestial / Moon</string>
+    <string name="forecast_tab_14day">14-Day Extended</string>
+    <string name="forecast_rain_risk">Precipitation Chance</string>
+    <string name="forecast_atmospheric_deepdive">ATMOSPHERIC TELEMETRY DEEP-DIVE</string>
+    <string name="forecast_relative_humidity">Relative Humidity</string>
+    <string name="forecast_dew_point">Dew Point</string>
+    <string name="forecast_surface_pressure">Surface Pressure</string>
+    <string name="forecast_high_pressure">High Pressure • Clear</string>
+    <string name="forecast_low_pressure">Low Pressure • Storm Watch</string>
+    <string name="forecast_uv_index">UV Solar Radiation</string>
+    <string name="forecast_uv_of_11">of 11+ Index</string>
+    <string name="forecast_uv_very_high">Very High Radiation</string>
+    <string name="forecast_uv_high">High Radiation</string>
+    <string name="forecast_uv_moderate">Moderate</string>
+    <string name="forecast_uv_low">Low / Safe</string>
+    <string name="forecast_wind_gust_vector">Wind &amp; Gust Vector</string>
+    <string name="forecast_peak_gusts">Peak Gusts: %1$s</string>
+    <string name="forecast_atmospheric_visibility">Atmospheric Visibility</string>
+    <string name="forecast_clear_horizon">Clear Horizon</string>
+    <string name="forecast_reduced_visibility">Reduced Visibility</string>
+    <string name="forecast_cloud_cover">Cloud Layer Coverage</string>
+    <string name="forecast_sky_observation">Sky Observation</string>
+    <string name="forecast_granular_table">GRANULAR 5-DAY MODEL TABLE</string>
+    <string name="forecast_hum">Hum: %1$d%%</string>
+    <string name="forecast_14day_extended">14-DAY EXTENDED METEOROLOGICAL OUTLOOK</string>
+    <string name="forecast_rain">Rain %1$d%%</string>
+
+    <!-- Interactive Radar Screen -->
+    <string name="radar_title">Interactive Dual-Pol Doppler Radar</string>
+    <string name="radar_subtitle">Live telemetry &amp; reflectivity overlay • Station: KOKX NEXRAD • Centered on %1$s</string>
+    <string name="radar_layer_precip">Precipitation</string>
+    <string name="radar_layer_traffic">Traffic Corridors</string>
+    <string name="radar_layer_satellite">Satellite IR</string>
+    <string name="radar_layer_wind">Wind Streamlines</string>
+    <string name="radar_legend_precip_title">REFLECTIVITY (dBZ)</string>
+    <string name="radar_legend_traffic_title">TRAFFIC SPEEDS</string>
+    <string name="radar_legend_satellite_title">IR CLOUD TOP TEMP</string>
+    <string name="radar_legend_wind_title">STREAMLINE VELOCITY</string>
+    <string name="radar_legend_precip_light">20-30 dBZ (Light Rain)</string>
+    <string name="radar_legend_precip_mod">35-45 dBZ (Moderate)</string>
+    <string name="radar_legend_precip_heavy">50-60 dBZ (Heavy/Storm)</string>
+    <string name="radar_legend_precip_hail">65+ dBZ (Hail Hazard)</string>
+    <string name="radar_legend_traffic_fast">65+ mph (Fast Flow)</string>
+    <string name="radar_legend_traffic_mod">35-50 mph (Moderate)</string>
+    <string name="radar_legend_traffic_slow">&lt; 20 mph (Severe Congestion)</string>
+    <string name="radar_legend_sat_cirrus">-20°C (Cirrus)</string>
+    <string name="radar_legend_sat_frontal">-45°C (Frontal Clouds)</string>
+    <string name="radar_legend_sat_core">-65°C (Deep Convective Core)</string>
+    <string name="radar_legend_wind_vector">Vector Direction &amp; Speed</string>
+    <string name="radar_zoom_in">Zoom In</string>
+    <string name="radar_zoom_out">Zoom Out</string>
+    <string name="radar_recenter">Recenter</string>
+
+    <!-- Live TV Broadcast Screen -->
+    <string name="livetv_next_periods">NEXT BROADCAST PERIODS</string>
+    <string name="livetv_live_broadcast">LIVE BROADCAST</string>
+    <string name="livetv_doppler_specs">LIVE DOPPLER DUAL-POL 500KW</string>
+    <string name="livetv_audio_on">AUDIO ON</string>
+    <string name="livetv_muted">MUTED</string>
+    <string name="livetv_pip_mode">PiP MODE</string>
+    <string name="livetv_presenter_name">PRESENTER: DR. SARAH CHEN</string>
+    <string name="livetv_presenter_subtitle">National Meteorological Radar Command Center • Doppler Live Telemetry</string>
+
+    <!-- City Search Screen -->
+    <string name="search_header_title">Global Meteorological Station Search</string>
+    <string name="search_header_subtitle">Access live weather radar and telemetry for over 200,000 global municipalities</string>
+    <string name="search_placeholder">Enter city, state, or country (e.g., Tokyo, London, Miami)...</string>
+    <string name="search_gps_button">AUTO-DETECT GPS</string>
+    <string name="search_results_title">SEARCH RESULTS (%1$d)</string>
+    <string name="search_no_results">No meteorological stations found matching \"%1$s\"</string>
+    <string name="search_saved_title">BOOKMARKED FAVORITE STATIONS (%1$d)</string>
+    <string name="search_saved_subtitle">SAVED TO LOCAL PROFILE</string>
+    <string name="search_active_badge">ACTIVE</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_header_title">Broadcast Preferences &amp; Configuration</string>
+    <string name="settings_header_subtitle">Customize television broadcast presentation, meteorological units, and hardware telemetry feeds</string>
+    <string name="settings_cat_display">DISPLAY &amp; BROADCAST AESTHETICS</string>
+    <string name="settings_crt_title">CRT Scanlines &amp; Cinematic Vignette</string>
+    <string name="settings_crt_subtitle">Authentic retro broadcast television CRT beam scanlines and edge darkening</string>
+    <string name="settings_remote_title">Virtual TV Remote Overlay</string>
+    <string name="settings_remote_subtitle">Enable floating directional D-Pad for 10-foot TV experience navigation</string>
+    <string name="settings_cat_units">METEOROLOGICAL UNITS &amp; SCALES</string>
+    <string name="settings_units_title">Temperature &amp; Atmospheric Units</string>
+    <string name="settings_units_subtitle">Preferences are saved locally and retained across app launches</string>
+    <string name="settings_saved_locally">SAVED LOCALLY</string>
+    <string name="settings_celsius_title">Celsius (°C)</string>
+    <string name="settings_celsius_subtitle">Metric: °C, km/h, mm, hPa</string>
+    <string name="settings_fahrenheit_title">Fahrenheit (°F)</string>
+    <string name="settings_fahrenheit_subtitle">Imperial: °F, mph, in, inHg</string>
+    <string name="settings_cat_audio">AUDIO &amp; BROADCAST CONTROLS</string>
+    <string name="settings_audio_title">24/7 Live Broadcast Audio Stream</string>
+    <string name="settings_audio_subtitle">Background atmospheric audio and weather presenter commentary</string>
+    <string name="settings_cat_civil">CIVIL DEFENSE &amp; EMERGENCY PROTOCOLS</string>
+    <string name="settings_ebs_title">Emergency Broadcast System (EBS) Test</string>
+    <string name="settings_ebs_subtitle">Simulate an urgent tornado/severe storm warning modal</string>
+    <string name="settings_ebs_btn">TRIGGER TEST</string>
+    <string name="settings_cat_system">SYSTEM &amp; TELEMETRY FEEDS</string>
+    <string name="settings_sys_platform">Platform Engine</string>
+    <string name="settings_sys_provider">Primary Provider</string>
+    <string name="settings_sys_radar">Radar Core</string>
+    <string name="settings_sys_astronomy">Astronomical Computation</string>
+    <string name="settings_sys_interval">Emergency Broadcast Interval</string>
+
+    <!-- Video On Demand Screen -->
+    <string name="vod_title">HORIZON VIDEO ON DEMAND (VOD) ARCHIVE</string>
+    <string name="vod_subtitle">Special meteorological field investigations, storm chases, and climatology reports</string>
+    <string name="vod_badge_4k">4K / 1080P BROADCAST</string>
+    <string name="vod_quality_badge">4K / 1080P BROADCAST</string>
+    <string name="vod_more_category">MORE IN THIS CATEGORY</string>
+    <string name="vod_more_in_category">MORE IN THIS CATEGORY</string>
+    <string name="vod_streaming_status">STREAMING 1080P MASTER FEED</string>
+    <string name="vod_streaming_feed">STREAMING 1080P MASTER FEED</string>
+    <string name="vod_paused_status">PAUSED</string>
+    <string name="vod_paused">PAUSED</string>
+    <string name="vod_produced_by">PRODUCED BY HORIZON NETWORKS</string>
+    <string name="vod_published">PUBLISHED: %1$s</string>
+    <string name="vod_cat_all">All Dispatches</string>
+    <string name="vod_cat_severe">Severe Weather</string>
+    <string name="vod_cat_forecasts">Forecasts</string>
+    <string name="vod_cat_science">Earth Science</string>
+    <string name="vod_cat_earth_sci">Earth Science</string>
+    <string name="vod_cat_climate">Climate &amp; Nature</string>
+
+    <!-- Astronomical & Real-time Telemetry Widgets & Recharts -->
+    <string name="astro_title">CELESTIAL &amp; LUNAR HORIZON</string>
+    <string name="astro_synodic">REAL SYNODIC CYCLE</string>
+    <string name="astro_sunrise">Sunrise %1$s</string>
+    <string name="astro_sunset">Sunset %1$s</string>
+    <string name="astro_daylight_progress">Daylight Progress: %1$d%% of solar arc elapsed</string>
+    <string name="astro_night_horizon">Night Horizon: Sun is currently below local horizon</string>
+    <string name="astro_illumination">%1$d%% Illumination</string>
+    <string name="astro_days_to_full">%1$d days until next Full Moon</string>
+    <string name="telemetry_header_title">REAL-TIME ATMOSPHERIC SENSOR TELEMETRY</string>
+    <string name="telemetry_live_status">Live local stream • Active sampling (every 2.0s) • Cycle #%1$d</string>
+    <string name="telemetry_paused_status">Telemetry feed paused</string>
+    <string name="telemetry_btn_pause">PAUSE</string>
+    <string name="telemetry_btn_resume">RESUME</string>
+    <string name="telemetry_temperature">TEMPERATURE</string>
+    <string name="telemetry_humidity">HUMIDITY</string>
+    <string name="telemetry_barometer">BAROMETER</string>
+    <string name="telemetry_temp_chilly">Chilly / Cold</string>
+    <string name="telemetry_temp_mild">Mild Comfort</string>
+    <string name="telemetry_temp_warm">Warm</string>
+    <string name="telemetry_temp_heat">High Heat</string>
+    <string name="telemetry_hum_dry">Dry Air</string>
+    <string name="telemetry_hum_ideal">Ideal Comfort</string>
+    <string name="telemetry_hum_humid">Humid</string>
+    <string name="telemetry_hum_high">High Moisture</string>
+    <string name="telemetry_press_low">Low (Storm Watch)</string>
+    <string name="telemetry_press_normal">Normal (Steady)</string>
+    <string name="telemetry_press_high">High (Clear Skies)</string>
+    <string name="recharts_badge">RECHARTS VISUALIZATION</string>
+    <string name="recharts_title">5-DAY SYNOPTIC METEOROLOGICAL FORECAST</string>
+    <string name="recharts_subtitle">Area curve temperature gradients, Cartesian gridlines &amp; precipitation chance bars</string>
+    <string name="recharts_tab_all">ALL</string>
+    <string name="recharts_tab_temp">TEMP</string>
+    <string name="recharts_tab_rain">RAIN</string>
+    <string name="recharts_today">TODAY</string>
+    <string name="recharts_legend_high">High Temp Curve (%1$s)</string>
+    <string name="recharts_legend_low">Low Temp Curve (%1$s)</string>
+    <string name="recharts_legend_pop">Rain Probability (POP %%)</string>
+    <string name="recharts_hint">CLICK ANY DAY TO INSPECT TOOLTIP</string>
+    <string name="trends_title">24-Hour Temperature &amp; Precipitation Curve</string>
+    <string name="trends_temp_legend">Temp (%1$s)</string>
+    <string name="trends_rain_legend">Rain POP (%%)</string>
+
+    <!-- Loading & Error States -->
+    <string name="loading_sync">SYNCHRONIZING HORIZON BROADCAST TELEMETRY...</string>
+    <string name="loading_connecting">Connecting to Open-Meteo &amp; Doppler Radar networks</string>
+    <string name="error_signal_interrupted">Broadcast Signal Interrupted</string>
+    <string name="error_reconnect_button">RECONNECT TELEMETRY</string>
+</resources>

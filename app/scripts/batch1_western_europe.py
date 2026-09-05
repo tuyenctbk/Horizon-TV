@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+import os
+import sys
+sys.path.append("/app/scripts")
+from locale_engine import write_locale
+
+# Batch 1: es, fr, de, it, pt, nl, sv, no, da, fi
+
+common_terms = {
+    "es": {
+        "nav_home": "Inicio", "nav_live_tv": "TV en Vivo", "nav_forecast": "Pronóstico",
+        "nav_radar": "Radar", "nav_search": "Búsqueda", "nav_vod": "VOD Hub", "nav_settings": "Ajustes",
+        "common_warning": "Advertencia", "common_refresh": "Actualizar", "common_search": "Buscar",
+        "common_clear": "Borrar", "common_city": "Ciudad", "common_favorite": "Favorito", "common_close": "Cerrar",
+        "common_play_pause": "Reproducir / Pausar", "common_live": "EN VIVO", "common_active": "ACTIVO",
+        "badge_live_24_7": "EN VIVO 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "CONTRAER",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Sensación %1$s", "lbar_wind": "Viento",
+        "lbar_humidity": "Humedad", "lbar_barometer": "Barómetro", "lbar_dew_point": "Punto de rocío",
+        "lbar_aqi": "ICA", "lbar_uv_index": "Índice UV", "lbar_visibility": "Visibilidad",
+        "emergency_broadcast": "TRANSMISIÓN DE EMERGENCIA", "emergency_dismiss": "Descartar",
+        "remote_title": "CONTROL REMOTO TV", "search_header_title": "Búsqueda de estaciones meteorológicas globales",
+        "search_placeholder": "Ingrese ciudad, estado o país...", "search_gps_button": "AUTODETECTAR GPS",
+        "settings_header_title": "Preferencias de transmisión y configuración", "vod_title": "ARCHIVO DE VIDEO BAJO DEMANDA (VOD)",
+        "loading_sync": "SINCRONIZANDO TELEMETRÍA...", "error_signal_interrupted": "Señal interrumpida",
+        "error_reconnect_button": "RECONECTAR TELEMETRÍA"
+    },
+    "fr": {
+        "nav_home": "Accueil", "nav_live_tv": "TV en Direct", "nav_forecast": "Prévisions",
+        "nav_radar": "Radar", "nav_search": "Recherche", "nav_vod": "Hub VOD", "nav_settings": "Paramètres",
+        "common_warning": "Avertissement", "common_refresh": "Actualiser", "common_search": "Rechercher",
+        "common_clear": "Effacer", "common_city": "Ville", "common_favorite": "Favori", "common_close": "Fermer",
+        "common_play_pause": "Lecture / Pause", "common_live": "EN DIRECT", "common_active": "ACTIF",
+        "badge_live_24_7": "EN DIRECT 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "RÉDUIRE",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Ressenti %1$s", "lbar_wind": "Vent",
+        "lbar_humidity": "Humidité", "lbar_barometer": "Baromètre", "lbar_dew_point": "Point de rosée",
+        "lbar_aqi": "IQA", "lbar_uv_index": "Indice UV", "lbar_visibility": "Visibilité",
+        "emergency_broadcast": "DIFFUSION D'URGENCE", "emergency_dismiss": "Ignorer",
+        "remote_title": "TÉLÉCOMMANDE TV", "search_header_title": "Recherche mondiale de stations météo",
+        "search_placeholder": "Entrez ville, région ou pays...", "search_gps_button": "GÉOLOCALISATION GPS",
+        "settings_header_title": "Préférences de diffusion et configuration", "vod_title": "ARCHIVES VIDÉO À LA DEMANDE (VOD)",
+        "loading_sync": "SYNCHRONISATION DE LA TÉLÉMÉTRIE...", "error_signal_interrupted": "Signal interrompu",
+        "error_reconnect_button": "RECONNECTER LA TÉLÉMÉTRIE"
+    },
+    "de": {
+        "nav_home": "Start", "nav_live_tv": "Live-TV", "nav_forecast": "Vorhersage",
+        "nav_radar": "Radar", "nav_search": "Suche", "nav_vod": "VOD Hub", "nav_settings": "Einstellungen",
+        "common_warning": "Warnung", "common_refresh": "Aktualisieren", "common_search": "Suchen",
+        "common_clear": "Löschen", "common_city": "Stadt", "common_favorite": "Favorit", "common_close": "Schließen",
+        "common_play_pause": "Wiedergabe / Pause", "common_live": "LIVE", "common_active": "AKTIV",
+        "badge_live_24_7": "LIVE 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "EINKLAPPEN",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Gefühlt %1$s", "lbar_wind": "Wind",
+        "lbar_humidity": "Feuchtigkeit", "lbar_barometer": "Barometer", "lbar_dew_point": "Taupunkt",
+        "lbar_aqi": "AQI", "lbar_uv_index": "UV-Index", "lbar_visibility": "Sichtweite",
+        "emergency_broadcast": "NOTFALLSENDUNG", "emergency_dismiss": "Verwerfen",
+        "remote_title": "TV-FERNBEDIENUNG", "search_header_title": "Globale Wetterstationssuche",
+        "search_placeholder": "Stadt, Bundesland oder Land eingeben...", "search_gps_button": "GPS AUTO-ERKENNUNG",
+        "settings_header_title": "Sendeeinstellungen & Konfiguration", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "SYNCHRONISIERE TELEMETRIE...", "error_signal_interrupted": "Sendesignal unterbrochen",
+        "error_reconnect_button": "TELEMETRIE WIEDERVERBINDEN"
+    },
+    "it": {
+        "nav_home": "Home", "nav_live_tv": "TV in Diretta", "nav_forecast": "Previsioni",
+        "nav_radar": "Radar", "nav_search": "Cerca", "nav_vod": "Hub VOD", "nav_settings": "Impostazioni",
+        "common_warning": "Avviso", "common_refresh": "Aggiorna", "common_search": "Cerca",
+        "common_clear": "Cancella", "common_city": "Città", "common_favorite": "Preferito", "common_close": "Chiudi",
+        "common_play_pause": "Riproduci / Pausa", "common_live": "DIRETTA", "common_active": "ATTIVO",
+        "badge_live_24_7": "DIRETTA 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "COMPRIMI",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Percepito %1$s", "lbar_wind": "Vento",
+        "lbar_humidity": "Umidità", "lbar_barometer": "Barometro", "lbar_dew_point": "Punto di rugiada",
+        "lbar_aqi": "IQA", "lbar_uv_index": "Indice UV", "lbar_visibility": "Visibilità",
+        "emergency_broadcast": "TRASMISSIONE DI EMERGENZA", "emergency_dismiss": "Ignora",
+        "remote_title": "TELECOMANDO TV", "search_header_title": "Ricerca globale stazioni meteo",
+        "search_placeholder": "Inserisci città, regione o paese...", "search_gps_button": "RILEVAMENTO GPS",
+        "settings_header_title": "Preferenze di trasmissione e configurazione", "vod_title": "ARCHIVIO VIDEO ON DEMAND (VOD)",
+        "loading_sync": "SINCRONIZZAZIONE TELEMETRIA...", "error_signal_interrupted": "Segnale interrotto",
+        "error_reconnect_button": "RICONNETTI TELEMETRIA"
+    },
+    "pt": {
+        "nav_home": "Início", "nav_live_tv": "TV ao Vivo", "nav_forecast": "Previsão",
+        "nav_radar": "Radar", "nav_search": "Buscar", "nav_vod": "VOD Hub", "nav_settings": "Configurações",
+        "common_warning": "Aviso", "common_refresh": "Atualizar", "common_search": "Buscar",
+        "common_clear": "Limpar", "common_city": "Cidade", "common_favorite": "Favorito", "common_close": "Fechar",
+        "common_play_pause": "Reproduzir / Pausar", "common_live": "AO VIVO", "common_active": "ATIVO",
+        "badge_live_24_7": "AO VIVO 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "RECOLHER",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Sensação %1$s", "lbar_wind": "Vento",
+        "lbar_humidity": "Umidade", "lbar_barometer": "Barômetro", "lbar_dew_point": "Ponto de orvalho",
+        "lbar_aqi": "IQA", "lbar_uv_index": "Índice UV", "lbar_visibility": "Visibilidade",
+        "emergency_broadcast": "TRANSMISSÃO DE EMERGÊNCIA", "emergency_dismiss": "Dispensar",
+        "remote_title": "CONTROLE REMOTO TV", "search_header_title": "Busca global de estações meteorológicas",
+        "search_placeholder": "Digite cidade, estado ou país...", "search_gps_button": "AUTODETECTAR GPS",
+        "settings_header_title": "Preferências de transmissão e configuração", "vod_title": "ARQUIVO DE VÍDEO SOB DEMANDA (VOD)",
+        "loading_sync": "SINCRONIZANDO TELEMETRIA...", "error_signal_interrupted": "Sinal interrompido",
+        "error_reconnect_button": "RECONECTAR TELEMETRIA"
+    },
+    "nl": {
+        "nav_home": "Home", "nav_live_tv": "Live TV", "nav_forecast": "Verwachting",
+        "nav_radar": "Radar", "nav_search": "Zoeken", "nav_vod": "VOD Hub", "nav_settings": "Instellingen",
+        "common_warning": "Waarschuwing", "common_refresh": "Vernieuwen", "common_search": "Zoeken",
+        "common_clear": "Wissen", "common_city": "Stad", "common_favorite": "Favoriet", "common_close": "Sluiten",
+        "common_play_pause": "Afspelen / Pauzeren", "common_live": "LIVE", "common_active": "ACTIEF",
+        "badge_live_24_7": "LIVE 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "INKLAPPEN",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Voelt als %1$s", "lbar_wind": "Wind",
+        "lbar_humidity": "Luchtvochtigheid", "lbar_barometer": "Barometer", "lbar_dew_point": "Dauwpunt",
+        "lbar_aqi": "LKI", "lbar_uv_index": "UV-index", "lbar_visibility": "Zichtbaarheid",
+        "emergency_broadcast": "NOODUITZENDING", "emergency_dismiss": "Sluiten",
+        "remote_title": "TV AFSTANDSBEDIENING", "search_header_title": "Wereldwijde weerstations zoeken",
+        "search_placeholder": "Voer stad, provincie of land in...", "search_gps_button": "GPS AUTO-DETECTIE",
+        "settings_header_title": "Uitzendvoorkeuren & Configuratie", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "TELEMETRIE SYNCHRONISEREN...", "error_signal_interrupted": "Uitzendsignaal onderbroken",
+        "error_reconnect_button": "TELEMETRIE HERVERBINDEN"
+    },
+    "sv": {
+        "nav_home": "Hem", "nav_live_tv": "Direktsänd TV", "nav_forecast": "Prognos",
+        "nav_radar": "Radar", "nav_search": "Sök", "nav_vod": "VOD Hub", "nav_settings": "Inställningar",
+        "common_warning": "Varning", "common_refresh": "Uppdatera", "common_search": "Sök",
+        "common_clear": "Rensa", "common_city": "Stad", "common_favorite": "Favorit", "common_close": "Stäng",
+        "common_play_pause": "Spela / Pausa", "common_live": "DIREKT", "common_active": "AKTIV",
+        "badge_live_24_7": "DIREKT 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "FÄLL IHOP",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Känns som %1$s", "lbar_wind": "Vind",
+        "lbar_humidity": "Luftfuktighet", "lbar_barometer": "Barometer", "lbar_dew_point": "Daggpunkt",
+        "lbar_aqi": "AQI", "lbar_uv_index": "UV-index", "lbar_visibility": "Sikt",
+        "emergency_broadcast": "NÖDSÄNDNING", "emergency_dismiss": "Avfärda",
+        "remote_title": "TV-FJÄRRKONTROLL", "search_header_title": "Global sökning efter väderstationer",
+        "search_placeholder": "Ange stad, region eller land...", "search_gps_button": "AUTOMATISK GPS",
+        "settings_header_title": "Sändningsinställningar & Konfiguration", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "SYNKRONISERAR TELEMETRI...", "error_signal_interrupted": "Sändningssignal avbruten",
+        "error_reconnect_button": "ÅTERANSLUT TELEMETRI"
+    },
+    "no": {
+        "nav_home": "Hjem", "nav_live_tv": "Direkte-TV", "nav_forecast": "Værvarsel",
+        "nav_radar": "Radar", "nav_search": "Søk", "nav_vod": "VOD Hub", "nav_settings": "Innstillinger",
+        "common_warning": "Advarsel", "common_refresh": "Oppdater", "common_search": "Søk",
+        "common_clear": "Tøm", "common_city": "By", "common_favorite": "Favoritt", "common_close": "Lukk",
+        "common_play_pause": "Spill / Pause", "common_live": "DIREKTE", "common_active": "AKTIV",
+        "badge_live_24_7": "DIREKTE 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "SKJUL",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Føles som %1$s", "lbar_wind": "Vind",
+        "lbar_humidity": "Fuktighet", "lbar_barometer": "Barometer", "lbar_dew_point": "Duggpunkt",
+        "lbar_aqi": "AQI", "lbar_uv_index": "UV-indeks", "lbar_visibility": "Sikt",
+        "emergency_broadcast": "NØDKRINGKASTING", "emergency_dismiss": "Avvis",
+        "remote_title": "TV-FJERNKONTROLL", "search_header_title": "Globalt søk etter værstasjoner",
+        "search_placeholder": "Skriv inn by, fylke eller land...", "search_gps_button": "AUTO-GPS",
+        "settings_header_title": "Kringkastingsvalg & Konfigurasjon", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "SYNKRONISERER TELEMETRI...", "error_signal_interrupted": "Kringkastingssignal brutt",
+        "error_reconnect_button": "KOBLE TIL TELEMETRI PÅ NYTT"
+    },
+    "da": {
+        "nav_home": "Hjem", "nav_live_tv": "Direkte TV", "nav_forecast": "Udsigt",
+        "nav_radar": "Radar", "nav_search": "Søg", "nav_vod": "VOD Hub", "nav_settings": "Indstillinger",
+        "common_warning": "Advarsel", "common_refresh": "Opdater", "common_search": "Søg",
+        "common_clear": "Ryd", "common_city": "By", "common_favorite": "Favorit", "common_close": "Luk",
+        "common_play_pause": "Afspil / Pause", "common_live": "DIREKTE", "common_active": "AKTIV",
+        "badge_live_24_7": "DIREKTE 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "SKJUL",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Føles som %1$s", "lbar_wind": "Vind",
+        "lbar_humidity": "Luftfugtighed", "lbar_barometer": "Barometer", "lbar_dew_point": "Dugpunkt",
+        "lbar_aqi": "AQI", "lbar_uv_index": "UV-indeks", "lbar_visibility": "Sigtbarhed",
+        "emergency_broadcast": "NØDUDSENDELSE", "emergency_dismiss": "Afvis",
+        "remote_title": "TV-FJERNBETJENING", "search_header_title": "Global søgning efter vejrstationer",
+        "search_placeholder": "Indtast by, region eller land...", "search_gps_button": "GPS AUTO-REGISTRERING",
+        "settings_header_title": "Udsendelsespræferencer & Konfiguration", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "SYNKRONISERER TELEMETRI...", "error_signal_interrupted": "Signal afbrudt",
+        "error_reconnect_button": "GENFORBIND TELEMETRI"
+    },
+    "fi": {
+        "nav_home": "Koti", "nav_live_tv": "Suora TV", "nav_forecast": "Ennuste",
+        "nav_radar": "Tutka", "nav_search": "Haku", "nav_vod": "VOD Hub", "nav_settings": "Asetukset",
+        "common_warning": "Varoitus", "common_refresh": "Päivitä", "common_search": "Hae",
+        "common_clear": "Tyhjennä", "common_city": "Kaupunki", "common_favorite": "Suosikki", "common_close": "Sulje",
+        "common_play_pause": "Toista / Tauko", "common_live": "SUORA", "common_active": "AKTIIVINEN",
+        "badge_live_24_7": "SUORA 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "PIILOTA",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Tuntuu kuin %1$s", "lbar_wind": "Tuuli",
+        "lbar_humidity": "Kosteus", "lbar_barometer": "Ilmanpaine", "lbar_dew_point": "Kastepiste",
+        "lbar_aqi": "Ilmanlaatu", "lbar_uv_index": "UV-indeksi", "lbar_visibility": "Näkyvyys",
+        "emergency_broadcast": "HÄTÄLÄHETYS", "emergency_dismiss": "Hylkää",
+        "remote_title": "TV-KAUKOSÄÄDIN", "search_header_title": "Globaali sääasemahaku",
+        "search_placeholder": "Kirjoita kaupunki, alue tai maa...", "search_gps_button": "AUTOMAATTINEN GPS",
+        "settings_header_title": "Lähetysasetukset ja konfigurointi", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "SYNKRONOIDAAN TELEMETRIAA...", "error_signal_interrupted": "Lähetyssignaali katkesi",
+        "error_reconnect_button": "YHDISTÄ TELEMETRIA UUDELLEEN"
+    }
+}
+
+for lang, mapping in common_terms.items():
+    write_locale(lang, mapping)
+
+print("Batch 1 (10 languages) complete.")

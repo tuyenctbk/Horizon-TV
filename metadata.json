@@ -1,0 +1,6 @@
+{
+  "name": "Horizon TV",
+  "description": "24/7 broadcast television weather platform featuring live meteorological telemetry, interactive Doppler radar, iconic L-bar broadcast, VOD dispatches, and emergency weather alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

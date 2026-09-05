@@ -1,0 +1,67 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Golden Sun Crest positioned top-right of cloud -->
+    <path
+        android:pathData="M64,38m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="55"
+                android:startY="28"
+                android:endX="74"
+                android:endY="48"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FDE047" />
+                <item android:offset="1.0" android:color="#F59E0B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Cloud Soft Drop Shadow -->
+    <path
+        android:fillColor="#35040E20"
+        android:pathData="M35,64h38a11,11 0 0 0 0,-22a16,16 0 0 0,-30 -4a12,12 0 0 0,-8 26z" />
+
+    <!-- Pure Crisp Cloud Silhouette -->
+    <path
+        android:pathData="M34,62h38a11,11 0 0 0 0,-22a16,16 0 0 0,-30 -4a12,12 0 0 0,-8 26z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="26"
+                android:startY="32"
+                android:endX="72"
+                android:endY="62"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFF" />
+                <item android:offset="0.8" android:color="#E0F2FE" />
+                <item android:offset="1.0" android:color="#BAE6FD" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Primary Doppler Radar Arc Wave -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M42,69a17,17 0 0 0 24,0" />
+
+    <!-- Secondary Doppler Radar Arc Wave -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#06B6D4"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:pathData="M46,75a11,11 0 0 0 16,0" />
+
+    <!-- Broadcast Telemetry Pulse Beacon -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M54,80m-2.2,0a2.2,2.2 0,1 1,4.4 0a2.2,2.2 0,1 1,-4.4 0" />
+
+</vector>

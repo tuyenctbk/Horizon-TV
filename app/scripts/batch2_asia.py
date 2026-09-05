@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+import os
+import sys
+sys.path.append("/app/scripts")
+from locale_engine import write_locale
+
+# Batch 2: ja, ko, zh, zh-rTW, vi, th, id, ms, hi, bn
+
+asian_terms = {
+    "ja": {
+        "nav_home": "ホーム", "nav_live_tv": "ライブTV", "nav_forecast": "天気予報",
+        "nav_radar": "気象レーダー", "nav_search": "検索", "nav_vod": "VODハブ", "nav_settings": "設定",
+        "common_warning": "警告", "common_refresh": "更新", "common_search": "検索",
+        "common_clear": "クリア", "common_city": "都市", "common_favorite": "お気に入り", "common_close": "閉じる",
+        "common_play_pause": "再生 / 一時停止", "common_live": "ライブ", "common_active": "有効",
+        "badge_live_24_7": "24時間ライブ", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "折りたたむ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "体感 %1$s", "lbar_wind": "風速",
+        "lbar_humidity": "湿度", "lbar_barometer": "気圧", "lbar_dew_point": "露点温度",
+        "lbar_aqi": "空気質", "lbar_uv_index": "UV指数", "lbar_visibility": "視程",
+        "emergency_broadcast": "緊急警報放送", "emergency_dismiss": "閉じる",
+        "remote_title": "テレビリモコン", "search_header_title": "世界気象観測所検索",
+        "search_placeholder": "都市名、地域、国名を入力...", "search_gps_button": "GPS自動検出",
+        "settings_header_title": "放送環境・単位設定", "vod_title": "HORIZON オンデマンド (VOD)",
+        "loading_sync": "気象テレメトリ同期中...", "error_signal_interrupted": "放送信号が中断されました",
+        "error_reconnect_button": "テレメトリ再接続"
+    },
+    "ko": {
+        "nav_home": "홈", "nav_live_tv": "라이브 TV", "nav_forecast": "기상예보",
+        "nav_radar": "레이더", "nav_search": "검색", "nav_vod": "VOD 허브", "nav_settings": "설정",
+        "common_warning": "경보", "common_refresh": "새로고침", "common_search": "검색",
+        "common_clear": "지우기", "common_city": "도시", "common_favorite": "즐겨찾기", "common_close": "닫기",
+        "common_play_pause": "재생 / 일시정지", "common_live": "생방송", "common_active": "활성",
+        "badge_live_24_7": "24/7 라이브", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "접기",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "체감 %1$s", "lbar_wind": "풍속",
+        "lbar_humidity": "습도", "lbar_barometer": "기압", "lbar_dew_point": "이슬점",
+        "lbar_aqi": "공기질", "lbar_uv_index": "자외선지수", "lbar_visibility": "시정",
+        "emergency_broadcast": "재난 긴급 방송", "emergency_dismiss": "닫기",
+        "remote_title": "TV 리모컨", "search_header_title": "글로벌 기상 관측소 검색",
+        "search_placeholder": "도시, 지역 또는 국가 입력...", "search_gps_button": "GPS 자동 감지",
+        "settings_header_title": "방송 환경 및 기상 단위 설정", "vod_title": "HORIZON 주문형 비디오 (VOD)",
+        "loading_sync": "기상 원격 측정 동기화 중...", "error_signal_interrupted": "방송 신호 중단됨",
+        "error_reconnect_button": "원격 측정 재연결"
+    },
+    "zh": {
+        "nav_home": "首页", "nav_live_tv": "实时电视", "nav_forecast": "天气预报",
+        "nav_radar": "气象雷达", "nav_search": "搜索", "nav_vod": "VOD视频点播", "nav_settings": "设置",
+        "common_warning": "警告", "common_refresh": "刷新", "common_search": "搜索",
+        "common_clear": "清除", "common_city": "城市", "common_favorite": "收藏", "common_close": "关闭",
+        "common_play_pause": "播放 / 暂停", "common_live": "直播", "common_active": "已激活",
+        "badge_live_24_7": "24/7直播", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "折叠",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "体感 %1$s", "lbar_wind": "风速",
+        "lbar_humidity": "湿度", "lbar_barometer": "气压", "lbar_dew_point": "露点",
+        "lbar_aqi": "空气质量", "lbar_uv_index": "紫外线指数", "lbar_visibility": "能见度",
+        "emergency_broadcast": "紧急气象广播", "emergency_dismiss": "忽略",
+        "remote_title": "电视遥控器", "search_header_title": "全球气象站搜索",
+        "search_placeholder": "输入城市、省份或国家...", "search_gps_button": "GPS自动定位",
+        "settings_header_title": "广播偏好与单位配置", "vod_title": "HORIZON 视频点播 (VOD) 档案",
+        "loading_sync": "正在同步气象遥测数据...", "error_signal_interrupted": "广播信号中断",
+        "error_reconnect_button": "重新连接遥测"
+    },
+    "zh-rTW": {
+        "nav_home": "首頁", "nav_live_tv": "即時電視", "nav_forecast": "天氣預報",
+        "nav_radar": "氣象雷達", "nav_search": "搜尋", "nav_vod": "VOD隨選影音", "nav_settings": "設定",
+        "common_warning": "警告", "common_refresh": "重新整理", "common_search": "搜尋",
+        "common_clear": "清除", "common_city": "城市", "common_favorite": "我的最愛", "common_close": "關閉",
+        "common_play_pause": "播放 / 暫停", "common_live": "直播", "common_active": "啟用",
+        "badge_live_24_7": "24小時直播", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "收合",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "體感 %1$s", "lbar_wind": "風速",
+        "lbar_humidity": "濕度", "lbar_barometer": "氣壓", "lbar_dew_point": "露點",
+        "lbar_aqi": "空氣品質", "lbar_uv_index": "紫外線指數", "lbar_visibility": "能見度",
+        "emergency_broadcast": "緊急防災廣播", "emergency_dismiss": "關閉",
+        "remote_title": "電視遙控器", "search_header_title": "全球氣象測站搜尋",
+        "search_placeholder": "輸入城市、地區或國家...", "search_gps_button": "GPS自動定位",
+        "settings_header_title": "電視廣播與氣象單位設定", "vod_title": "HORIZON 隨選影音 (VOD) 庫",
+        "loading_sync": "正在同步氣象遙測數據...", "error_signal_interrupted": "訊號中斷",
+        "error_reconnect_button": "重新連線遙測"
+    },
+    "vi": {
+        "nav_home": "Trang chủ", "nav_live_tv": "TV Trực tiếp", "nav_forecast": "Dự báo",
+        "nav_radar": "Radar", "nav_search": "Tìm kiếm", "nav_vod": "Kho VOD", "nav_settings": "Cài đặt",
+        "common_warning": "Cảnh báo", "common_refresh": "Làm mới", "common_search": "Tìm kiếm",
+        "common_clear": "Xóa", "common_city": "Thành phố", "common_favorite": "Yêu thích", "common_close": "Đóng",
+        "common_play_pause": "Phát / Tạm dừng", "common_live": "TRỰC TIẾP", "common_active": "HOẠT ĐỘNG",
+        "badge_live_24_7": "TRỰC TIẾP 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "THU GỌN",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Cảm giác như %1$s", "lbar_wind": "Gió",
+        "lbar_humidity": "Độ ẩm", "lbar_barometer": "Áp suất", "lbar_dew_point": "Điểm sương",
+        "lbar_aqi": "AQI", "lbar_uv_index": "Chỉ số UV", "lbar_visibility": "Tầm nhìn",
+        "emergency_broadcast": "PHÁT SÓNG KHẨN CẤP", "emergency_dismiss": "Bỏ qua",
+        "remote_title": "ĐIỀU KHIỂN TV", "search_header_title": "Tìm kiếm trạm khí tượng toàn cầu",
+        "search_placeholder": "Nhập thành phố, khu vực hoặc quốc gia...", "search_gps_button": "TỰ ĐỘNG ĐỊNH VỊ GPS",
+        "settings_header_title": "Tùy chọn phát sóng & Cấu hình", "vod_title": "KHO VIDEO THEO YÊU CẦU (VOD)",
+        "loading_sync": "ĐANG ĐỒNG BỘ ĐO XA KHÍ TƯỢNG...", "error_signal_interrupted": "Tín hiệu bị gián đoạn",
+        "error_reconnect_button": "KẾT NỐI LẠI ĐO XA"
+    },
+    "th": {
+        "nav_home": "หน้าแรก", "nav_live_tv": "ถ่ายทอดสด", "nav_forecast": "พยากรณ์",
+        "nav_radar": "เรดาร์", "nav_search": "ค้นหา", "nav_vod": "ศูนย์ VOD", "nav_settings": "การตั้งค่า",
+        "common_warning": "คำเตือน", "common_refresh": "รีเฟรช", "common_search": "ค้นหา",
+        "common_clear": "ล้าง", "common_city": "เมือง", "common_favorite": "รายการโปรด", "common_close": "ปิด",
+        "common_play_pause": "เล่น / หยุดชั่วคราว", "common_live": "สด", "common_active": "ใช้งานอยู่",
+        "badge_live_24_7": "ถ่ายทอดสด 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "ย่อ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "รู้สึกเหมือน %1$s", "lbar_wind": "แรงลม",
+        "lbar_humidity": "ความชื้น", "lbar_barometer": "ความกดอากาศ", "lbar_dew_point": "จุดน้ำค้าง",
+        "lbar_aqi": "ดัชนีคุณภาพอากาศ", "lbar_uv_index": "ดัชนี UV", "lbar_visibility": "ทัศนวิสัย",
+        "emergency_broadcast": "การแพร่ภาพฉุกเฉิน", "emergency_dismiss": "ปิด",
+        "remote_title": "รีโมทคอนโทรลทีวี", "search_header_title": "ค้นหาสถานีตรวจอากาศทั่วโลก",
+        "search_placeholder": "ป้อนชื่อเมือง รัฐ หรือประเทศ...", "search_gps_button": "ตรวจหาด้วย GPS",
+        "settings_header_title": "การตั้งค่าการแพร่ภาพและหน่วยตรวจวัด", "vod_title": "คลังวิดีโอออนดีมานด์ (VOD)",
+        "loading_sync": "กำลังซิงค์ข้อมูลตรวจวัดอากาศ...", "error_signal_interrupted": "สัญญาณถูกตัดขาด",
+        "error_reconnect_button": "เชื่อมต่อข้อมูลใหม่"
+    },
+    "id": {
+        "nav_home": "Beranda", "nav_live_tv": "TV Langsung", "nav_forecast": "Prakiraan",
+        "nav_radar": "Radar", "nav_search": "Cari", "nav_vod": "Pusat VOD", "nav_settings": "Pengaturan",
+        "common_warning": "Peringatan", "common_refresh": "Segarkan", "common_search": "Cari",
+        "common_clear": "Hapus", "common_city": "Kota", "common_favorite": "Favorit", "common_close": "Tutup",
+        "common_play_pause": "Putar / Jeda", "common_live": "LANGSUNG", "common_active": "AKTIF",
+        "badge_live_24_7": "LANGSUNG 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "LIPAT",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Terasa seperti %1$s", "lbar_wind": "Angin",
+        "lbar_humidity": "Kelembapan", "lbar_barometer": "Barometer", "lbar_dew_point": "Titik embun",
+        "lbar_aqi": "AQI", "lbar_uv_index": "Indeks UV", "lbar_visibility": "Jarak pandang",
+        "emergency_broadcast": "SIARAN DARURAT", "emergency_dismiss": "Tutup",
+        "remote_title": "REMOT KONTROL TV", "search_header_title": "Pencarian stasiun meteorologi global",
+        "search_placeholder": "Masukkan kota, provinsi, atau negara...", "search_gps_button": "DETEKSI OTOMATIS GPS",
+        "settings_header_title": "Preferensi Siaran & Konfigurasi", "vod_title": "ARSIP VIDEO SESUAI PERMINTAAN (VOD)",
+        "loading_sync": "MENYINKRONKAN TELEMETRI...", "error_signal_interrupted": "Sinyal siaran terputus",
+        "error_reconnect_button": "HUBUNGKAN ULANG TELEMETRI"
+    },
+    "ms": {
+        "nav_home": "Utama", "nav_live_tv": "TV Siaran Langsung", "nav_forecast": "Ramalan",
+        "nav_radar": "Radar", "nav_search": "Cari", "nav_vod": "Hab VOD", "nav_settings": "Tetapan",
+        "common_warning": "Amaran", "common_refresh": "Muat Semula", "common_search": "Cari",
+        "common_clear": "Kosongkan", "common_city": "Bandar", "common_favorite": "Kegemaran", "common_close": "Tutup",
+        "common_play_pause": "Main / Jeda", "common_live": "LANGSUNG", "common_active": "AKTIF",
+        "badge_live_24_7": "LANGSUNG 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "RUNTUHKAN",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Terasa seperti %1$s", "lbar_wind": "Angin",
+        "lbar_humidity": "Kelembapan", "lbar_barometer": "Barometer", "lbar_dew_point": "Takat embun",
+        "lbar_aqi": "IPU", "lbar_uv_index": "Indeks UV", "lbar_visibility": "Kebolehlihatan",
+        "emergency_broadcast": "SIARAN KECEMASAN", "emergency_dismiss": "Tolak",
+        "remote_title": "KAWALAN JAUH TV", "search_header_title": "Carian stesen meteorologi global",
+        "search_placeholder": "Masukkan bandar, negeri atau negara...", "search_gps_button": "PENGESANAN GPS AUTO",
+        "settings_header_title": "Pilihan Siaran & Konfigurasi", "vod_title": "ARKIB VIDEO ATAS PERMINTAAN (VOD)",
+        "loading_sync": "MENYELARASKAN TELEMETRI...", "error_signal_interrupted": "Isyarat siaran terputus",
+        "error_reconnect_button": "SAMBUNG SEMULA TELEMETRI"
+    },
+    "hi": {
+        "nav_home": "होम", "nav_live_tv": "लाइव टीवी", "nav_forecast": "पूर्वानुमान",
+        "nav_radar": "रडार", "nav_search": "खोजें", "nav_vod": "वीओडी हब", "nav_settings": "सेटिंग्स",
+        "common_warning": "चेतावनी", "common_refresh": "रीफ्रेश करें", "common_search": "खोजें",
+        "common_clear": "साफ़ करें", "common_city": "शहर", "common_favorite": "पसंदीदा", "common_close": "बंद करें",
+        "common_play_pause": "चलाएं / रोकें", "common_live": "लाइव", "common_active": "सक्रिय",
+        "badge_live_24_7": "24/7 लाइव", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "संक्षिप्त करें",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "महसूस: %1$s", "lbar_wind": "हवा",
+        "lbar_humidity": "आर्द्रता", "lbar_barometer": "वायुदाब", "lbar_dew_point": "ओस बिंदु",
+        "lbar_aqi": "वायु गुणवत्ता", "lbar_uv_index": "यूवी सूचकांक", "lbar_visibility": "दृश्यता",
+        "emergency_broadcast": "आपातकालीन प्रसारण", "emergency_dismiss": "खारिज करें",
+        "remote_title": "टीवी रिमोट कंट्रोल", "search_header_title": "वैश्विक मौसम स्टेशन खोज",
+        "search_placeholder": "शहर, राज्य या देश दर्ज करें...", "search_gps_button": "जीपीएस ऑटो-डिटेक्ट",
+        "settings_header_title": "प्रसारण प्राथमिकताएं एवं विन्यास", "vod_title": "होराइजन वीडियो ऑन डिमांड (VOD)",
+        "loading_sync": "टेलीमेट्री सिंक्रनाइज़ हो रही है...", "error_signal_interrupted": "सिग्नल बाधित हुआ",
+        "error_reconnect_button": "टेलीमेट्री पुनः कनेक्ट करें"
+    },
+    "bn": {
+        "nav_home": "হোম", "nav_live_tv": "লাইভ টিভি", "nav_forecast": "পূর্বাভাস",
+        "nav_radar": "রাডার", "nav_search": "অনুসন্ধান", "nav_vod": "ভিওডি হাব", "nav_settings": "সেটিংস",
+        "common_warning": "সতর্কতা", "common_refresh": "রিফ্রেশ", "common_search": "অনুসন্ধান",
+        "common_clear": "মুছুন", "common_city": "শহর", "common_favorite": "প্রিয়", "common_close": "বন্ধ করুন",
+        "common_play_pause": "প্লে / পজ", "common_live": "লাইভ", "common_active": "সক্রিয়",
+        "badge_live_24_7": "২৪/৭ লাইভ", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "সংকোচন",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "অনুভূত %1$s", "lbar_wind": "বায়ুপ্রবাহ",
+        "lbar_humidity": "আর্দ্রতা", "lbar_barometer": "বায়ুচাপ", "lbar_dew_point": "শিশিরাঙ্ক",
+        "lbar_aqi": "বায়ু মান", "lbar_uv_index": "ইউভি সূচক", "lbar_visibility": "দৃশ্যমানতা",
+        "emergency_broadcast": "জরুরী সম্প্রচার", "emergency_dismiss": "বাতিল",
+        "remote_title": "টিভি রিমোট", "search_header_title": "বিশ্বব্যাপী আবহাওয়া কেন্দ্র অনুসন্ধান",
+        "search_placeholder": "শহর, রাজ্য বা দেশ লিখুন...", "search_gps_button": "জিপিএস অটো-ডিটেক্ট",
+        "settings_header_title": "সম্প্রচার পছন্দ ও কনফিগারেশন", "vod_title": "ভিডিও অন ডিমান্ড (VOD)",
+        "loading_sync": "টেলিমেট্রি সিঙ্ক হচ্ছে...", "error_signal_interrupted": "সম্প্রচার সংকেত বিচ্ছিন্ন",
+        "error_reconnect_button": "পুনরায় সংযোগ করুন"
+    }
+}
+
+for lang, mapping in asian_terms.items():
+    write_locale(lang, mapping)
+
+print("Batch 2 (10 Asian languages) complete.")

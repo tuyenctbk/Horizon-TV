@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+import os
+import sys
+sys.path.append("/app/scripts")
+from locale_engine import write_locale
+
+# Batch 3: ru, uk, pl, cs, hu, ro, el, tr, ar, he
+
+regional_terms = {
+    "ru": {
+        "nav_home": "Главная", "nav_live_tv": "Прямой эфир", "nav_forecast": "Прогноз",
+        "nav_radar": "Радар", "nav_search": "Поиск", "nav_vod": "VOD Архив", "nav_settings": "Настройки",
+        "common_warning": "Предупреждение", "common_refresh": "Обновить", "common_search": "Поиск",
+        "common_clear": "Очистить", "common_city": "Город", "common_favorite": "Избранное", "common_close": "Закрыть",
+        "common_play_pause": "Воспроизведение / Пауза", "common_live": "ПРЯМОЙ ЭФИР", "common_active": "АКТИВНО",
+        "badge_live_24_7": "ЭФИР 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "СВЕРНУТЬ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Ощущается как %1$s", "lbar_wind": "Ветер",
+        "lbar_humidity": "Влажность", "lbar_barometer": "Барометр", "lbar_dew_point": "Точка росы",
+        "lbar_aqi": "Качество воздуха", "lbar_uv_index": "УФ-индекс", "lbar_visibility": "Видимость",
+        "emergency_broadcast": "ЭКСТРЕННОЕ ОПОВЕЩЕНИЕ", "emergency_dismiss": "Закрыть",
+        "remote_title": "ПУЛЬТ ДУ ТВ", "search_header_title": "Глобальный поиск метеостанций",
+        "search_placeholder": "Введите город, регион или страну...", "search_gps_button": "GPS АВТООПРЕДЕЛЕНИЕ",
+        "settings_header_title": "Настройки вещания и телеметрии", "vod_title": "АРХИВ ВИДЕО ПО ЗАПРОСУ (VOD)",
+        "loading_sync": "СИНХРОНИЗАЦИЯ ТЕЛЕМЕТРИИ...", "error_signal_interrupted": "Сигнал вещания прерван",
+        "error_reconnect_button": "ПЕРЕПОДКЛЮЧИТЬ ТЕЛЕМЕТРИЮ"
+    },
+    "uk": {
+        "nav_home": "Головна", "nav_live_tv": "Прямий ефір", "nav_forecast": "Прогноз",
+        "nav_radar": "Радар", "nav_search": "Пошук", "nav_vod": "VOD Хаб", "nav_settings": "Налаштування",
+        "common_warning": "Попередження", "common_refresh": "Оновити", "common_search": "Пошук",
+        "common_clear": "Очистити", "common_city": "Місто", "common_favorite": "Обране", "common_close": "Закрити",
+        "common_play_pause": "Відтворити / Пауза", "common_live": "ПРЯМИЙ ЕФІР", "common_active": "АКТИВНО",
+        "badge_live_24_7": "ЕФІР 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "ЗГОРНУТИ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Відчувається як %1$s", "lbar_wind": "Вітер",
+        "lbar_humidity": "Вологість", "lbar_barometer": "Барометр", "lbar_dew_point": "Точка роси",
+        "lbar_aqi": "Якість повітря", "lbar_uv_index": "УФ-індекс", "lbar_visibility": "Видимість",
+        "emergency_broadcast": "ЕКСТРЕНЕ СПОВІЩЕННЯ", "emergency_dismiss": "Закрити",
+        "remote_title": "ПУЛЬТ ТБ", "search_header_title": "Глобальний пошук метеостанцій",
+        "search_placeholder": "Введіть місто, область або країну...", "search_gps_button": "GPS АВТОВИЗНАЧЕННЯ",
+        "settings_header_title": "Налаштування мовлення та телеметрії", "vod_title": "АРХІВ ВІДЕО НА ВИМОГУ (VOD)",
+        "loading_sync": "СИНХРОНІЗАЦІЯ ТЕЛЕМЕТРІЇ...", "error_signal_interrupted": "Сигнал перервано",
+        "error_reconnect_button": "ПОВТОРНЕ ПІДКЛЮЧЕННЯ"
+    },
+    "pl": {
+        "nav_home": "Główna", "nav_live_tv": "Telewizja na żywo", "nav_forecast": "Prognoza",
+        "nav_radar": "Radar", "nav_search": "Szukaj", "nav_vod": "Centrum VOD", "nav_settings": "Ustawienia",
+        "common_warning": "Ostrzeżenie", "common_refresh": "Odśwież", "common_search": "Szukaj",
+        "common_clear": "Wyczyść", "common_city": "Miasto", "common_favorite": "Ulubione", "common_close": "Zamknij",
+        "common_play_pause": "Odtwórz / Wstrzymaj", "common_live": "NA ŻYWO", "common_active": "AKTYWNY",
+        "badge_live_24_7": "NA ŻYWO 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "ZWIŃ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Odczuwalna %1$s", "lbar_wind": "Wiatr",
+        "lbar_humidity": "Wilgotność", "lbar_barometer": "Barometr", "lbar_dew_point": "Punkt rosy",
+        "lbar_aqi": "Jakość powietrza", "lbar_uv_index": "Indeks UV", "lbar_visibility": "Widoczność",
+        "emergency_broadcast": "KOMUNIKAT OSTRZEGAWCZY", "emergency_dismiss": "Odrzuć",
+        "remote_title": "PILOT DO TELEWIZORA", "search_header_title": "Globalne wyszukiwanie stacji",
+        "search_placeholder": "Wpisz miasto, region lub kraj...", "search_gps_button": "AUTOMATYCZNY GPS",
+        "settings_header_title": "Preferencje transmisji i konfiguracja", "vod_title": "ARCHIWUM WIDEO NA ŻĄDANIE (VOD)",
+        "loading_sync": "SYNCHRONIZACJA TELEMETRII...", "error_signal_interrupted": "Przerwany sygnał nadawczy",
+        "error_reconnect_button": "POŁĄCZ PONOWNIE"
+    },
+    "cs": {
+        "nav_home": "Domů", "nav_live_tv": "Živé vysílání", "nav_forecast": "Předpověď",
+        "nav_radar": "Radar", "nav_search": "Hledat", "nav_vod": "VOD Centrum", "nav_settings": "Nastavení",
+        "common_warning": "Varování", "common_refresh": "Obnovit", "common_search": "Hledat",
+        "common_clear": "Vymazat", "common_city": "Město", "common_favorite": "Oblíbené", "common_close": "Zavřít",
+        "common_play_pause": "Přehrát / Pozastavit", "common_live": "ŽIVĚ", "common_active": "AKTIVNÍ",
+        "badge_live_24_7": "ŽIVĚ 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "SBALIT",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Pocitová %1$s", "lbar_wind": "Vítr",
+        "lbar_humidity": "Vlhkost", "lbar_barometer": "Barometr", "lbar_dew_point": "Rosný bod",
+        "lbar_aqi": "Kvalita vzduchu", "lbar_uv_index": "UV index", "lbar_visibility": "Viditelnost",
+        "emergency_broadcast": "NOHOUZOVÉ VYSÍLÁNÍ", "emergency_dismiss": "Zavřít",
+        "remote_title": "TV DÁLKOVÝ OVLADAČ", "search_header_title": "Globální vyhledávání meteorologických stanic",
+        "search_placeholder": "Zadejte město, region nebo zemi...", "search_gps_button": "AUTOMATICKÁ DETEKCE GPS",
+        "settings_header_title": "Předvolby vysílání a konfigurace", "vod_title": "ARCHIV VIDEA NA VYŽÁDÁNÍ (VOD)",
+        "loading_sync": "SYNCHRONIZACE TELEMETRIE...", "error_signal_interrupted": "Signál přerušen",
+        "error_reconnect_button": "ZNOVU PŘIPOJIT"
+    },
+    "hu": {
+        "nav_home": "Főoldal", "nav_live_tv": "Élő TV", "nav_forecast": "Előrejelzés",
+        "nav_radar": "Radar", "nav_search": "Keresés", "nav_vod": "VOD Központ", "nav_settings": "Beállítások",
+        "common_warning": "Figyelmeztetés", "common_refresh": "Frissítés", "common_search": "Keresés",
+        "common_clear": "Törlés", "common_city": "Város", "common_favorite": "Kedvenc", "common_close": "Bezárás",
+        "common_play_pause": "Lejátszás / Szünet", "common_live": "ÉLŐ", "common_active": "AKTÍV",
+        "badge_live_24_7": "ÉLŐ 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "ÖSSZECSUKÁS",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Hőérzet %1$s", "lbar_wind": "Szél",
+        "lbar_humidity": "Páratartalom", "lbar_barometer": "Légnyomás", "lbar_dew_point": "Harmatpont",
+        "lbar_aqi": "Levegőminőség", "lbar_uv_index": "UV-index", "lbar_visibility": "Látástávolság",
+        "emergency_broadcast": "VÉSZHELYZETI KÖZVETÍTÉS", "emergency_dismiss": "Elvetés",
+        "remote_title": "TV TÁVIRÁNYÍTÓ", "search_header_title": "Globális meteorológiai állomás kereső",
+        "search_placeholder": "Adjon meg várost, megyét vagy országot...", "search_gps_button": "GPS HELYMEGHATÁROZÁS",
+        "settings_header_title": "Adási beállítások & Konfiguráció", "vod_title": "HORIZON VIDEO ON DEMAND (VOD)",
+        "loading_sync": "TELEMETRIA SZINKRONIZÁLÁSA...", "error_signal_interrupted": "Megszakadt az adás",
+        "error_reconnect_button": "ÚJRACSATLAKOZÁS"
+    },
+    "ro": {
+        "nav_home": "Acasă", "nav_live_tv": "TV în Direct", "nav_forecast": "Prognoză",
+        "nav_radar": "Radar", "nav_search": "Căutare", "nav_vod": "Hub VOD", "nav_settings": "Setări",
+        "common_warning": "Avertisment", "common_refresh": "Reîmprospătare", "common_search": "Căutare",
+        "common_clear": "Ștergere", "common_city": "Oraș", "common_favorite": "Favorit", "common_close": "Închidere",
+        "common_play_pause": "Redare / Pauză", "common_live": "ÎN DIRECT", "common_active": "ACTIV",
+        "badge_live_24_7": "ÎN DIRECT 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "RESTRÂNGE",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Se simte ca %1$s", "lbar_wind": "Vânt",
+        "lbar_humidity": "Umiditate", "lbar_barometer": "Barometru", "lbar_dew_point": "Punct de rouă",
+        "lbar_aqi": "Calitatea aerului", "lbar_uv_index": "Index UV", "lbar_visibility": "Vizibilitate",
+        "emergency_broadcast": "EMISIUNE DE URGENȚĂ", "emergency_dismiss": "Respinge",
+        "remote_title": "TELECOMANDĂ TV", "search_header_title": "Căutare globală stații meteo",
+        "search_placeholder": "Introduceți oraș, județ sau țară...", "search_gps_button": "DETECTARE GPS",
+        "settings_header_title": "Preferințe transmisie & Configurare", "vod_title": "ARHIVĂ VIDEO LA CERERE (VOD)",
+        "loading_sync": "SINCRONIZARE TELEMETRIE...", "error_signal_interrupted": "Semnal întrerupt",
+        "error_reconnect_button": "RECONECTARE TELEMETRIE"
+    },
+    "el": {
+        "nav_home": "Αρχική", "nav_live_tv": "Ζωντανή TV", "nav_forecast": "Πρόγνωση",
+        "nav_radar": "Ραντάρ", "nav_search": "Αναζήτηση", "nav_vod": "Κόμβος VOD", "nav_settings": "Ρυθμίσεις",
+        "common_warning": "Προειδοποίηση", "common_refresh": "Ανανέωση", "common_search": "Αναζήτηση",
+        "common_clear": "Καθαρισμός", "common_city": "Πόλη", "common_favorite": "Αγαπημένο", "common_close": "Κλείσιμο",
+        "common_play_pause": "Αναπαραγωγή / Παύση", "common_live": "ΖΩΝΤΑΝΑ", "common_active": "ΕΝΕΡΓΟ",
+        "badge_live_24_7": "ΖΩΝΤΑΝΑ 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "ΣΥΜΠΤΥΞΗ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Αίσθηση %1$s", "lbar_wind": "Άνεμος",
+        "lbar_humidity": "Υγρασία", "lbar_barometer": "Βαρόμετρο", "lbar_dew_point": "Σημείο δρόσου",
+        "lbar_aqi": "Ποιότητα αέρα", "lbar_uv_index": "Δείκτης UV", "lbar_visibility": "Ορατότητα",
+        "emergency_broadcast": "ΕΚΤΑΚΤΗ ΕΚΠΟΜΠΗ", "emergency_dismiss": "Απόρριψη",
+        "remote_title": "ΤΗΛΕΧΕΙΡΙΣΤΗΡΙΟ TV", "search_header_title": "Παγκόσμια αναζήτηση μετεωρολογικών σταθμών",
+        "search_placeholder": "Εισαγάγετε πόλη ή χώρα...", "search_gps_button": "ΑΥΤΟΜΑΤΟ GPS",
+        "settings_header_title": "Προτιμήσεις μετάδοσης & Διαμόρφωση", "vod_title": "ΑΡΧΕΙΟ VIDEO ON DEMAND (VOD)",
+        "loading_sync": "ΣΥΓΧΡΟΝΙΣΜΟΣ ΤΗΛΕΜΕΤΡΙΑΣ...", "error_signal_interrupted": "Διακοπή σήματος",
+        "error_reconnect_button": "ΕΠΑΝΑΣΥΝΔΕΣΗ ΤΗΛΕΜΕΤΡΙΑΣ"
+    },
+    "tr": {
+        "nav_home": "Ana Sayfa", "nav_live_tv": "Canlı TV", "nav_forecast": "Hava Durumu",
+        "nav_radar": "Radar", "nav_search": "Arama", "nav_vod": "VOD Merkezi", "nav_settings": "Ayarlar",
+        "common_warning": "Uyarı", "common_refresh": "Yenile", "common_search": "Ara",
+        "common_clear": "Temizle", "common_city": "Şehir", "common_favorite": "Favori", "common_close": "Kapat",
+        "common_play_pause": "Oynat / Duraklat", "common_live": "CANLI", "common_active": "AKTİF",
+        "badge_live_24_7": "7/24 CANLI", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "DARALT",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "Hissedilen %1$s", "lbar_wind": "Rüzgar",
+        "lbar_humidity": "Nem", "lbar_barometer": "Barometre", "lbar_dew_point": "Çiy noktası",
+        "lbar_aqi": "Hava Kalitesi", "lbar_uv_index": "UV İndeksi", "lbar_visibility": "Görüş Mesafesi",
+        "emergency_broadcast": "ACİL DURUM YAYINI", "emergency_dismiss": "Kapat",
+        "remote_title": "TV UZAKTAN KUMANDASI", "search_header_title": "Küresel meteoroloji istasyonu arama",
+        "search_placeholder": "Şehir, ilçe veya ülke girin...", "search_gps_button": "GPS İLE KONUM BUL",
+        "settings_header_title": "Yayın Tercihleri ve Yapılandırma", "vod_title": "HORIZON İSTEĞE BAĞLI VİDEO (VOD)",
+        "loading_sync": "TELEMETRİ SENKRONİZE EDİLİYOR...", "error_signal_interrupted": "Yayın sinyali kesildi",
+        "error_reconnect_button": "TELEMETRİYİ YENİDEN BAĞLA"
+    },
+    "ar": {
+        "nav_home": "الرئيسية", "nav_live_tv": "بث مباشر", "nav_forecast": "التوقعات",
+        "nav_radar": "الرادار", "nav_search": "بحث", "nav_vod": "مركز الفيديو", "nav_settings": "الإعدادات",
+        "common_warning": "تحذير", "common_refresh": "تحديث", "common_search": "بحث",
+        "common_clear": "مسح", "common_city": "المدينة", "common_favorite": "المفضلة", "common_close": "إغلاق",
+        "common_play_pause": "تشغيل / إيقاف مؤقت", "common_live": "مباشر", "common_active": "نشط",
+        "badge_live_24_7": "مباشر 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "طي",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "الحرارة المحسوسة %1$s", "lbar_wind": "الرياح",
+        "lbar_humidity": "الرطوبة", "lbar_barometer": "الضغط الجوي", "lbar_dew_point": "نقطة الندى",
+        "lbar_aqi": "جودة الهواء", "lbar_uv_index": "مؤشر الأشعة فوق البنفسجية", "lbar_visibility": "مدى الرؤية",
+        "emergency_broadcast": "بث طوارئ عاجل", "emergency_dismiss": "تجاهل",
+        "remote_title": "جهاز التحكم بالتلفاز", "search_header_title": "البحث في محطات الأرصاد الجوية العالمية",
+        "search_placeholder": "أدخل المدينة أو الدولة...", "search_gps_button": "تحديد الموقع تلقائياً",
+        "settings_header_title": "تفضيلات البث والإعدادات", "vod_title": "أرشيف الفيديو حسب الطلب (VOD)",
+        "loading_sync": "جاري مزامنة بيانات الطقس...", "error_signal_interrupted": "انقطع بث الإشارة",
+        "error_reconnect_button": "إعادة الاتصال"
+    },
+    "he": {
+        "nav_home": "בית", "nav_live_tv": "שידור חי", "nav_forecast": "תחזית",
+        "nav_radar": "מכ\"ם", "nav_search": "חיפוש", "nav_vod": "מרכז VOD", "nav_settings": "הגדרות",
+        "common_warning": "אזהרה", "common_refresh": "רענון", "common_search": "חיפוש",
+        "common_clear": "נקה", "common_city": "עיר", "common_favorite": "מועדף", "common_close": "סגור",
+        "common_play_pause": "הפעל / השהה", "common_live": "חי", "common_active": "פעיל",
+        "badge_live_24_7": "שידור חי 24/7", "lbar_title": "HORIZON L-BAR", "lbar_collapse": "כווץ",
+        "lbar_expand": "L-BAR", "lbar_feels_like": "מרגיש כמו %1$s", "lbar_wind": "רוח",
+        "lbar_humidity": "לחות", "lbar_barometer": "ברומטר", "lbar_dew_point": "נקודת טל",
+        "lbar_aqi": "איכות אוויר", "lbar_uv_index": "מדד קרינת UV", "lbar_visibility": "ראות",
+        "emergency_broadcast": "שידור חירום מטאורולוגי", "emergency_dismiss": "סגור",
+        "remote_title": "שלט רחוק לטלוויזיה", "search_header_title": "חיפוש תחנות חיזוי עולמיות",
+        "search_placeholder": "הזן עיר, מחוז או מדינה...", "search_gps_button": "איתור GPS אוטומטי",
+        "settings_header_title": "העדפות שידור והגדרות", "vod_title": "ארכיון וידאו לפי דרישה (VOD)",
+        "loading_sync": "מסנכרן נתוני טלמטריה...", "error_signal_interrupted": "אות השידור נותק",
+        "error_reconnect_button": "התחבר מחדש"
+    }
+}
+
+for lang, mapping in regional_terms.items():
+    write_locale(lang, mapping)
+
+print("Batch 3 (10 Regional languages) complete.")
