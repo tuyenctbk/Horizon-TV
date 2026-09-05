@@ -50,10 +50,10 @@ data class WeatherUiState(
 )
 
 class WeatherViewModel(
-    application: Application,
-    private val repository: WeatherRepository = WeatherRepository()
+    application: Application
 ) : AndroidViewModel(application) {
 
+    private val repository: WeatherRepository = WeatherRepository()
     private val preferencesManager = UserPreferencesManager(application)
 
     private val _uiState = MutableStateFlow(
@@ -184,8 +184,12 @@ class WeatherViewModel(
 
     fun addCurrentToFavorites() {
         val current = _uiState.value.currentLocation
-        if (_uiState.value.favoriteCities.none { it.name.equals(current.name, ignoreCase = true) }) {
-            val updated = _uiState.value.favoriteCities + current
+        addFavorite(current)
+    }
+
+    fun addFavorite(city: CityLocation) {
+        if (_uiState.value.favoriteCities.none { it.name.equals(city.name, ignoreCase = true) }) {
+            val updated = _uiState.value.favoriteCities + city
             preferencesManager.saveFavoriteCities(updated)
             _uiState.update {
                 it.copy(favoriteCities = updated)
@@ -194,10 +198,18 @@ class WeatherViewModel(
     }
 
     fun removeFavorite(city: CityLocation) {
-        val updated = _uiState.value.favoriteCities.filter { fav -> fav.name != city.name }
+        val updated = _uiState.value.favoriteCities.filter { fav -> !fav.name.equals(city.name, ignoreCase = true) }
         preferencesManager.saveFavoriteCities(updated)
         _uiState.update {
             it.copy(favoriteCities = updated)
+        }
+    }
+
+    fun toggleFavorite(city: CityLocation) {
+        if (_uiState.value.favoriteCities.any { it.name.equals(city.name, ignoreCase = true) }) {
+            removeFavorite(city)
+        } else {
+            addFavorite(city)
         }
     }
 

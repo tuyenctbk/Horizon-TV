@@ -224,11 +224,7 @@ class MainActivity : ComponentActivity() {
                                                         },
                                                         onAutoDetectGps = { viewModel.autoDetectGpsLocation() },
                                                         onToggleFavorite = { city ->
-                                                            if (uiState.favoriteCities.any { it.name.equals(city.name, ignoreCase = true) }) {
-                                                                viewModel.removeFavorite(city)
-                                                            } else {
-                                                                viewModel.addCurrentToFavorites()
-                                                            }
+                                                            viewModel.toggleFavorite(city)
                                                         }
                                                     )
                                                 }
