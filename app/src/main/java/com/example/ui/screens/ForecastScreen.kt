@@ -234,19 +234,25 @@ private fun ThirtySixHourDetailedView(
         }
 
         item {
+            val dewStr = if (unitSystem == UnitSystem.METRIC) "${current.dewPointC.roundToInt()}°C"
+            else "${(current.dewPointC * 9 / 5 + 32).roundToInt()}°F"
+
+            val pressStr = if (unitSystem == UnitSystem.METRIC) "${current.pressureHpa.roundToInt()} hPa"
+            else String.format(java.util.Locale.US, "%.2f inHg", current.pressureHpa * 0.02953)
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MetricDetailCard(
                     icon = Icons.Default.WaterDrop,
                     title = stringResource(R.string.forecast_relative_humidity),
                     value = "${current.humidityPercent}%",
-                    detail = stringResource(R.string.forecast_dew_point, current.dewPointC.roundToInt()),
+                    detail = "Dew point $dewStr",
                     accentColor = SleekBluePrimary,
                     modifier = Modifier.weight(1f)
                 )
                 MetricDetailCard(
                     icon = Icons.Default.Compress,
                     title = stringResource(R.string.forecast_surface_pressure),
-                    value = "${current.pressureHpa.roundToInt()} hPa",
+                    value = pressStr,
                     detail = if (current.pressureHpa > 1013) stringResource(R.string.forecast_high_pressure) else stringResource(R.string.forecast_low_pressure),
                     accentColor = SleekBluePrimary,
                     modifier = Modifier.weight(1f)
@@ -268,19 +274,28 @@ private fun ThirtySixHourDetailedView(
         }
 
         item {
+            val windSpeedStr = if (unitSystem == UnitSystem.METRIC) "${current.windSpeedKmh.roundToInt()} km/h"
+            else "${(current.windSpeedKmh * 0.621371).roundToInt()} mph"
+
+            val peakGustStr = if (unitSystem == UnitSystem.METRIC) "${current.windGustsKmh.roundToInt()} km/h"
+            else "${(current.windGustsKmh * 0.621371).roundToInt()} mph"
+
+            val visStr = if (unitSystem == UnitSystem.METRIC) "${current.visibilityKm.roundToInt()} km"
+            else "${(current.visibilityKm * 0.621371).roundToInt()} mi"
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MetricDetailCard(
                     icon = Icons.Default.Air,
                     title = stringResource(R.string.forecast_wind_gust_vector),
-                    value = "${current.windSpeedKmh.roundToInt()} km/h",
-                    detail = stringResource(R.string.forecast_peak_gusts, current.windGustsKmh.roundToInt()),
+                    value = windSpeedStr,
+                    detail = "Peak gusts $peakGustStr",
                     accentColor = SleekGreenText,
                     modifier = Modifier.weight(1f)
                 )
                 MetricDetailCard(
                     icon = Icons.Default.Visibility,
                     title = stringResource(R.string.forecast_atmospheric_visibility),
-                    value = "${current.visibilityKm.roundToInt()} km",
+                    value = visStr,
                     detail = if (current.visibilityKm >= 10) stringResource(R.string.forecast_clear_horizon) else stringResource(R.string.forecast_reduced_visibility),
                     accentColor = SleekTextSecondary,
                     modifier = Modifier.weight(1f)
@@ -397,7 +412,12 @@ private fun FourteenDayOutlookView(pkg: FullWeatherPackage, unitSystem: UnitSyst
                 Column(modifier = Modifier.width(100.dp)) {
                     Text(text = stringResource(R.string.forecast_rain, day.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     if (day.rainMm > 0) {
-                        Text(text = "${String.format(java.util.Locale.US, "%.1f", day.rainMm)} mm", color = SleekTextSecondary, fontSize = 10.sp)
+                        val rainLabel = if (unitSystem == UnitSystem.METRIC) {
+                            "${String.format(java.util.Locale.US, "%.1f", day.rainMm)} mm"
+                        } else {
+                            "${String.format(java.util.Locale.US, "%.2f", day.rainMm * 0.0393701)} in"
+                        }
+                        Text(text = rainLabel, color = SleekTextSecondary, fontSize = 10.sp)
                     }
                 }
 

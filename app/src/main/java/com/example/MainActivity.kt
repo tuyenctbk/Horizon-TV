@@ -64,95 +64,39 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
                             Column(modifier = Modifier.fillMaxSize()) {
+                                val activeAlert = uiState.weatherPackage?.alerts?.firstOrNull { it.id !in uiState.dismissedAlertIds }
+
                                 // TV Top Header Bar
                                 TVHeader(
                                     currentScreen = uiState.currentScreen,
                                     currentLocation = uiState.currentLocation,
                                     unitSystem = uiState.unitSystem,
-                                    hasAlerts = uiState.weatherPackage?.alerts?.isNotEmpty() == true,
+                                    hasAlerts = activeAlert != null,
                                     onNavigate = { viewModel.setScreen(it) },
                                     onToggleUnits = { viewModel.toggleUnitSystem() },
                                     onOpenRemote = { viewModel.toggleVirtualRemote() },
                                     onOpenAlerts = {
-                                        uiState.weatherPackage?.alerts?.firstOrNull()?.let {
-                                            viewModel.openAlertModal(it)
-                                        }
+                                        activeAlert?.let { viewModel.openAlertModal(it) }
                                     }
                                 )
 
                                 // Reactive Emergency Weather Alert Banner (Stream Event Monitor)
                                 EmergencyBroadcastBanner(
-                                    alert = uiState.weatherPackage?.alerts?.firstOrNull(),
+                                    alert = activeAlert,
                                     onOpenModal = { viewModel.openAlertModal(it) },
-                                    onDismiss = { viewModel.dismissAlertModal() }
+                                    onDismiss = { activeAlert?.let { viewModel.dismissAlert(it.id) } }
                                 )
 
                                 // Main Content Area
                                 Box(modifier = Modifier.weight(1f)) {
                                     if (uiState.isLoading && uiState.currentWeather == null) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                CircularProgressIndicator(color = HorizonCyan, strokeWidth = 3.dp)
-                                                Spacer(modifier = Modifier.height(14.dp))
-                                                Text(
-                                                    text = stringResource(R.string.loading_sync),
-                                                    color = HorizonCyan,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    letterSpacing = 1.sp
-                                                )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = stringResource(R.string.loading_connecting),
-                                                    color = TextSecondarySilver,
-                                                    fontSize = 11.sp
-                                                )
-                                            }
-                                        }
+                                        BroadcastSplashScreen(isLoading = true)
                                     } else if (uiState.errorMessage != null && uiState.currentWeather == null) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Column(
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                modifier = Modifier.padding(24.dp)
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Warning,
-                                                    contentDescription = stringResource(R.string.common_warning),
-                                                    tint = SevereRed,
-                                                    modifier = Modifier.size(48.dp)
-                                                )
-                                                Spacer(modifier = Modifier.height(12.dp))
-                                                Text(
-                                                    text = stringResource(R.string.error_signal_interrupted),
-                                                    color = SleekTextPrimary,
-                                                    fontSize = 18.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Spacer(modifier = Modifier.height(6.dp))
-                                                Text(
-                                                    text = uiState.errorMessage ?: stringResource(R.string.common_warning),
-                                                    color = SleekTextSecondary,
-                                                    fontSize = 13.sp,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                                Spacer(modifier = Modifier.height(16.dp))
-                                                Button(
-                                                    onClick = { viewModel.loadWeatherForLocation(uiState.currentLocation) },
-                                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(percent = 50),
-                                                    colors = ButtonDefaults.buttonColors(containerColor = SleekBluePrimary)
-                                                ) {
-                                                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.common_refresh), tint = Color.White)
-                                                    Spacer(modifier = Modifier.width(6.dp))
-                                                    Text(stringResource(R.string.error_reconnect_button), color = Color.White, fontWeight = FontWeight.Bold)
-                                                }
-                                            }
-                                        }
+                                        BroadcastSplashScreen(
+                                            isLoading = false,
+                                            errorMessage = uiState.errorMessage,
+                                            onRetry = { viewModel.loadWeatherForLocation(uiState.currentLocation) }
+                                        )
                                     } else {
                                         PersistentLBarLayout(
                                             currentLocation = uiState.currentLocation,
@@ -174,7 +118,9 @@ class MainActivity : ComponentActivity() {
                                                         onSelectCity = { viewModel.loadWeatherForLocation(it) },
                                                         onNavigate = { viewModel.setScreen(it) },
                                                         onPlayVodStory = { viewModel.playVodStory(it) },
-                                                        onOpenAlertModal = { viewModel.openAlertModal(it) }
+                                                        onOpenAlertModal = { viewModel.openAlertModal(it) },
+                                                        onRemoveCity = { viewModel.removeFavorite(it) },
+                                                        onDismissAlert = { viewModel.dismissAlert(it.id) }
                                                     )
                                                 }
                                                 TVScreen.LIVE_TV -> {
@@ -230,6 +176,9 @@ class MainActivity : ComponentActivity() {
                                                         onAutoDetectGps = { viewModel.autoDetectGpsLocation() },
                                                         onToggleFavorite = { city ->
                                                             viewModel.toggleFavorite(city)
+                                                        },
+                                                        onRemoveFavorite = { city ->
+                                                            viewModel.removeFavorite(city)
                                                         }
                                                     )
                                                 }

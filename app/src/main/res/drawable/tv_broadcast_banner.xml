@@ -5,7 +5,7 @@
     android:viewportWidth="320"
     android:viewportHeight="180">
 
-    <!-- Broadcast Studio Backdrop Gradient Canvas -->
+    <!-- Broadcast Studio Deep Atmospheric Gradient Canvas -->
     <path
         android:pathData="M0,0h320v180h-320z">
         <aapt:attr name="android:fillColor">
@@ -15,27 +15,29 @@
                 android:endX="320"
                 android:endY="180"
                 android:type="linear">
-                <item android:offset="0.0" android:color="#050C1B" />
-                <item android:offset="0.35" android:color="#091E3B" />
-                <item android:offset="0.75" android:color="#06325C" />
-                <item android:offset="1.0" android:color="#021A3B" />
+                <item android:offset="0.0" android:color="#030712" />
+                <item android:offset="0.30" android:color="#08142C" />
+                <item android:offset="0.65" android:color="#0C2548" />
+                <item android:offset="0.90" android:color="#083358" />
+                <item android:offset="1.0" android:color="#02142B" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Glowing Studio Blue Ambient Lighting -->
+    <!-- Glowing Studio Cyan Ambient Spotlight -->
     <path
-        android:pathData="M160,0h160v180h-160z">
+        android:pathData="M140,0h180v180h-180z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="240"
+                android:startX="235"
                 android:startY="90"
                 android:endX="320"
                 android:endY="180"
                 android:type="radial"
-                android:gradientRadius="140">
-                <item android:offset="0.0" android:color="#350284C7" />
-                <item android:offset="0.7" android:color="#100369A1" />
+                android:gradientRadius="150">
+                <item android:offset="0.0" android:color="#4500E5FF" />
+                <item android:offset="0.35" android:color="#250284C7" />
+                <item android:offset="0.75" android:color="#0A0369A1" />
                 <item android:offset="1.0" android:color="#00000000" />
             </gradient>
         </aapt:attr>
@@ -46,96 +48,117 @@
         android:fillColor="#00000000"
         android:strokeColor="#1E3A8A"
         android:strokeWidth="1.2"
-        android:pathData="M235,90m-68,0a68,68 0,1 1,136 0a68,68 0,1 1,-136 0" />
+        android:pathData="M235,90m-72,0a72,72 0,1 1,144 0a72,72 0,1 1,-144 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#0284C7"
         android:strokeWidth="1.2"
-        android:pathData="M235,90m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0" />
+        android:pathData="M235,90m-52,0a52,52 0,1 1,104 0a52,52 0,1 1,-104 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#38BDF8"
         android:strokeWidth="1.0"
-        android:pathData="M235,90m-26,0a26,26 0,1 1,52 0a26,26 0,1 1,-52 0" />
+        android:pathData="M235,90m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="0.8"
+        android:pathData="M235,90m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0" />
 
     <!-- Radar Crosshairs -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#1E40AF"
         android:strokeWidth="1.0"
-        android:pathData="M165,90L305,90 M235,20L235,160" />
+        android:pathData="M160,90L310,90 M235,15L235,165" />
 
     <!-- Sweeping Radar Beam Polygon -->
     <path
-        android:pathData="M235,90 L295,45 L310,80 Z">
+        android:pathData="M235,90 L298,40 L315,75 Z">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:startX="235"
                 android:startY="90"
-                android:endX="300"
-                android:endY="60"
+                android:endX="305"
+                android:endY="55"
                 android:type="linear">
-                <item android:offset="0.0" android:color="#5038BDF8" />
+                <item android:offset="0.0" android:color="#7000E5FF" />
+                <item android:offset="0.6" android:color="#3038BDF8" />
                 <item android:offset="1.0" android:color="#0038BDF8" />
             </gradient>
         </aapt:attr>
     </path>
 
     <!-- Radar Precipitation Storm Cells in dBZ Grading -->
+    <!-- Green Light Rain Band -->
     <path
-        android:fillColor="#5522C55E"
-        android:pathData="M255,70m-16,0a16,16 0,1 1,32 0a16,16 0,1 1,-32 0" />
+        android:fillColor="#6022C55E"
+        android:pathData="M258,68m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0" />
+    <!-- Yellow Moderate Rain Core -->
     <path
-        android:fillColor="#75EAB308"
-        android:pathData="M258,68m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+        android:fillColor="#80EAB308"
+        android:pathData="M262,65m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0" />
+    <!-- Red Severe Torrent Core -->
     <path
-        android:fillColor="#95EF4444"
-        android:pathData="M260,66m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+        android:fillColor="#AAEF4444"
+        android:pathData="M264,63m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+    <!-- Purple Hail Mesocyclone Spike -->
+    <path
+        android:fillColor="#DDA855F7"
+        android:pathData="M265,62m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
 
-    <!-- Atmospheric Telemetry Waves Along Bottom -->
+    <!-- Secondary Storm Cell Cluster -->
+    <path
+        android:fillColor="#5022C55E"
+        android:pathData="M205,115m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0" />
+    <path
+        android:fillColor="#70EAB308"
+        android:pathData="M207,113m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0" />
+
+    <!-- Bottom Atmospheric Waves -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#1D4ED8"
-        android:strokeWidth="1.6"
-        android:pathData="M-10,152 Q65,120 145,142 T300,128" />
+        android:strokeWidth="1.8"
+        android:pathData="M-10,154 Q65,122 145,144 T310,130" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#0EA5E9"
         android:strokeWidth="1.2"
-        android:pathData="M-10,162 Q75,132 155,152 T310,140" />
+        android:pathData="M-10,164 Q75,134 155,154 T320,142" />
 
-    <!-- Station Live Broadcast Pill Badge (Top Left) -->
+    <!-- Top Left Broadcast Station Badge -->
     <path
         android:fillColor="#DC2626"
-        android:pathData="M24,24 h46 a5,5 0 0 1 5,5 v8 a5,5 0 0 1 -5,5 h-46 a5,5 0 0 1 -5,-5 v-8 a5,5 0 0 1 5,-5 z" />
+        android:pathData="M20,20 h48 a5,5 0 0 1 5,5 v10 a5,5 0 0 1 -5,5 h-48 a5,5 0 0 1 -5,-5 v-10 a5,5 0 0 1 5,-5 z" />
 
-    <!-- White Beacon Dot in LIVE Badge -->
+    <!-- Pulsing Live Dot -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M31,33m-2.2,0a2.2,2.2 0,1 1,4.4 0a2.2,2.2 0,1 1,-4.4 0" />
+        android:pathData="M28,30m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
 
-    <!-- Letters "LIVE" in Badge (Clean Vector Path) -->
+    <!-- Text: LIVE -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M38,29 h1.8 v6.5 h3.2 v1.5 h-5 z M45.5,29 h1.8 v8 h-1.8 z M49.5,29 h1.8 l1.8,5.5 l1.8,-5.5 h1.8 l-2.6,8 h-2 z M58.5,29 h5.5 v1.5 h-3.7 v1.8 h3.2 v1.5 h-3.2 v1.7 h3.7 v1.5 h-5.5 z" />
+        android:pathData="M35,26 h2 v5.8 h3.4 v1.7 h-5.4 z M42,26 h2 v7.5 h-2 z M46,26 h2 l1.8,5.2 l1.8,-5.2 h2 l-2.6,7.5 h-2.2 z M55.5,26 h5.5 v1.6 h-3.5 v1.4 h3 v1.6 h-3 v1.3 h3.5 v1.6 h-5.5 z" />
 
-    <!-- "24/7" Secondary Pill Badge -->
+    <!-- "24/7 DOPPLER" Pill Badge -->
     <path
         android:fillColor="#1E3A8A"
-        android:pathData="M83,24 h36 a5,5 0 0 1 5,5 v8 a5,5 0 0 1 -5,5 h-36 a5,5 0 0 1 -5,-5 v-8 a5,5 0 0 1 5,-5 z" />
+        android:pathData="M78,20 h84 a5,5 0 0 1 5,5 v10 a5,5 0 0 1 -5,5 h-84 a5,5 0 0 1 -5,-5 v-10 a5,5 0 0 1 5,-5 z" />
     <path
         android:fillColor="#38BDF8"
-        android:pathData="M92,29 h4.8 v1.4 h-3.2 l3.2,3.4 v3.2 h-5 v-1.4 h3.2 l-3,-3.3 z M99,29 h1.6 l-2.5,8 h-1.6 z M100.5,33 h3.5 v-4 h1.6 v8 h-1.6 v-2.5 h-3.5 z" />
+        android:pathData="M87,25 h4.8 v1.4 h-3.2 l3.2,3.2 v2.9 h-5 v-1.4 h3.2 l-3,-3.1 z M94,25 h1.6 l-2.5,7.5 h-1.6 z M95.5,28.8 h3.5 v-3.8 h1.6 v7.5 h-1.6 v-2.2 h-3.5 z M106,25 h3.5 a3,3 0 0 1 3,3.7 a3,3 0 0 1 -3,3.8 h-3.5 z M107.6,26.5 v4.5 h2 a1.8,1.8 0 0 0 1.8,-2.2 a1.8,1.8 0 0 0 -1.8,-2.3 z M114.5,25 h5 a3,3 0 0 1 3,3.7 a3,3 0 0 1 -3,3.8 h-5 z M116.1,26.5 v4.5 h3.4 a1.8,1.8 0 0 0 1.8,-2.2 a1.8,1.8 0 0 0 -1.8,-2.3 z M124.5,25 h4.5 a2,2 0 0 1 2,2 v1.5 a2,2 0 0 1 -2,2 h-2.5 v2 h-2 z M126.5,26.5 v2 h2.5 v-2 z M132.5,25 h4.5 a2,2 0 0 1 2,2 v1.2 a2,2 0 0 1 -2,2 h-2.5 v2.3 h-2 z M134.5,26.5 v1.5 h2.5 v-1.5 z M137.5,29 l2.5,3.5 h-2.2 l-1.8,-3.5 z M141,25 h2 v5.8 h3.4 v1.7 h-5.4 z M148,25 h5 v1.6 h-3.5 v1.4 h3 v1.6 h-3 v1.3 h3.5 v1.6 h-5 z" />
 
-    <!-- Station Logo Icon: Cloud & Sun Crest (x: 24..60, y: 52..82) -->
+    <!-- Station Emblem: Solar Crest & Cloud (x: 20..52, y: 52..82) -->
     <!-- Sun -->
     <path
-        android:pathData="M48,58m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0">
+        android:pathData="M44,56m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="42"
-                android:startY="52"
-                android:endX="54"
+                android:startX="36"
+                android:startY="48"
+                android:endX="52"
                 android:endY="64"
                 android:type="linear">
                 <item android:offset="0.0" android:color="#FDE047" />
@@ -143,66 +166,96 @@
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Cloud -->
+    <!-- Stylized Cloud -->
     <path
-        android:pathData="M26,76h26a7,7 0 0 0 0,-14a10,10 0 0 0,-19 -3a8,8 0 0 0,-7 17z">
+        android:pathData="M20,76h30a8,8 0 0 0 0,-16a11,11 0 0 0,-21 -3a9,9 0 0 0,-9 19z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="20"
-                android:startY="58"
-                android:endX="52"
+                android:startX="16"
+                android:startY="54"
+                android:endX="50"
                 android:endY="76"
                 android:type="linear">
                 <item android:offset="0.0" android:color="#FFFFFF" />
-                <item android:offset="1.0" android:color="#BAE6FD" />
+                <item android:offset="1.0" android:color="#7DD3FC" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Stylized "HORIZON" Brand Lettering (Clean geometric bold paths) -->
+    <!-- Bold HORIZON Station Typography -->
     <!-- H -->
-    <path android:fillColor="#FFFFFF" android:pathData="M60,60 h3 v4.5 h4.5 v-4.5 h3 v16 h-3 v-8 h-4.5 v8 h-3 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M56,58 h3.5 v5 h5.5 v-5 h3.5 v18 h-3.5 v-9 h-5.5 v9 h-3.5 z" />
     <!-- O -->
-    <path android:fillColor="#FFFFFF" android:pathData="M73,60 h7 a3,3 0 0 1 3,3 v10 a3,3 0 0 1 -3,3 h-7 a3,3 0 0 1 -3,-3 v-10 a3,3 0 0 1 3,-3 z M73,63 v10 h7 v-10 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M71,58 h8 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-8 a4,4 0 0 1 -4,-4 v-10 a4,4 0 0 1 4,-4 z M71,62 v10 h8 v-10 z" />
     <!-- R -->
-    <path android:fillColor="#FFFFFF" android:pathData="M86,60 h6.5 a3,3 0 0 1 3,3 v3 a3,3 0 0 1 -3,3 h-3.5 v7 h-3 z M89,63 v3.5 h3.5 v-3.5 z M92.5,69 l4,7 h-3.5 l-3.5,-7 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M86,58 h7.5 a3.5,3.5 0 0 1 3.5,3.5 v3.5 a3.5,3.5 0 0 1 -3.5,3.5 h-4 v7.5 h-3.5 z M89.5,61.5 v4 h4 v-4 z M93.5,68.5 l4.5,7.5 h-4 l-4,-7.5 z" />
     <!-- I -->
-    <path android:fillColor="#FFFFFF" android:pathData="M98.5,60 h3 v16 h-3 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M100,58 h3.5 v18 h-3.5 z" />
     <!-- Z -->
-    <path android:fillColor="#FFFFFF" android:pathData="M104.5,60 h9 v2.8 l-5.8,10.2 h6 v3 h-9.2 v-2.8 l5.8,-10.2 h-5.8 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M107,58 h10 v3.2 l-6.5,11.3 h6.5 v3.5 h-10.5 v-3.2 l6.5,-11.3 h-6 z" />
     <!-- O -->
-    <path android:fillColor="#FFFFFF" android:pathData="M116.5,60 h7 a3,3 0 0 1 3,3 v10 a3,3 0 0 1 -3,3 h-7 a3,3 0 0 1 -3,-3 v-10 a3,3 0 0 1 3,-3 z M116.5,63 v10 h7 v-10 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M120,58 h8 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-8 a4,4 0 0 1 -4,-4 v-10 a4,4 0 0 1 4,-4 z M120,62 v10 h8 v-10 z" />
     <!-- N -->
-    <path android:fillColor="#FFFFFF" android:pathData="M129.5,60 h3 l5,10.5 v-10.5 h3 v16 h-3 l-5,-10.5 v10.5 h-3 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M135,58 h3.5 l6,11.5 v-11.5 h3.5 v18 h-3.5 l-6,-11.5 v11.5 h-3.5 z" />
 
-    <!-- "WEATHER TV" Sub-Header Banner (Electric Cyan) -->
+    <!-- "WEATHER TV" Sub-Heading (Cyan Gradient + Gold TV) -->
     <!-- W -->
-    <path android:fillColor="#38BDF8" android:pathData="M24,84 h2 l1.8,6.5 l1.8,-6.5 h1.8 l1.8,6.5 l1.8,-6.5 h2 l-2.6,9.5 h-2 l-1.8,-6.5 l-1.8,6.5 h-2 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M20,84 h2.2 l2,7 l2,-7 h2.2 l2,7 l2,-7 h2.2 l-3,10 h-2.2 l-2,-7 l-2,7 h-2.2 z" />
     <!-- E -->
-    <path android:fillColor="#38BDF8" android:pathData="M39,84 h6 v1.8 h-4 v2 h3.5 v1.8 h-3.5 v2.1 h4 v1.8 h-6 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M37,84 h6.5 v2 h-4.3 v2 h3.8 v2 h-3.8 v2 h4.3 v2 h-6.5 z" />
     <!-- A -->
-    <path android:fillColor="#38BDF8" android:pathData="M48,84 h2.5 l3.5,9.5 h-2.2 l-0.8,-2.2 h-3.5 l-0.8,2.2 h-2.2 z M48.2,89.5 h2.2 l-1.1,-3.5 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M46.5,84 h2.8 l3.8,10 h-2.4 l-0.9,-2.4 h-3.8 l-0.9,2.4 h-2.4 z M46.8,89.6 h2.6 l-1.3,-3.8 z" />
     <!-- T -->
-    <path android:fillColor="#38BDF8" android:pathData="M55,84 h7 v1.8 h-2.5 v7.7 h-2 v-7.7 h-2.5 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M54.5,84 h7.5 v2 h-2.7 v8 h-2.1 v-8 h-2.7 z" />
     <!-- H -->
-    <path android:fillColor="#38BDF8" android:pathData="M64,84 h2 v3.5 h3.5 v-3.5 h2 v9.5 h-2 v-4.2 h-3.5 v4.2 h-2 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M64,84 h2.2 v3.8 h3.8 v-3.8 h2.2 v10 h-2.2 v-4.2 h-3.8 v4.2 h-2.2 z" />
     <!-- E -->
-    <path android:fillColor="#38BDF8" android:pathData="M73.5,84 h6 v1.8 h-4 v2 h3.5 v1.8 h-3.5 v2.1 h4 v1.8 h-6 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M74.5,84 h6.5 v2 h-4.3 v2 h3.8 v2 h-3.8 v2 h4.3 v2 h-6.5 z" />
     <!-- R -->
-    <path android:fillColor="#38BDF8" android:pathData="M81.5,84 h4.5 a2,2 0 0 1 2,2 v1.5 a2,2 0 0 1 -2,2 h-2.5 v4 h-2 z M83.5,85.8 v2 h2.5 v-2 z M86,89.5 l2.5,4 h-2.2 l-2,-4 z" />
-    <!-- TV -->
-    <path android:fillColor="#F59E0B" android:pathData="M92,84 h5 v1.8 h-1.6 v7.7 h-1.8 v-7.7 h-1.6 z M99,84 h2 l2.2,7 l2.2,-7 h2 l-3.2,9.5 h-2 z" />
+    <path android:fillColor="#00E5FF" android:pathData="M83,84 h5 a2.5,2.5 0 0 1 2.5,2.5 v1.5 a2.5,2.5 0 0 1 -2.5,2.5 h-2.8 v3.5 h-2.2 z M85.2,86 v2 h2.8 v-2 z M88,90.5 l2.8,3.5 h-2.5 l-2.3,-3.5 z" />
 
-    <!-- Station Tagline Accent Line -->
+    <!-- "TV" in Vibrant Amber Gold -->
+    <!-- T -->
+    <path android:fillColor="#F59E0B" android:pathData="M95,84 h6 v2 h-2 v8 h-2 v-8 h-2 z" />
+    <!-- V -->
+    <path android:fillColor="#F59E0B" android:pathData="M102.5,84 h2.2 l2.5,7.2 l2.5,-7.2 h2.2 l-3.5,10 h-2.4 z" />
+
+    <!-- Electric Accent Bar -->
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#0284C7"
-        android:strokeWidth="1.5"
-        android:pathData="M24,102 L145,102" />
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2"
+        android:pathData="M20,102 L150,102" />
 
-    <!-- Sub-label "24/7 DOPPLER METEOROLOGICAL NETWORK" -->
+    <!-- Channel Bug & Capabilities Footer -->
     <path
         android:fillColor="#94A3B8"
-        android:pathData="M24,110 h1.5 v1.5 h-1.5 z M28,109 h4 v0.9 h-2.8 v1.1 h2.5 v0.9 h-2.5 v1.2 h2.8 v0.9 h-4 z M33.5,109 h3 a1.5,1.5 0 0 1 1.5,1.5 v2 a1.5,1.5 0 0 1 -1.5,1.5 h-3 z M34.5,110 v3 h2 v-3 z M39.5,109 h1 v5 h-1 z M42,109 h3.5 v1 h-2.5 v4 h-1 z M47,109 h3.5 a1.5,1.5 0 0 1 1.5,1.5 v2 a1.5,1.5 0 0 1 -1.5,1.5 h-3.5 z M48,110 v3 h2.5 v-3 z" />
+        android:pathData="M20,110 h2 v2 h-2 z M24,109 h4 v1 h-2.8 v1 h2.5 v1 h-2.5 v1.2 h2.8 v1 h-4 z M29.5,109 h3 a1.5,1.5 0 0 1 1.5,1.5 v2.2 a1.5,1.5 0 0 1 -1.5,1.5 h-3 z M30.5,110 v3.2 h2 v-3.2 z M35.5,109 h1 v5.2 h-1 z M38,109 h3.5 v1 h-2.5 v4.2 h-1 z M43,109 h3.5 a1.5,1.5 0 0 1 1.5,1.5 v2.2 a1.5,1.5 0 0 1 -1.5,1.5 h-3.5 z M44,110 v3.2 h2.5 v-3.2 z" />
+
+    <!-- Station Info Badge (CH 104) in Bottom-Left -->
+    <path
+        android:fillColor="#0B1E3B"
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1"
+        android:pathData="M20,130 h135 a4,4 0 0 1 4,4 v18 a4,4 0 0 1 -4,4 h-135 a4,4 0 0 1 -4,-4 v-18 a4,4 0 0 1 4,-4 z" />
+
+    <!-- Yellow Accent Line in Info Badge -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M20,130 h4 v26 h-4 z" />
+
+    <!-- CH 104 & Telemetry Status Text vector -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M30,136 h5 v1.2 h-3.5 v4.6 h3.5 v1.2 h-5 z M37,136 h1.5 v3 h3 v-3 h1.5 v7 h-1.5 v-2.8 h-3 v2.8 h-1.5 z M47,136 h1.5 v7 h-1.5 z M50.5,136 h4.5 v7 h-4.5 z M52,137.2 v4.6 h1.5 v-4.6 z M57,136 h1.5 v4.2 h2.5 v-4.2 h1.5 v7 h-1.5 v-1.6 h-2.5 v1.6 h-1.5 z M65,139 h2 v1.5 h-2 z" />
+
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M70,136 h1.5 v7 h-1.5 z M73,136 h4 v1.2 h-2.8 v1.6 h2.5 v1.2 h-2.5 v1.8 h2.8 v1.2 h-4 z M79,136 h1.5 l2,4 l2,-4 h1.5 l-2.8,7 h-1.4 z M88,136 h5 v1.2 h-3.5 v4.6 h3.5 v1.2 h-5 z" />
+
+    <!-- Sub-row: CONTINUOUS METEOROLOGICAL TELEMETRY -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M30,147 h1 v3 h-1 z M32,147 h2 v0.7 h-1.3 v0.9 h1.1 v0.7 h-1.1 v1 h1.3 v0.7 h-2 z M35,147 h0.9 l1,1.8 v-1.8 h0.9 v4 h-0.9 l-1,-1.8 v1.8 h-0.9 z M39,147 h2.5 v0.7 h-1.7 v3.3 h-0.8 z M42.5,147 h0.8 v4 h-0.8 z M44.5,147 h2 v4 h-2 z M45.3,147.7 v2.6 h0.4 v-2.6 z M47.5,147 h0.8 v2.5 h1.5 v-2.5 h0.8 v4 h-0.8 v-0.8 h-1.5 v0.8 h-0.8 z M52,147 h2 v0.7 h-1.3 v0.9 h1.1 v0.7 h-1.1 v1 h1.3 v0.7 h-2 z M55,147 h2 v4 h-2 z M55.8,147.7 v2.6 h0.4 v-2.6 z M58,147 h1.5 a1,1 0 0 1 1,1 v0.5 a1,1 0 0 1 -1,1 h-0.7 v1.5 h-0.8 z M58.8,147.7 v1.1 h0.7 v-1.1 z M61.5,147 h2 v0.7 h-1.3 v0.9 h1.1 v0.7 h-1.1 v1 h1.3 v0.7 h-2 z M64.5,147 h1.5 a1,1 0 0 1 1,1 v0.5 a1,1 0 0 1 -1,1 h-0.7 v1.5 h-0.8 z M65.3,147.7 v1.1 h0.7 v-1.1 z M68,147 h0.8 v4 h-0.8 z M70,147 h2 v4 h-2 z M70.8,147.7 v2.6 h0.4 v-2.6 z M73,147 h2.5 v0.7 h-1.7 v3.3 h-0.8 z" />
 
 </vector>

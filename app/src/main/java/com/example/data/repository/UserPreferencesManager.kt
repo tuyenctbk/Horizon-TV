@@ -47,6 +47,7 @@ class UserPreferencesManager(context: Context) {
     fun setLBarVisible(visible: Boolean) = prefs.edit().putBoolean(KEY_LBAR_VISIBLE, visible).apply()
 
     fun getFavoriteCities(): List<CityLocation>? {
+        if (!prefs.contains(KEY_FAVORITE_CITIES)) return null
         val raw = prefs.getString(KEY_FAVORITE_CITIES, null) ?: return null
         return try {
             val array = JSONArray(raw)
@@ -65,7 +66,7 @@ class UserPreferencesManager(context: Context) {
                     )
                 )
             }
-            if (list.isNotEmpty()) list else null
+            list
         } catch (_: Exception) {
             null
         }

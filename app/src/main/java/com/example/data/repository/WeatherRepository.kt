@@ -379,14 +379,25 @@ class WeatherRepository {
             }
         }
 
-        list.add("CURRENT OBSERVATION: ${current.conditionText.uppercase()}, ${current.tempC.roundToInt()}°C (Feels like ${current.feelsLikeC.roundToInt()}°C) with ${current.humidityPercent}% humidity.")
-        list.add("WIND TELEMETRY: Winds traveling from ${getWindCompass(current.windDirectionDeg)} at ${current.windSpeedKmh.roundToInt()} km/h, peak gusts at ${current.windGustsKmh.roundToInt()} km/h.")
+        val tempC = current.tempC.roundToInt()
+        val tempF = (current.tempC * 9 / 5 + 32).roundToInt()
+        val feelsC = current.feelsLikeC.roundToInt()
+        val feelsF = (current.feelsLikeC * 9 / 5 + 32).roundToInt()
+        val windKmh = current.windSpeedKmh.roundToInt()
+        val windMph = (current.windSpeedKmh * 0.621371).roundToInt()
+        val gustKmh = current.windGustsKmh.roundToInt()
+        val gustMph = (current.windGustsKmh * 0.621371).roundToInt()
+
+        list.add("CURRENT OBSERVATION: ${current.conditionText.uppercase()}, $tempC°C / $tempF°F (Feels like $feelsC°C / $feelsF°F) with ${current.humidityPercent}% humidity.")
+        list.add("WIND TELEMETRY: Winds traveling from ${getWindCompass(current.windDirectionDeg)} at $windKmh km/h ($windMph mph), peak gusts at $gustKmh km/h ($gustMph mph).")
         list.add("AIR QUALITY INDEX: US AQI reads ${current.aqi} (${current.aqiStatus}) with PM2.5 at ${String.format(Locale.US, "%.1f", current.pm25)} µg/m³.")
         list.add("SOLAR TIMING: First light sunrise logged at ${current.sunriseTime} | Sunset dusk horizon scheduled at ${current.sunsetTime}.")
 
         val nextPeriod = periods.firstOrNull { !it.isCurrent } ?: periods.firstOrNull()
         if (nextPeriod != null) {
-            list.add("OUTLOOK FOR ${nextPeriod.periodName.uppercase()}: Expecting ${nextPeriod.conditionText} near ${nextPeriod.tempC.roundToInt()}°C with ${nextPeriod.popPercent}% probability of precipitation.")
+            val pC = nextPeriod.tempC.roundToInt()
+            val pF = (nextPeriod.tempC * 9 / 5 + 32).roundToInt()
+            list.add("OUTLOOK FOR ${nextPeriod.periodName.uppercase()}: Expecting ${nextPeriod.conditionText} near $pC°C / $pF°F with ${nextPeriod.popPercent}% probability of precipitation.")
         }
 
         return list

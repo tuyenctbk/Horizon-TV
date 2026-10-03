@@ -207,10 +207,19 @@ fun LiveTVBroadcastScreen(
                 )
 
                 // Current Metrics Rows
-                LBarMetricRow(label = stringResource(R.string.home_wind), value = "${currentWeather.windSpeedKmh.roundToInt()} km/h ${WeatherRepository.getWindCompass(currentWeather.windDirectionDeg)}")
+                val windVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.windSpeedKmh.roundToInt()} km/h"
+                else "${(currentWeather.windSpeedKmh * 0.621371).roundToInt()} mph"
+
+                val baroVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.pressureHpa.roundToInt()} hPa"
+                else String.format(java.util.Locale.US, "%.2f inHg", currentWeather.pressureHpa * 0.02953)
+
+                val dewVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.dewPointC.roundToInt()}°C"
+                else "${(currentWeather.dewPointC * 9 / 5 + 32).roundToInt()}°F"
+
+                LBarMetricRow(label = stringResource(R.string.home_wind), value = "$windVal ${WeatherRepository.getWindCompass(currentWeather.windDirectionDeg)}")
                 LBarMetricRow(label = stringResource(R.string.home_humidity), value = "${currentWeather.humidityPercent}%")
-                LBarMetricRow(label = stringResource(R.string.home_barometer), value = "${currentWeather.pressureHpa.roundToInt()} hPa")
-                LBarMetricRow(label = stringResource(R.string.home_dew_point), value = "${currentWeather.dewPointC.roundToInt()}°")
+                LBarMetricRow(label = stringResource(R.string.home_barometer), value = baroVal)
+                LBarMetricRow(label = stringResource(R.string.home_dew_point), value = dewVal)
                 LBarMetricRow(label = stringResource(R.string.home_air_quality), value = "${currentWeather.aqi} (${currentWeather.aqiStatus})")
 
                 HorizontalDivider(color = SleekBorder, modifier = Modifier.padding(vertical = 8.dp))

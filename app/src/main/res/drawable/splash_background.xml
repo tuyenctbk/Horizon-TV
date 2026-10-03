@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dark Broadcast Navy Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#050C1B"
+                android:centerColor="#040915"
+                android:endColor="#02040A"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- TV Broadcast Banner in Center -->
+    <item
+        android:drawable="@drawable/tv_broadcast_banner"
+        android:gravity="center"
+        android:width="280dp"
+        android:height="158dp" />
+</layer-list>

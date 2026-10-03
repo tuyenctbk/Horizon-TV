@@ -196,10 +196,19 @@ fun PersistentLBarLayout(
                     )
 
                     // Compact Telemetry Rows
-                    LBarMetricItem(label = stringResource(R.string.lbar_wind), value = "${currentWeather.windSpeedKmh.roundToInt()} km/h ${WeatherRepository.getWindCompass(currentWeather.windDirectionDeg)}")
+                    val windVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.windSpeedKmh.roundToInt()} km/h"
+                    else "${(currentWeather.windSpeedKmh * 0.621371).roundToInt()} mph"
+
+                    val baroVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.pressureHpa.roundToInt()} hPa"
+                    else String.format(java.util.Locale.US, "%.2f inHg", currentWeather.pressureHpa * 0.02953)
+
+                    val dewVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.dewPointC.roundToInt()}°C"
+                    else "${(currentWeather.dewPointC * 9 / 5 + 32).roundToInt()}°F"
+
+                    LBarMetricItem(label = stringResource(R.string.lbar_wind), value = "$windVal ${WeatherRepository.getWindCompass(currentWeather.windDirectionDeg)}")
                     LBarMetricItem(label = stringResource(R.string.lbar_humidity), value = "${currentWeather.humidityPercent}%")
-                    LBarMetricItem(label = stringResource(R.string.lbar_barometer), value = "${currentWeather.pressureHpa.roundToInt()} hPa")
-                    LBarMetricItem(label = stringResource(R.string.lbar_dew_point), value = "${currentWeather.dewPointC.roundToInt()}°C")
+                    LBarMetricItem(label = stringResource(R.string.lbar_barometer), value = baroVal)
+                    LBarMetricItem(label = stringResource(R.string.lbar_dew_point), value = dewVal)
 
                     HorizontalDivider(color = SleekBorder, modifier = Modifier.padding(vertical = 6.dp))
 

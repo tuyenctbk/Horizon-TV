@@ -47,6 +47,8 @@ fun HomeDashboardScreen(
     onNavigate: (TVScreen) -> Unit,
     onPlayVodStory: (VodStory) -> Unit,
     onOpenAlertModal: (SevereWeatherAlert) -> Unit,
+    onRemoveCity: (CityLocation) -> Unit = {},
+    onDismissAlert: (SevereWeatherAlert) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -109,6 +111,18 @@ fun HomeDashboardScreen(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = { onDismissAlert(alert) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.emergency_dismiss),
+                            tint = SleekRedText,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -278,60 +292,120 @@ fun HomeDashboardScreen(
                     text = stringResource(R.string.home_carousel_switch),
                     color = SleekBluePrimary,
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { onNavigate(TVScreen.SEARCH) }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                favoriteCities.forEach { city ->
-                    val isSelected = city.name.equals(currentLocation.name, ignoreCase = true)
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) SleekBlueContainer else SleekSurfaceSecondary,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            if (isSelected) SleekBluePrimary else SleekBorder
-                        ),
-                        modifier = Modifier
-                            .clickable { onSelectCity(city) }
-                            .width(170.dp)
-                            .testTag("fav_city_${city.name}")
+            if (favoriteCities.isEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = SleekSurfaceSecondary,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigate(TVScreen.SEARCH) }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = city.name,
-                                    color = if (isSelected) SleekOnBlueContainer else SleekTextPrimary,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1
-                                )
-                                if (isSelected) {
-                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(SleekBluePrimary))
-                                }
-                            }
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(SleekBlueContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.AddLocationAlt, contentDescription = null, tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "${city.region.take(12)} • ${city.countryCode}",
-                                color = if (isSelected) SleekBluePrimary else SleekTextSecondary,
+                                text = "No Saved Cities in Rotation",
+                                color = SleekTextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Tap here to search and bookmark cities for your quick TV line-up",
+                                color = SleekTextSecondary,
                                 fontSize = 10.sp
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Coordinates: ${String.format(java.util.Locale.US, "%.1f, %.1f", city.latitude, city.longitude)}",
-                                color = SleekTextSecondary,
-                                fontSize = 9.sp
-                            )
+                        }
+                        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    favoriteCities.forEach { city ->
+                        val isSelected = city.name.equals(currentLocation.name, ignoreCase = true)
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (isSelected) SleekBlueContainer else SleekSurfaceSecondary,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isSelected) SleekBluePrimary else SleekBorder
+                            ),
+                            modifier = Modifier
+                                .clickable { onSelectCity(city) }
+                                .width(180.dp)
+                                .testTag("fav_city_${city.name}")
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = city.name,
+                                            color = if (isSelected) SleekOnBlueContainer else SleekTextPrimary,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        if (isSelected) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(SleekBluePrimary))
+                                        }
+                                    }
+                                    IconButton(
+                                        onClick = { onRemoveCity(city) },
+                                        modifier = Modifier.size(22.dp).testTag("delete_fav_${city.name}")
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = "Remove",
+                                            tint = if (isSelected) SleekBluePrimary else SleekTextSecondary,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "${city.region.take(12)} • ${city.countryCode}",
+                                    color = if (isSelected) SleekBluePrimary else SleekTextSecondary,
+                                    fontSize = 10.sp
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Coordinates: ${String.format(java.util.Locale.US, "%.1f, %.1f", city.latitude, city.longitude)}",
+                                    color = SleekTextSecondary,
+                                    fontSize = 9.sp
+                                )
+                            }
                         }
                     }
                 }

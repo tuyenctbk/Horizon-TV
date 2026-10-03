@@ -36,6 +36,7 @@ fun CitySearchScreen(
     onSelectCity: (CityLocation) -> Unit,
     onAutoDetectGps: () -> Unit,
     onToggleFavorite: (CityLocation) -> Unit,
+    onRemoveFavorite: (CityLocation) -> Unit = onToggleFavorite,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -147,7 +148,7 @@ fun CitySearchScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(searchResults) { city ->
+                    items(searchResults, key = { "${it.name}_${it.latitude}_${it.longitude}" }) { city ->
                         CityResultCard(
                             city = city,
                             isCurrent = city.name.equals(currentLocation.name, ignoreCase = true),
@@ -181,18 +182,66 @@ fun CitySearchScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(favoriteCities) { city ->
-                    CityResultCard(
-                        city = city,
-                        isCurrent = city.name.equals(currentLocation.name, ignoreCase = true),
-                        isFav = true,
-                        onSelect = { onSelectCity(city) },
-                        onToggleFav = { onToggleFavorite(city) }
-                    )
+            if (favoriteCities.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .background(SleekSurface, RoundedCornerShape(20.dp))
+                            .border(1.dp, SleekBorder, RoundedCornerShape(20.dp))
+                            .padding(24.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(SleekSurfaceSecondary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.BookmarkBorder,
+                                contentDescription = null,
+                                tint = SleekTextSecondary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "No Bookmarked Locations",
+                            color = SleekTextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Use the search bar above to find cities and tap the bookmark icon to save them to your TV lineup.",
+                            color = SleekTextSecondary,
+                            fontSize = 12.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(favoriteCities, key = { it.name }) { city ->
+                        CityResultCard(
+                            city = city,
+                            isCurrent = city.name.equals(currentLocation.name, ignoreCase = true),
+                            isFav = true,
+                            onSelect = { onSelectCity(city) },
+                            onToggleFav = { onToggleFavorite(city) },
+                            onDelete = { onRemoveFavorite(city) }
+                        )
+                    }
                 }
             }
         }
@@ -205,7 +254,8 @@ private fun CityResultCard(
     isCurrent: Boolean,
     isFav: Boolean,
     onSelect: () -> Unit,
-    onToggleFav: () -> Unit
+    onToggleFav: () -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
@@ -224,7 +274,7 @@ private fun CityResultCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -274,12 +324,27 @@ private fun CityResultCard(
                 }
             }
 
-            IconButton(onClick = onToggleFav) {
-                Icon(
-                    imageVector = if (isFav) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                    contentDescription = stringResource(R.string.common_favorite),
-                    tint = if (isFav) SolarGold else SleekTextSecondary
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onToggleFav) {
+                    Icon(
+                        imageVector = if (isFav) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = stringResource(R.string.common_favorite),
+                        tint = if (isFav) SolarGold else SleekTextSecondary
+                    )
+                }
+                if (onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.testTag("delete_city_${city.name}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Delete City",
+                            tint = SleekTextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
         }
     }

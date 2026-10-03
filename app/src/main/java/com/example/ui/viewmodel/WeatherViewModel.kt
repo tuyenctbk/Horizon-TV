@@ -46,7 +46,8 @@ data class WeatherUiState(
     val radarSelectedLayer: Int = 0, // 0: Precipitation, 1: Traffic, 2: IR Satellite, 3: Wind Streamlines
     val searchQuery: String = "",
     val searchResults: List<CityLocation> = emptyList(),
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+    val dismissedAlertIds: Set<String> = emptySet()
 )
 
 class WeatherViewModel(
@@ -55,6 +56,7 @@ class WeatherViewModel(
 
     private val repository: WeatherRepository = WeatherRepository()
     private val preferencesManager = UserPreferencesManager(application)
+    private var searchJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         WeatherUiState(
@@ -162,8 +164,23 @@ class WeatherViewModel(
         _uiState.update { it.copy(activeAlertModal = alert) }
     }
 
+    fun dismissAlert(alertId: String) {
+        _uiState.update {
+            it.copy(
+                dismissedAlertIds = it.dismissedAlertIds + alertId,
+                activeAlertModal = if (it.activeAlertModal?.id == alertId) null else it.activeAlertModal
+            )
+        }
+    }
+
     fun dismissAlertModal() {
-        _uiState.update { it.copy(activeAlertModal = null) }
+        val alert = _uiState.value.activeAlertModal
+        _uiState.update {
+            it.copy(
+                activeAlertModal = null,
+                dismissedAlertIds = if (alert != null) it.dismissedAlertIds + alert.id else it.dismissedAlertIds
+            )
+        }
     }
 
     fun playVodStory(story: VodStory?) {
@@ -205,6 +222,13 @@ class WeatherViewModel(
         }
     }
 
+    fun clearAllFavorites() {
+        preferencesManager.saveFavoriteCities(emptyList())
+        _uiState.update {
+            it.copy(favoriteCities = emptyList())
+        }
+    }
+
     fun toggleFavorite(city: CityLocation) {
         if (_uiState.value.favoriteCities.any { it.name.equals(city.name, ignoreCase = true) }) {
             removeFavorite(city)
@@ -214,13 +238,15 @@ class WeatherViewModel(
     }
 
     fun searchCities(query: String) {
+        searchJob?.cancel()
         _uiState.update { it.copy(searchQuery = query) }
         if (query.trim().length < 2) {
             _uiState.update { it.copy(searchResults = emptyList(), isSearching = false) }
             return
         }
-        viewModelScope.launch {
+        searchJob = viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true) }
+            delay(250) // 250ms debounce to prevent racing queries
             val results = repository.searchCities(query)
             _uiState.update { it.copy(searchResults = results, isSearching = false) }
         }
