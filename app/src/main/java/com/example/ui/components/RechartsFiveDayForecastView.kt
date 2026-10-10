@@ -24,9 +24,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.DailyForecastDay
 import com.example.data.model.UnitSystem
 import com.example.ui.theme.*
@@ -480,28 +482,28 @@ fun RechartsFiveDayForecastView(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Max Temp (High):", color = Color(0xFFD1D5DB), fontSize = 10.sp)
+                                Text(stringResource(R.string.recharts_tooltip_max), color = Color(0xFFD1D5DB), fontSize = 10.sp)
                                 Text(maxT, color = SolarGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Min Temp (Low):", color = Color(0xFFD1D5DB), fontSize = 10.sp)
+                                Text(stringResource(R.string.recharts_tooltip_min), color = Color(0xFFD1D5DB), fontSize = 10.sp)
                                 Text(minT, color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Precipitation POP:", color = Color(0xFFD1D5DB), fontSize = 10.sp)
+                                Text(stringResource(R.string.recharts_tooltip_pop), color = Color(0xFFD1D5DB), fontSize = 10.sp)
                                 Text("${activeDay.popPercent}% (${activeDay.rainMm} mm)", color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Max Wind / UV:", color = Color(0xFF9CA3AF), fontSize = 9.sp)
+                                Text(stringResource(R.string.recharts_tooltip_wind_uv), color = Color(0xFF9CA3AF), fontSize = 9.sp)
                                 val windDisplay = if (unitSystem == UnitSystem.METRIC)
                                     "${activeDay.maxWindKmh.roundToInt()} km/h"
                                 else

@@ -18,6 +18,11 @@ enum class TVScreen {
     SETTINGS
 }
 
+enum class SuggestionType {
+    RATE,
+    SHARE
+}
+
 data class CityLocation(
     val name: String,
     val region: String = "",

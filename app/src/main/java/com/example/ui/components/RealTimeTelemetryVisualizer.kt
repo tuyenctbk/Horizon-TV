@@ -23,10 +23,12 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.CurrentWeather
 import com.example.data.model.UnitSystem
 import com.example.ui.theme.*
@@ -235,8 +237,8 @@ private fun TemperatureGaugeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("TEMPERATURE", color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.Thermostat, contentDescription = "Temp", tint = SevereRed, modifier = Modifier.size(16.dp))
+            Text(stringResource(R.string.telemetry_temperature), color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Thermostat, contentDescription = stringResource(R.string.telemetry_temperature), tint = SevereRed, modifier = Modifier.size(16.dp))
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -347,8 +349,8 @@ private fun HumidityGaugeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("HUMIDITY", color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.WaterDrop, contentDescription = "Humidity", tint = SleekBluePrimary, modifier = Modifier.size(16.dp))
+            Text(stringResource(R.string.telemetry_humidity), color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.WaterDrop, contentDescription = stringResource(R.string.telemetry_humidity), tint = SleekBluePrimary, modifier = Modifier.size(16.dp))
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -458,8 +460,8 @@ private fun BarometerGaugeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("BAROMETER", color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.Speed, contentDescription = "Pressure", tint = SolarGold, modifier = Modifier.size(16.dp))
+            Text(stringResource(R.string.telemetry_barometer), color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Speed, contentDescription = stringResource(R.string.telemetry_barometer), tint = SolarGold, modifier = Modifier.size(16.dp))
         }
 
         Spacer(modifier = Modifier.height(6.dp))

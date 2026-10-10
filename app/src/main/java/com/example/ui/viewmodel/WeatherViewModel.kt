@@ -47,7 +47,8 @@ data class WeatherUiState(
     val searchQuery: String = "",
     val searchResults: List<CityLocation> = emptyList(),
     val isSearching: Boolean = false,
-    val dismissedAlertIds: Set<String> = emptySet()
+    val dismissedAlertIds: Set<String> = emptySet(),
+    val activeSuggestion: SuggestionType? = null
 )
 
 class WeatherViewModel(
@@ -66,7 +67,7 @@ class WeatherViewModel(
             isLiveAudioPlaying = preferencesManager.isLiveAudioPlaying(),
             isLBarVisible = preferencesManager.isLBarVisible(),
             favoriteCities = preferencesManager.getFavoriteCities() ?: repository.getDefaultFavoriteCities(),
-            vodStories = repository.getSampleVodStories()
+            vodStories = repository.getMeteorologicalVodDispatches()
         )
     )
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
@@ -75,6 +76,8 @@ class WeatherViewModel(
     private var radarTimerJob: Job? = null
 
     init {
+        // Track app launch for non-intrusive engagement rules
+        preferencesManager.incrementLaunchCount()
         // Initial location detection and load
         detectAndLoadInitialLocation()
         startEmergencyPolling()
@@ -95,13 +98,18 @@ class WeatherViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null, currentLocation = location) }
             try {
                 val (current, fullPkg) = repository.fetchRealWeatherData(location.latitude, location.longitude)
+                val activeAlert = fullPkg.alerts.firstOrNull()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         currentWeather = current,
                         weatherPackage = fullPkg,
-                        activeAlertModal = fullPkg.alerts.firstOrNull() // Show prominent emergency modal if alert active
+                        activeAlertModal = activeAlert // Show prominent emergency modal if alert active
                     )
+                }
+                // Check if eligible for rating or share suggestion (only when no urgent alert is active)
+                if (activeAlert == null) {
+                    checkAndShowEngagementSuggestion()
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -112,6 +120,44 @@ class WeatherViewModel(
                 }
             }
         }
+    }
+
+    private fun checkAndShowEngagementSuggestion() {
+        if (_uiState.value.activeSuggestion != null) return
+        if (preferencesManager.shouldShowRatingSuggestion()) {
+            preferencesManager.recordRatingPromptShown()
+            _uiState.update { it.copy(activeSuggestion = SuggestionType.RATE) }
+        } else if (preferencesManager.shouldShowShareSuggestion()) {
+            preferencesManager.recordSharePromptShown()
+            _uiState.update { it.copy(activeSuggestion = SuggestionType.SHARE) }
+        }
+    }
+
+    fun onSuggestionPositive(type: SuggestionType) {
+        if (type == SuggestionType.RATE) {
+            preferencesManager.setUserRated(true)
+        } else {
+            preferencesManager.setUserShared(true)
+        }
+        _uiState.update { it.copy(activeSuggestion = null) }
+    }
+
+    fun onSuggestionLater(type: SuggestionType) {
+        if (type == SuggestionType.RATE) {
+            preferencesManager.incrementRatingDismissCount()
+        } else {
+            preferencesManager.incrementShareDismissCount()
+        }
+        _uiState.update { it.copy(activeSuggestion = null) }
+    }
+
+    fun onSuggestionNever(type: SuggestionType) {
+        if (type == SuggestionType.RATE) {
+            preferencesManager.setRatingDeclinedPermanently(true)
+        } else {
+            preferencesManager.setShareDeclinedPermanently(true)
+        }
+        _uiState.update { it.copy(activeSuggestion = null) }
     }
 
     fun setScreen(screen: TVScreen) {

@@ -166,97 +166,171 @@ private fun ThirtySixHourDetailedView(
     pkg: FullWeatherPackage,
     unitSystem: UnitSystem
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            // Diurnal Period Cards Grid
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                pkg.diurnalPeriods.forEach { period ->
-                    val pTemp = if (unitSystem == UnitSystem.METRIC) "${period.tempC.roundToInt()}°C"
-                    else "${(period.tempC * 9 / 5 + 32).roundToInt()}°F"
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isCompact = maxWidth < 600.dp
 
-                    val isCurr = period.isCurrent
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(
-                                if (isCurr) SleekBlueContainer else SleekSurface,
-                                RoundedCornerShape(16.dp)
-                            )
-                            .border(
-                                1.dp,
-                                if (isCurr) SleekBluePrimary else SleekBorder,
-                                RoundedCornerShape(16.dp)
-                            )
-                            .padding(14.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(percent = 50),
-                            color = if (isCurr) SleekBluePrimary else SleekSurfaceSecondary
-                        ) {
-                            Text(
-                                text = period.periodName.uppercase(),
-                                color = if (isCurr) Color.White else SleekTextSecondary,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                // Diurnal Period Cards Grid
+                if (isCompact) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        val chunkedPeriods = pkg.diurnalPeriods.chunked(2)
+                        chunkedPeriods.forEach { pair ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                pair.forEach { period ->
+                                    val pTemp = if (unitSystem == UnitSystem.METRIC) "${period.tempC.roundToInt()}°C"
+                                    else "${(period.tempC * 9 / 5 + 32).roundToInt()}°F"
+                                    val isCurr = period.isCurrent
+
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .background(
+                                                if (isCurr) SleekBlueContainer else SleekSurface,
+                                                RoundedCornerShape(16.dp)
+                                            )
+                                            .border(
+                                                1.dp,
+                                                if (isCurr) SleekBluePrimary else SleekBorder,
+                                                RoundedCornerShape(16.dp)
+                                            )
+                                            .padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(percent = 50),
+                                            color = if (isCurr) SleekBluePrimary else SleekSurfaceSecondary
+                                        ) {
+                                            Text(
+                                                text = period.periodName.uppercase(),
+                                                color = if (isCurr) Color.White else SleekTextSecondary,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        WeatherConditionIcon(weatherCode = period.weatherCode, size = 30.dp)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                                        Text(text = period.conditionText, color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(text = stringResource(R.string.forecast_rain_risk, period.popPercent), color = SleekBluePrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                if (pair.size == 1) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        WeatherConditionIcon(weatherCode = period.weatherCode, size = 34.dp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                        Text(text = period.conditionText, color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = stringResource(R.string.forecast_rain_risk, period.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        pkg.diurnalPeriods.forEach { period ->
+                            val pTemp = if (unitSystem == UnitSystem.METRIC) "${period.tempC.roundToInt()}°C"
+                            else "${(period.tempC * 9 / 5 + 32).roundToInt()}°F"
+
+                            val isCurr = period.isCurrent
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (isCurr) SleekBlueContainer else SleekSurface,
+                                        RoundedCornerShape(16.dp)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (isCurr) SleekBluePrimary else SleekBorder,
+                                        RoundedCornerShape(16.dp)
+                                    )
+                                    .padding(14.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(percent = 50),
+                                    color = if (isCurr) SleekBluePrimary else SleekSurfaceSecondary
+                                ) {
+                                    Text(
+                                        text = period.periodName.uppercase(),
+                                        color = if (isCurr) Color.White else SleekTextSecondary,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                WeatherConditionIcon(weatherCode = period.weatherCode, size = 34.dp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Black)
+                                Text(text = period.conditionText, color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = stringResource(R.string.forecast_rain_risk, period.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        item {
-            // Deep-Dive Meteorological Metric Cards Grid
-            Text(
-                text = stringResource(R.string.forecast_atmospheric_deepdive),
-                color = SleekTextPrimary,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            )
-        }
+            item {
+                // Deep-Dive Meteorological Metric Cards Grid
+                Text(
+                    text = stringResource(R.string.forecast_atmospheric_deepdive),
+                    color = SleekTextPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
+            }
 
-        item {
             val dewStr = if (unitSystem == UnitSystem.METRIC) "${current.dewPointC.roundToInt()}°C"
             else "${(current.dewPointC * 9 / 5 + 32).roundToInt()}°F"
 
             val pressStr = if (unitSystem == UnitSystem.METRIC) "${current.pressureHpa.roundToInt()} hPa"
             else String.format(java.util.Locale.US, "%.2f inHg", current.pressureHpa * 0.02953)
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val windSpeedStr = if (unitSystem == UnitSystem.METRIC) "${current.windSpeedKmh.roundToInt()} km/h"
+            else "${(current.windSpeedKmh * 0.621371).roundToInt()} mph"
+
+            val peakGustStr = if (unitSystem == UnitSystem.METRIC) "${current.windGustsKmh.roundToInt()} km/h"
+            else "${(current.windGustsKmh * 0.621371).roundToInt()} mph"
+
+            val visStr = if (unitSystem == UnitSystem.METRIC) "${current.visibilityKm.roundToInt()} km"
+            else "${(current.visibilityKm * 0.621371).roundToInt()} mi"
+
+            val card1 = @Composable {
                 MetricDetailCard(
                     icon = Icons.Default.WaterDrop,
                     title = stringResource(R.string.forecast_relative_humidity),
                     value = "${current.humidityPercent}%",
                     detail = "Dew point $dewStr",
                     accentColor = SleekBluePrimary,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+            val card2 = @Composable {
                 MetricDetailCard(
                     icon = Icons.Default.Compress,
                     title = stringResource(R.string.forecast_surface_pressure),
                     value = pressStr,
                     detail = if (current.pressureHpa > 1013) stringResource(R.string.forecast_high_pressure) else stringResource(R.string.forecast_low_pressure),
                     accentColor = SleekBluePrimary,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+            val card3 = @Composable {
                 MetricDetailCard(
                     icon = Icons.Default.WbSunny,
                     title = stringResource(R.string.forecast_uv_index),
@@ -268,46 +342,74 @@ private fun ThirtySixHourDetailedView(
                         else -> stringResource(R.string.forecast_uv_low)
                     },
                     accentColor = SolarGold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-
-        item {
-            val windSpeedStr = if (unitSystem == UnitSystem.METRIC) "${current.windSpeedKmh.roundToInt()} km/h"
-            else "${(current.windSpeedKmh * 0.621371).roundToInt()} mph"
-
-            val peakGustStr = if (unitSystem == UnitSystem.METRIC) "${current.windGustsKmh.roundToInt()} km/h"
-            else "${(current.windGustsKmh * 0.621371).roundToInt()} mph"
-
-            val visStr = if (unitSystem == UnitSystem.METRIC) "${current.visibilityKm.roundToInt()} km"
-            else "${(current.visibilityKm * 0.621371).roundToInt()} mi"
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val card4 = @Composable {
                 MetricDetailCard(
                     icon = Icons.Default.Air,
                     title = stringResource(R.string.forecast_wind_gust_vector),
                     value = windSpeedStr,
                     detail = "Peak gusts $peakGustStr",
                     accentColor = SleekGreenText,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+            val card5 = @Composable {
                 MetricDetailCard(
                     icon = Icons.Default.Visibility,
                     title = stringResource(R.string.forecast_atmospheric_visibility),
                     value = visStr,
                     detail = if (current.visibilityKm >= 10) stringResource(R.string.forecast_clear_horizon) else stringResource(R.string.forecast_reduced_visibility),
                     accentColor = SleekTextSecondary,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+            val card6 = @Composable {
                 MetricDetailCard(
                     icon = Icons.Default.FilterDrama,
                     title = stringResource(R.string.forecast_cloud_cover),
                     value = "${current.cloudCoverPercent}%",
                     detail = stringResource(R.string.forecast_sky_observation),
                     accentColor = SleekBluePrimary,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            if (isCompact) {
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(modifier = Modifier.weight(1f)) { card1() }
+                        Box(modifier = Modifier.weight(1f)) { card2() }
+                    }
+                }
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(modifier = Modifier.weight(1f)) { card3() }
+                        Box(modifier = Modifier.weight(1f)) { card4() }
+                    }
+                }
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(modifier = Modifier.weight(1f)) { card5() }
+                        Box(modifier = Modifier.weight(1f)) { card6() }
+                    }
+                }
+            } else {
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(modifier = Modifier.weight(1f)) { card1() }
+                        Box(modifier = Modifier.weight(1f)) { card2() }
+                        Box(modifier = Modifier.weight(1f)) { card3() }
+                    }
+                }
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(modifier = Modifier.weight(1f)) { card4() }
+                        Box(modifier = Modifier.weight(1f)) { card5() }
+                        Box(modifier = Modifier.weight(1f)) { card6() }
+                    }
+                }
             }
         }
     }

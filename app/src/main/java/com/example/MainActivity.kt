@@ -253,6 +253,14 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = { viewModel.dismissAlertModal() }
                             )
 
+                            // Rating & Share Engagement Suggestion Modal (Non-intrusive)
+                            SuggestionPromptModal(
+                                suggestionType = uiState.activeSuggestion,
+                                onPositiveAction = { viewModel.onSuggestionPositive(it) },
+                                onLaterAction = { viewModel.onSuggestionLater(it) },
+                                onNeverAction = { viewModel.onSuggestionNever(it) }
+                            )
+
                             // CRT Scanlines & Broadcast Vignette Overlay
                             FilmGrainVignette(isEnabled = uiState.isCrtGrainEnabled)
                         }

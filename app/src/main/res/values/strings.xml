@@ -327,6 +327,41 @@
     <string name="trends_temp_legend">Temp (%1$s)</string>
     <string name="trends_rain_legend">Rain POP (%%)</string>
 
+    <string name="common_delete_station">Delete Station</string>
+
+    <!-- Tooltip & Chart Strings -->
+    <string name="recharts_tooltip_max">Max Temp (High):</string>
+    <string name="recharts_tooltip_min">Min Temp (Low):</string>
+    <string name="recharts_tooltip_pop">Precipitation POP:</string>
+    <string name="recharts_tooltip_wind_uv">Max Wind / UV:</string>
+    <string name="trends_temp_metric">Temp (°C)</string>
+    <string name="trends_temp_imperial">Temp (°F)</string>
+    <string name="trends_rain_pop">Rain POP (%%)</string>
+
+    <!-- Community & Feedback in Settings -->
+    <string name="settings_cat_community">COMMUNITY &amp; DEVELOPER FEEDBACK</string>
+    <string name="settings_rate_title">Rate on Google Play</string>
+    <string name="settings_rate_subtitle">Leave a 5-star review to support continuous 24/7 meteorological broadcasting</string>
+    <string name="settings_share_title">Share Horizon TV</string>
+    <string name="settings_share_subtitle">Send live broadcast link and Doppler radar telemetry to friends</string>
+    <string name="settings_feedback_title">Meteorological Desk Support &amp; Bug Report</string>
+    <string name="settings_feedback_subtitle">Direct feedback to engineering desk at tuyenctbk@gmail.com for issues and telemetry reports</string>
+    <string name="settings_feedback_email_subject">Horizon TV Broadcast Desk: Meteorological Feedback &amp; Bug Report</string>
+
+    <!-- Rating & Share Engagement Suggestions -->
+    <string name="suggestion_rate_title">Enjoying Horizon Weather TV?</string>
+    <string name="suggestion_rate_desc">Your 5-star rating on Google Play helps us maintain continuous dual-pol Doppler radar feeds and global telemetry free for everyone.</string>
+    <string name="suggestion_rate_positive">Rate 5 Stars on Google Play</string>
+    <string name="suggestion_rate_later">Remind Me Later</string>
+    <string name="suggestion_rate_never">Don\'t Ask Again</string>
+
+    <string name="suggestion_share_title">Share Horizon Weather TV</string>
+    <string name="suggestion_share_desc">Know friends or family who track severe storms? Share 24/7 meteorological telemetry, dual-pol Doppler radar, and live weather dispatches.</string>
+    <string name="suggestion_share_positive">Share Broadcast Stream</string>
+    <string name="suggestion_share_later">Later</string>
+    <string name="suggestion_share_never">Don\'t Ask Again</string>
+    <string name="suggestion_share_text">Check out Horizon Weather TV — 24/7 live meteorological telemetry, interactive Doppler radar, and severe weather alerts! https://play.google.com/store/apps/details?id=com.aistudio.horizontv.wzpk</string>
+
     <!-- Loading & Error States -->
     <string name="loading_sync">SYNCHRONIZING HORIZON BROADCAST TELEMETRY...</string>
     <string name="loading_connecting">Connecting to Open-Meteo &amp; Doppler Radar networks</string>

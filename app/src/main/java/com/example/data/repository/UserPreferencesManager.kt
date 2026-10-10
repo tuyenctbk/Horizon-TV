@@ -19,6 +19,95 @@ class UserPreferencesManager(context: Context) {
         private const val KEY_LIVE_AUDIO = "key_live_audio"
         private const val KEY_LBAR_VISIBLE = "key_lbar_visible"
         private const val KEY_FAVORITE_CITIES = "key_favorite_cities"
+        private const val KEY_LAUNCH_COUNT = "key_launch_count"
+        private const val KEY_HAS_RATED = "key_has_rated"
+        private const val KEY_RATING_DECLINED = "key_rating_declined"
+        private const val KEY_LAST_RATING_PROMPT_MS = "key_last_rating_prompt_ms"
+        private const val KEY_RATING_DISMISS_COUNT = "key_rating_dismiss_count"
+        private const val KEY_HAS_SHARED = "key_has_shared"
+        private const val KEY_SHARE_DECLINED = "key_share_declined"
+        private const val KEY_LAST_SHARE_PROMPT_MS = "key_last_share_prompt_ms"
+        private const val KEY_SHARE_DISMISS_COUNT = "key_share_dismiss_count"
+    }
+
+    fun incrementLaunchCount(): Int {
+        val current = prefs.getInt(KEY_LAUNCH_COUNT, 0) + 1
+        prefs.edit().putInt(KEY_LAUNCH_COUNT, current).apply()
+        return current
+    }
+
+    fun getLaunchCount(): Int = prefs.getInt(KEY_LAUNCH_COUNT, 0)
+
+    fun hasUserRated(): Boolean = prefs.getBoolean(KEY_HAS_RATED, false)
+    fun setUserRated(rated: Boolean) = prefs.edit().putBoolean(KEY_HAS_RATED, rated).apply()
+
+    fun isRatingDeclinedPermanently(): Boolean = prefs.getBoolean(KEY_RATING_DECLINED, false)
+    fun setRatingDeclinedPermanently(declined: Boolean) = prefs.edit().putBoolean(KEY_RATING_DECLINED, declined).apply()
+
+    fun getLastRatingPromptMs(): Long = prefs.getLong(KEY_LAST_RATING_PROMPT_MS, 0L)
+    fun recordRatingPromptShown() = prefs.edit().putLong(KEY_LAST_RATING_PROMPT_MS, System.currentTimeMillis()).apply()
+
+    fun getRatingDismissCount(): Int = prefs.getInt(KEY_RATING_DISMISS_COUNT, 0)
+    fun incrementRatingDismissCount() {
+        val count = getRatingDismissCount() + 1
+        prefs.edit().putInt(KEY_RATING_DISMISS_COUNT, count).apply()
+        if (count >= 2) {
+            setRatingDeclinedPermanently(true)
+        }
+    }
+
+    fun hasUserShared(): Boolean = prefs.getBoolean(KEY_HAS_SHARED, false)
+    fun setUserShared(shared: Boolean) = prefs.edit().putBoolean(KEY_HAS_SHARED, shared).apply()
+
+    fun isShareDeclinedPermanently(): Boolean = prefs.getBoolean(KEY_SHARE_DECLINED, false)
+    fun setShareDeclinedPermanently(declined: Boolean) = prefs.edit().putBoolean(KEY_SHARE_DECLINED, declined).apply()
+
+    fun getLastSharePromptMs(): Long = prefs.getLong(KEY_LAST_SHARE_PROMPT_MS, 0L)
+    fun recordSharePromptShown() = prefs.edit().putLong(KEY_LAST_SHARE_PROMPT_MS, System.currentTimeMillis()).apply()
+
+    fun getShareDismissCount(): Int = prefs.getInt(KEY_SHARE_DISMISS_COUNT, 0)
+    fun incrementShareDismissCount() {
+        val count = getShareDismissCount() + 1
+        prefs.edit().putInt(KEY_SHARE_DISMISS_COUNT, count).apply()
+        if (count >= 2) {
+            setShareDeclinedPermanently(true)
+        }
+    }
+
+    /**
+     * Rating suggestion business logic:
+     * - Requires at least 3 separate app launches (user has experienced the broadcast)
+     * - Has NOT rated or permanently declined
+     * - Dismiss count < 2
+     * - Minimum 7 days between subtle reminders if user previously chose "Later"
+     */
+    fun shouldShowRatingSuggestion(): Boolean {
+        if (hasUserRated() || isRatingDeclinedPermanently()) return false
+        if (getRatingDismissCount() >= 2) return false
+        if (getLaunchCount() < 3) return false
+        val lastPrompt = getLastRatingPromptMs()
+        val sevenDaysMs = 7L * 24 * 60 * 60 * 1000L
+        if (lastPrompt > 0 && (System.currentTimeMillis() - lastPrompt < sevenDaysMs)) return false
+        return true
+    }
+
+    /**
+     * Share suggestion business logic:
+     * - Separated from rating prompt (never shows simultaneously)
+     * - Requires at least 5 app launches (well-engaged user)
+     * - Has NOT shared or permanently declined
+     * - Dismiss count < 2
+     * - Minimum 10 days since last share suggestion
+     */
+    fun shouldShowShareSuggestion(): Boolean {
+        if (hasUserShared() || isShareDeclinedPermanently()) return false
+        if (getShareDismissCount() >= 2) return false
+        if (shouldShowRatingSuggestion()) return false
+        if (getLaunchCount() < 5) return false
+        val lastPrompt = getLastSharePromptMs()
+        val tenDaysMs = 10L * 24 * 60 * 60 * 1000L
+        if (lastPrompt > 0 && (System.currentTimeMillis() - lastPrompt < tenDaysMs)) return false
+        return true
     }
 
     fun getUnitSystem(): UnitSystem {

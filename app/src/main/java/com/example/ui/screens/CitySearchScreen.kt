@@ -339,7 +339,7 @@ private fun CityResultCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Delete City",
+                            contentDescription = stringResource(R.string.common_delete_station),
                             tint = SleekTextSecondary,
                             modifier = Modifier.size(20.dp)
                         )

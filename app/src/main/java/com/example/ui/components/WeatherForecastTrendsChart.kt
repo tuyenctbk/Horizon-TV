@@ -16,9 +16,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.HourlyPoint
 import com.example.data.model.UnitSystem
 import com.example.ui.theme.*
@@ -54,12 +56,21 @@ fun WeatherForecastTrendsChart(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(8.dp).background(SleekBluePrimary, CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Temp (${if (unitSystem == UnitSystem.METRIC) "°C" else "°F"})", color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(if (unitSystem == UnitSystem.METRIC) R.string.trends_temp_metric else R.string.trends_temp_imperial),
+                        color = SleekBluePrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(8.dp).background(SleekBlueContainer, CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Rain POP (%)", color = SleekTextSecondary, fontSize = 11.sp)
+                    Text(
+                        text = stringResource(R.string.trends_rain_pop),
+                        color = SleekTextSecondary,
+                        fontSize = 11.sp
+                    )
                 }
             }
         }

@@ -456,7 +456,7 @@ class WeatherRepository {
         )
     }
 
-    fun getSampleVodStories(): List<VodStory> = listOf(
+    fun getMeteorologicalVodDispatches(): List<VodStory> = listOf(
         VodStory(
             id = "vod_1",
             category = "Severe Weather",
@@ -465,7 +465,7 @@ class WeatherRepository {
             duration = "14:20",
             timestamp = "Today 16:30",
             description = "High-definition Doppler dissection of atmospheric barometric collapses and eyewall mesovortices.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/superstorm_radar_1080p.mp4",
             accentColorHex = 0xFFDC2626
         ),
         VodStory(
@@ -476,7 +476,7 @@ class WeatherRepository {
             duration = "09:45",
             timestamp = "Yesterday 20:00",
             description = "How Rossby wave undulations trigger unprecedented temperature swings across northern temperate latitudes.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/polar_vortex_telemetry.mp4",
             accentColorHex = 0xFF0284C7
         ),
         VodStory(
@@ -487,7 +487,7 @@ class WeatherRepository {
             duration = "08:12",
             timestamp = "2 hours ago",
             description = "Global climate indices and sea-surface anomalies signaling major multi-week rain systems.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/drought_outlook_synoptic.mp4",
             accentColorHex = 0xFF10B981
         ),
         VodStory(
@@ -498,7 +498,7 @@ class WeatherRepository {
             duration = "11:55",
             timestamp = "3 days ago",
             description = "Spectacular ice crystal formations dancing on the threshold of space 80 kilometers above Earth.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/mesospheric_clouds_hd.mp4",
             accentColorHex = 0xFF8B5CF6
         )
     )

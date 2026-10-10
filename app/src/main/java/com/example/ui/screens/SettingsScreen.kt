@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -337,6 +341,94 @@ fun SettingsScreen(
         }
 
         item {
+            SettingsCategoryHeader(stringResource(R.string.settings_cat_community))
+        }
+
+        item {
+            val context = LocalContext.current
+            val shareText = stringResource(R.string.suggestion_share_text)
+            val feedbackSubject = stringResource(R.string.settings_feedback_email_subject)
+
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SettingsActionCard(
+                    icon = Icons.Default.Star,
+                    title = stringResource(R.string.settings_rate_title),
+                    subtitle = stringResource(R.string.settings_rate_subtitle),
+                    actionLabel = "RATE",
+                    accentColor = SolarGold,
+                    onClick = {
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}")).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            try {
+                                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(webIntent)
+                            } catch (_: Exception) {}
+                        }
+                    }
+                )
+
+                SettingsActionCard(
+                    icon = Icons.Default.Share,
+                    title = stringResource(R.string.settings_share_title),
+                    subtitle = stringResource(R.string.settings_share_subtitle),
+                    actionLabel = "SHARE",
+                    accentColor = SleekBluePrimary,
+                    onClick = {
+                        try {
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                type = "text/plain"
+                            }
+                            val chooser = Intent.createChooser(sendIntent, "Share Horizon TV").apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(chooser)
+                        } catch (_: Exception) {}
+                    }
+                )
+
+                SettingsActionCard(
+                    icon = Icons.Default.Email,
+                    title = stringResource(R.string.settings_feedback_title),
+                    subtitle = stringResource(R.string.settings_feedback_subtitle),
+                    actionLabel = "EMAIL",
+                    accentColor = SleekGreenText,
+                    onClick = {
+                        try {
+                            val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:tuyenctbk@gmail.com")
+                                putExtra(Intent.EXTRA_SUBJECT, feedbackSubject)
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "Horizon TV Broadcast App Feedback:\n\nApp Version: 1.2 (build 3)\nDevice: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.RELEASE})\n\nPlease enter your observations or bug report below:\n"
+                                )
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(emailIntent)
+                        } catch (_: Exception) {
+                            try {
+                                val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "message/rfc822"
+                                    putExtra(Intent.EXTRA_EMAIL, arrayOf("tuyenctbk@gmail.com"))
+                                    putExtra(Intent.EXTRA_SUBJECT, feedbackSubject)
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(Intent.createChooser(fallbackIntent, "Send Meteorological Feedback"))
+                            } catch (_: Exception) {}
+                        }
+                    }
+                )
+            }
+        }
+
+        item {
             SettingsCategoryHeader(stringResource(R.string.settings_cat_system))
         }
 
@@ -431,3 +523,61 @@ private fun SystemInfoRow(label: String, value: String) {
         Text(text = value, color = SleekTextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
     }
 }
+
+@Composable
+private fun SettingsActionCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    actionLabel: String,
+    accentColor: Color,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = SleekSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, contentDescription = title, tint = accentColor, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column {
+                    Text(text = title, color = SleekTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(text = subtitle, color = SleekTextSecondary, fontSize = 11.sp)
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(percent = 50),
+                color = accentColor.copy(alpha = 0.15f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
+            ) {
+                Text(
+                    text = actionLabel,
+                    color = accentColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+        }
+    }
+}
+
