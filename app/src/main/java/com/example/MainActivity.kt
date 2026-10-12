@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.SuggestionType
 import com.example.data.model.TVScreen
 import com.example.ui.components.*
 import com.example.ui.screens.*
@@ -193,7 +194,9 @@ class MainActivity : ComponentActivity() {
                                                         onToggleCrtGrain = { viewModel.toggleCrtGrain() },
                                                         onToggleVirtualRemote = { viewModel.toggleVirtualRemote() },
                                                         onToggleLiveAudio = { viewModel.toggleLiveAudio() },
-                                                        onTriggerTestAlert = { viewModel.openAlertModal(it) }
+                                                        onTriggerTestAlert = { viewModel.openAlertModal(it) },
+                                                        onRateApp = { viewModel.onSuggestionPositive(SuggestionType.RATE) },
+                                                        onShareApp = { viewModel.onSuggestionPositive(SuggestionType.SHARE) }
                                                     )
                                                 }
                                             }

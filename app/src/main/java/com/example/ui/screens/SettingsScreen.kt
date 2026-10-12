@@ -43,8 +43,12 @@ fun SettingsScreen(
     onToggleLiveAudio: () -> Unit,
     onTriggerTestAlert: (SevereWeatherAlert) -> Unit,
     onSelectUnitSystem: (UnitSystem) -> Unit = {},
+    onRateApp: () -> Unit = {},
+    onShareApp: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -345,9 +349,9 @@ fun SettingsScreen(
         }
 
         item {
-            val context = LocalContext.current
             val shareText = stringResource(R.string.suggestion_share_text)
             val feedbackSubject = stringResource(R.string.settings_feedback_email_subject)
+            val copiedMessageFormat = stringResource(R.string.settings_feedback_copied)
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SettingsActionCard(
@@ -357,6 +361,7 @@ fun SettingsScreen(
                     actionLabel = "RATE",
                     accentColor = SolarGold,
                     onClick = {
+                        onRateApp()
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}")).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -380,6 +385,7 @@ fun SettingsScreen(
                     actionLabel = "SHARE",
                     accentColor = SleekBluePrimary,
                     onClick = {
+                        onShareApp()
                         try {
                             val sendIntent = Intent().apply {
                                 action = Intent.ACTION_SEND
@@ -401,14 +407,22 @@ fun SettingsScreen(
                     actionLabel = "EMAIL",
                     accentColor = SleekGreenText,
                     onClick = {
+                        val recipient = "tuyenctbk@gmail.com"
+                        val appVersion = try {
+                            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                            val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
+                            "${pInfo.versionName} (build $vc)"
+                        } catch (_: Exception) {
+                            "1.3 (build 4)"
+                        }
+                        val emailBody = "Horizon TV Broadcast App Feedback:\n\nApp Version: $appVersion\nDevice: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.RELEASE})\n\nPlease enter your observations or bug report below:\n"
+
                         try {
                             val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:tuyenctbk@gmail.com")
+                                data = Uri.parse("mailto:$recipient")
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
                                 putExtra(Intent.EXTRA_SUBJECT, feedbackSubject)
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "Horizon TV Broadcast App Feedback:\n\nApp Version: 1.2 (build 3)\nDevice: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.RELEASE})\n\nPlease enter your observations or bug report below:\n"
-                                )
+                                putExtra(Intent.EXTRA_TEXT, emailBody)
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                             context.startActivity(emailIntent)
@@ -416,12 +430,28 @@ fun SettingsScreen(
                             try {
                                 val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "message/rfc822"
-                                    putExtra(Intent.EXTRA_EMAIL, arrayOf("tuyenctbk@gmail.com"))
+                                    putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
                                     putExtra(Intent.EXTRA_SUBJECT, feedbackSubject)
+                                    putExtra(Intent.EXTRA_TEXT, emailBody)
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
-                                context.startActivity(Intent.createChooser(fallbackIntent, "Send Meteorological Feedback"))
-                            } catch (_: Exception) {}
+                                val chooser = Intent.createChooser(fallbackIntent, "Send Meteorological Feedback").apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(chooser)
+                            } catch (_: Exception) {
+                                // Fallback when no email app is installed (e.g. Android TV devices)
+                                try {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("Developer Email", recipient)
+                                    clipboard?.setPrimaryClip(clip)
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        String.format(copiedMessageFormat, recipient),
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                } catch (_: Exception) {}
+                            }
                         }
                     }
                 )
@@ -433,6 +463,14 @@ fun SettingsScreen(
         }
 
         item {
+            val platformInfo = try {
+                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
+                "Horizon TV Android Broadcast v${pInfo.versionName} (Build $vc)"
+            } catch (_: Exception) {
+                "Horizon TV Android Broadcast v1.3"
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -441,7 +479,7 @@ fun SettingsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SystemInfoRow(stringResource(R.string.settings_sys_platform), "Horizon TV Android Broadcast v2.4")
+                SystemInfoRow(stringResource(R.string.settings_sys_platform), platformInfo)
                 SystemInfoRow(stringResource(R.string.settings_sys_provider), "Open-Meteo Global Forecasting Engine (Free & Open)")
                 SystemInfoRow(stringResource(R.string.settings_sys_radar), "Dual-Pol 500kW Doppler Multi-Layer Engine")
                 SystemInfoRow(stringResource(R.string.settings_sys_astronomy), "Synodic 29.53-Day Lunar & Daylight Solar Arc Algorithm")

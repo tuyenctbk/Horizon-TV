@@ -74,6 +74,7 @@ class WeatherViewModel(
 
     private var pollingJob: Job? = null
     private var radarTimerJob: Job? = null
+    private var hasShownSuggestionInSession: Boolean = false
 
     init {
         // Track app launch for non-intrusive engagement rules
@@ -123,11 +124,15 @@ class WeatherViewModel(
     }
 
     private fun checkAndShowEngagementSuggestion() {
+        if (hasShownSuggestionInSession) return
         if (_uiState.value.activeSuggestion != null) return
+        if (_uiState.value.activeAlertModal != null) return
         if (preferencesManager.shouldShowRatingSuggestion()) {
+            hasShownSuggestionInSession = true
             preferencesManager.recordRatingPromptShown()
             _uiState.update { it.copy(activeSuggestion = SuggestionType.RATE) }
         } else if (preferencesManager.shouldShowShareSuggestion()) {
+            hasShownSuggestionInSession = true
             preferencesManager.recordSharePromptShown()
             _uiState.update { it.copy(activeSuggestion = SuggestionType.SHARE) }
         }

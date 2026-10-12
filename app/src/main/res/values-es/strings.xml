@@ -273,6 +273,7 @@
     <string name="settings_feedback_title">Soporte Técnico Meteorológico y Reporte de Errores</string>
     <string name="settings_feedback_subtitle">Comentarios directos al equipo de ingeniería en tuyenctbk@gmail.com</string>
     <string name="settings_feedback_email_subject">Mesa de Transmisión Horizon TV: Comentarios Meteorológicos y Reporte de Errores</string>
+    <string name="settings_feedback_copied">Correo del desarrollador (%1$s) copiado al portapapeles</string>
 
     <!-- Rating & Share Engagement Suggestions -->
     <string name="suggestion_rate_title">¿Disfrutando de Horizon Weather TV?</string>

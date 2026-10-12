@@ -347,6 +347,7 @@
     <string name="settings_feedback_title">Meteorological Desk Support &amp; Bug Report</string>
     <string name="settings_feedback_subtitle">Direct feedback to engineering desk at tuyenctbk@gmail.com for issues and telemetry reports</string>
     <string name="settings_feedback_email_subject">Horizon TV Broadcast Desk: Meteorological Feedback &amp; Bug Report</string>
+    <string name="settings_feedback_copied">Developer email (%1$s) copied to clipboard</string>
 
     <!-- Rating & Share Engagement Suggestions -->
     <string name="suggestion_rate_title">Enjoying Horizon Weather TV?</string>
