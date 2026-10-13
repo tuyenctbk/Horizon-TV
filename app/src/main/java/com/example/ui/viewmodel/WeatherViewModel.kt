@@ -3,6 +3,8 @@ package com.example.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import com.example.R
 import com.example.data.model.*
 import com.example.data.repository.FullWeatherPackage
 import com.example.data.repository.UserPreferencesManager
@@ -18,6 +20,8 @@ import kotlinx.coroutines.launch
 data class WeatherUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+    @StringRes val errorResId: Int? = null,
+    val errorDetail: String? = null,
     val currentLocation: CityLocation = CityLocation(
         name = "New York",
         region = "New York",
@@ -95,16 +99,23 @@ class WeatherViewModel(
 
     private fun detectAndLoadInitialLocation() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val detected = repository.detectRealLocation()
-            _uiState.update { it.copy(currentLocation = detected) }
-            loadWeatherForLocation(detected)
+            val saved = preferencesManager.getLastSelectedLocation()
+            if (saved != null) {
+                _uiState.update { it.copy(currentLocation = saved) }
+                loadWeatherForLocation(saved)
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val detected = repository.detectRealLocation()
+                _uiState.update { it.copy(currentLocation = detected) }
+                loadWeatherForLocation(detected)
+            }
         }
     }
 
     fun loadWeatherForLocation(location: CityLocation) {
+        preferencesManager.saveLastSelectedLocation(location)
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, currentLocation = location) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, errorResId = null, errorDetail = null, currentLocation = location) }
             try {
                 val (current, fullPkg) = repository.fetchRealWeatherData(location.latitude, location.longitude)
                 val activeAlert = fullPkg.alerts.firstOrNull()
@@ -120,7 +131,9 @@ class WeatherViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Failed to synchronize meteorological feeds: ${e.localizedMessage ?: "Network error"}"
+                        errorMessage = null,
+                        errorResId = R.string.error_sync_failed,
+                        errorDetail = e.localizedMessage
                     )
                 }
             }

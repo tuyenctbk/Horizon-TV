@@ -85,7 +85,7 @@ fun TVHeader(
                 ) {
                     Icon(
                         Icons.Default.CloudQueue,
-                        contentDescription = "Horizon",
+                        contentDescription = stringResource(R.string.brand_title),
                         tint = SleekOnBlueContainer,
                         modifier = Modifier.size(20.dp)
                     )
@@ -163,7 +163,7 @@ fun TVHeader(
 
                 Icon(
                     Icons.Default.LocationOn,
-                    contentDescription = "Current City",
+                    contentDescription = stringResource(R.string.header_current_location),
                     tint = SleekBluePrimary,
                     modifier = Modifier.size(16.dp)
                 )
@@ -181,7 +181,7 @@ fun TVHeader(
                         color = SleekGreenContainer
                     ) {
                         Text(
-                            text = "GPS",
+                            text = stringResource(R.string.badge_gps),
                             color = SleekGreenText,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
@@ -287,7 +287,7 @@ fun TVHeader(
                         .testTag("unit_toggle_button")
                 ) {
                     Text(
-                        text = if (unitSystem == UnitSystem.METRIC) "°C / km/h" else "°F / mph",
+                        text = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_toggle_metric) else stringResource(R.string.unit_toggle_imperial),
                         color = if (isUnitFocused) SleekOnBlueContainer else SleekTextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,

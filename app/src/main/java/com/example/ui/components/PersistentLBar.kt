@@ -189,7 +189,7 @@ fun PersistentLBarLayout(
                     }
 
                     Text(
-                        text = currentWeather.conditionText.uppercase(),
+                        text = stringResource(WeatherRepository.getWeatherDescriptionRes(currentWeather.weatherCode)).uppercase(),
                         color = SolarGold,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -238,7 +238,7 @@ fun PersistentLBarLayout(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text(text = p.periodName.take(8), color = SleekTextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(p.periodNameRes).take(8), color = SleekTextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 Text(text = stringResource(R.string.lbar_rain_suffix, p.popPercent), color = SleekBluePrimary, fontSize = 8.sp)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {

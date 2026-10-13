@@ -242,7 +242,7 @@ private fun launchShareSheet(context: Context, text: String) {
             putExtra(Intent.EXTRA_TEXT, text)
             type = "text/plain"
         }
-        val chooser = Intent.createChooser(sendIntent, "Share Horizon TV").apply {
+        val chooser = Intent.createChooser(sendIntent, context.getString(R.string.settings_share_title)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(chooser)

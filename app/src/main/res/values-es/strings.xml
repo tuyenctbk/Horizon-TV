@@ -17,6 +17,12 @@
     <!-- Units -->
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
+    <string name="unit_mm">mm</string>
+    <string name="unit_in">pulg</string>
+    <string name="unit_hpa">hPa</string>
+    <string name="unit_inhg">inHg</string>
+    <string name="unit_km">km</string>
+    <string name="unit_mi">mi</string>
 
     <!-- Navigation & Header -->
     <string name="nav_home">Inicio</string>
@@ -131,7 +137,7 @@
     <string name="home_meteorologist_duty">METEORÓLOGO DE TURNO</string>
     <string name="home_continuous_broadcast">Canal Continuo de Radar y Telemetría Multirregional</string>
     <string name="home_switch_broadcast">CAMBIAR VISTA DE TRANSMISIÓN</string>
-    <string name="home_presented_by">PRESENTADO POR DRA. SARAH CHEN</string>
+    <string name="home_presented_by">MESA METEOROLÓGICA HORIZON</string>
     <string name="home_news_ticker_prefix">CINTILLO DE NOTICIAS</string>
     <string name="home_local_microclimate">TELEMETRÍA DE MICROCLIMA LOCAL</string>
     <string name="home_now_badge">AHORA</string>
@@ -190,7 +196,7 @@
 
     <!-- Interactive Radar Screen -->
     <string name="radar_title">Radar Doppler Dual-Pol Interactivo</string>
-    <string name="radar_subtitle">Telemetría y reflectividad en vivo • Estación: KOKX NEXRAD • Centrado en %1$s</string>
+    <string name="radar_subtitle">Telemetría y reflectividad en vivo • Radar Doppler de polarización dual • Centrado en %1$s</string>
     <string name="radar_layer_precip">Precipitación</string>
     <string name="radar_layer_traffic">Corredores de Tráfico</string>
     <string name="radar_layer_satellite">Satélite IR</string>
@@ -221,8 +227,8 @@
     <string name="livetv_audio_on">AUDIO ACTIVADO</string>
     <string name="livetv_muted">SILENCIADO</string>
     <string name="livetv_pip_mode">MODO PiP</string>
-    <string name="livetv_presenter_name">PRESENTADORA: DRA. SARAH CHEN</string>
-    <string name="livetv_presenter_subtitle">Centro de Comando de Radar Meteorológico Nacional • Telemetría Doppler en Vivo</string>
+    <string name="livetv_presenter_name">MESA METEOROLÓGICA HORIZON</string>
+    <string name="livetv_presenter_subtitle">Comando de Operaciones de Radar Nacional • Telemetría Doppler en Vivo</string>
 
     <!-- City Search Screen -->
     <string name="search_header_title">Búsqueda Global de Estaciones Meteorológicas</string>
@@ -316,7 +322,7 @@
     <string name="vod_paused_status">PAUSADO</string>
     <string name="vod_paused">PAUSADO</string>
     <string name="vod_produced_by">PRODUCIDO POR REDES HORIZON</string>
-    <string name="vod_published">PUBLICADO: %1$s</string>
+    <string name="vod_published">PUBLICADO: %1$s • %2$s</string>
     <string name="vod_cat_all">Todos los Despachos</string>
     <string name="vod_cat_severe">Clima Severo</string>
     <string name="vod_cat_forecasts">Pronósticos</string>
@@ -372,4 +378,93 @@
     <string name="loading_connecting">Conectando a redes de Open-Meteo y Radar Doppler</string>
     <string name="error_signal_interrupted">Señal de Transmisión Interrumpida</string>
     <string name="error_reconnect_button">RECONECTAR TELEMETRÍA</string>
+    <string name="splash_sync_step_1">INICIALIZANDO TELEMETRÍA METEOROLÓGICA...</string>
+    <string name="splash_sync_step_2">ADQUIRIENDO CUADRÍCULAS DE PREDICCIÓN NUMÉRICA GLOBAL...</string>
+    <string name="splash_sync_step_3">SINCRONIZANDO BARRIDOS DE REFLECTIVIDAD DOPPLER DUAL-POL...</string>
+    <string name="splash_sync_step_4">CALIBRANDO SENSORES ATMOSFÉRICOS Y ALERTAS EN TIEMPO REAL...</string>
+    <string name="splash_network_title">HORIZON WEATHER TV</string>
+    <string name="splash_network_subtitle">RED CONTINUA DE TRANSMISIÓN METEOROLÓGICA</string>
+    <string name="splash_channel_badge">CANAL 104 • 24/7</string>
+    <string name="badge_gps">GPS</string>
+    <string name="header_current_location">Ubicación actual</string>
+    <string name="pip_channel_tag">DOPPLER EN VIVO 24/7</string>
+    <string name="forecast_dew_point_detail">Punto de rocío %1$s</string>
+
+    <!-- Additional Common & Component UI Strings -->
+    <string name="common_remove">Eliminar</string>
+    <string name="common_rain">Lluvia</string>
+    <string name="weather_condition_icon">Icono de Condición Meteorológica</string>
+    <string name="astro_sun_and_moon">Sol y Luna</string>
+    <string name="astro_moon_phase">Fase Lunar</string>
+    <string name="unit_toggle_metric">°C / km/h</string>
+    <string name="unit_toggle_imperial">°F / mph</string>
+    <string name="radar_timeline_now">AHORA (%1$s)</string>
+    <string name="alert_test_effective_time">AHORA</string>
+    <string name="alert_test_expires_time">EN 45 MINUTOS</string>
+    <string name="settings_action_rate">CALIFICAR</string>
+    <string name="settings_action_share">COMPARTIR</string>
+    <string name="settings_action_email">CORREO</string>
+    <string name="settings_feedback_email_body_template">Comentarios de la Transmisión Horizon TV:\n\nVersión de la app: %1$s\nDispositivo: %2$s (Android %3$s)\n\nIngrese sus observaciones o reporte de errores a continuación:\n</string>
+    <string name="settings_sys_platform_value">Transmisión Android Horizon TV v%1$s (Compilación %2$d)</string>
+    <string name="settings_sys_platform_fallback">Transmisión Android Horizon TV</string>
+    <string name="settings_sys_provider_value">Motor de Pronóstico Global Open-Meteo (Libre y Abierto)</string>
+    <string name="settings_sys_radar_value">Motor Multicapa Doppler Dual-Pol de 500kW</string>
+    <string name="settings_sys_astronomy_value">Algoritmo de Arco Solar y Lunar Sinódico de 29.53 Días</string>
+    <string name="settings_sys_interval_value">Sondeo Automático de Telemetría cada 45 Segundos Activo</string>
+    <string name="error_sync_failed">Error al sincronizar canales meteorológicos: %1$s</string>
+    <string name="error_network_generic">Error de red</string>
+    <string name="recharts_tooltip_pop_format">%1$d%% (%2$s)</string>
+    <string name="recharts_tooltip_wind_uv_format">%1$s • UV %2$d</string>
+    <string name="telemetry_humidity_rh">%1$d%% HR</string>
+
+    <!-- WMO Weather Codes -->
+    <string name="wmo_clear_sky">Cielo Despejado</string>
+    <string name="wmo_mainly_clear">Mayormente Despejado</string>
+    <string name="wmo_partly_cloudy">Parcialmente Nublado</string>
+    <string name="wmo_overcast">Nublado</string>
+    <string name="wmo_fog">Niebla</string>
+    <string name="wmo_depositing_rime_fog">Niebla con Escarcha</string>
+    <string name="wmo_light_drizzle">Llovizna Ligera</string>
+    <string name="wmo_moderate_drizzle">Llovizna Moderada</string>
+    <string name="wmo_dense_drizzle">Llovizna Densa</string>
+    <string name="wmo_slight_rain">Lluvia Ligera</string>
+    <string name="wmo_moderate_rain">Lluvia Moderada</string>
+    <string name="wmo_heavy_rain">Lluvia Fuerte</string>
+    <string name="wmo_slight_snow">Nieve Ligera</string>
+    <string name="wmo_moderate_snow">Nieve Moderada</string>
+    <string name="wmo_heavy_snow">Nieve Fuerte</string>
+    <string name="wmo_snow_grains">Granizo Fino</string>
+    <string name="wmo_slight_rain_showers">Chubascos Ligeros</string>
+    <string name="wmo_moderate_rain_showers">Chubascos Moderados</string>
+    <string name="wmo_violent_rain_showers">Chubascos Violentos</string>
+    <string name="wmo_slight_snow_showers">Chubascos de Nieve Ligeros</string>
+    <string name="wmo_heavy_snow_showers">Chubascos de Nieve Fuertes</string>
+    <string name="wmo_thunderstorm">Tormenta Eléctrica</string>
+    <string name="wmo_thunderstorm_hail">Tormenta con Granizo</string>
+    <string name="wmo_severe_hail_thunderstorm">Tormenta Severa con Granizo</string>
+    <string name="wmo_atmospheric_conditions">Condiciones Atmosféricas</string>
+
+    <!-- Air Quality Index Statuses -->
+    <string name="aqi_good">Buena</string>
+    <string name="aqi_moderate">Moderada</string>
+    <string name="aqi_unhealthy_sensitive">Dañina para Grupos Sensibles</string>
+    <string name="aqi_unhealthy">Dañina a la Salud</string>
+    <string name="aqi_very_unhealthy">Muy Dañina</string>
+    <string name="aqi_hazardous">Peligrosa</string>
+
+    <!-- Diurnal Periods -->
+    <string name="period_morning">Mañana</string>
+    <string name="period_afternoon">Tarde</string>
+    <string name="period_evening">Atardecer</string>
+    <string name="period_night">Noche</string>
+
+    <!-- Moon Phases -->
+    <string name="moon_phase_new">Luna Nueva</string>
+    <string name="moon_phase_waxing_crescent">Luna Creciente</string>
+    <string name="moon_phase_first_quarter">Cuarto Creciente</string>
+    <string name="moon_phase_waxing_gibbous">Gibosa Creciente</string>
+    <string name="moon_phase_full">Luna Llena</string>
+    <string name="moon_phase_waning_gibbous">Gibosa Menguante</string>
+    <string name="moon_phase_last_quarter">Cuarto Menguante</string>
+    <string name="moon_phase_waning_crescent">Luna Menguante</string>
 </resources>

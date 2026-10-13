@@ -16,6 +16,12 @@
     <!-- Units -->
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
+    <string name="unit_mm">mm</string>
+    <string name="unit_in">in</string>
+    <string name="unit_hpa">hPa</string>
+    <string name="unit_inhg">inHg</string>
+    <string name="unit_km">km</string>
+    <string name="unit_mi">mi</string>
 
     <!-- Navigation & Header -->
     <string name="nav_home">Home</string>
@@ -130,7 +136,7 @@
     <string name="home_meteorologist_duty">METEOROLOGIST ON DUTY</string>
     <string name="home_continuous_broadcast">Continuous Multi-Region Radar &amp; Telemetry Feed</string>
     <string name="home_switch_broadcast">SWITCH BROADCAST VIEW</string>
-    <string name="home_presented_by">PRESENTED BY DR. SARAH CHEN</string>
+    <string name="home_presented_by">HORIZON METEOROLOGICAL DESK</string>
     <string name="home_news_ticker_prefix">BROADCAST TICKER</string>
     <string name="home_local_microclimate">LOCAL MICROCLIMATE TELEMETRY</string>
     <string name="home_now_badge">NOW</string>
@@ -189,7 +195,7 @@
 
     <!-- Interactive Radar Screen -->
     <string name="radar_title">Interactive Dual-Pol Doppler Radar</string>
-    <string name="radar_subtitle">Live telemetry &amp; reflectivity overlay • Station: KOKX NEXRAD • Centered on %1$s</string>
+    <string name="radar_subtitle">Live telemetry &amp; reflectivity overlay • Dual-Pol Doppler Radar • Centered on %1$s</string>
     <string name="radar_layer_precip">Precipitation</string>
     <string name="radar_layer_traffic">Traffic Corridors</string>
     <string name="radar_layer_satellite">Satellite IR</string>
@@ -220,8 +226,8 @@
     <string name="livetv_audio_on">AUDIO ON</string>
     <string name="livetv_muted">MUTED</string>
     <string name="livetv_pip_mode">PiP MODE</string>
-    <string name="livetv_presenter_name">PRESENTER: DR. SARAH CHEN</string>
-    <string name="livetv_presenter_subtitle">National Meteorological Radar Command Center • Doppler Live Telemetry</string>
+    <string name="livetv_presenter_name">HORIZON METEOROLOGICAL DESK</string>
+    <string name="livetv_presenter_subtitle">National Radar Operations Command • Live Doppler Telemetry</string>
 
     <!-- City Search Screen -->
     <string name="search_header_title">Global Meteorological Station Search</string>
@@ -276,7 +282,7 @@
     <string name="vod_paused_status">PAUSED</string>
     <string name="vod_paused">PAUSED</string>
     <string name="vod_produced_by">PRODUCED BY HORIZON NETWORKS</string>
-    <string name="vod_published">PUBLISHED: %1$s</string>
+    <string name="vod_published">PUBLISHED: %1$s • %2$s</string>
     <string name="vod_cat_all">All Dispatches</string>
     <string name="vod_cat_severe">Severe Weather</string>
     <string name="vod_cat_forecasts">Forecasts</string>
@@ -374,4 +380,93 @@
     <string name="loading_connecting">Connecting to Open-Meteo &amp; Doppler Radar networks</string>
     <string name="error_signal_interrupted">Broadcast Signal Interrupted</string>
     <string name="error_reconnect_button">RECONNECT TELEMETRY</string>
+    <string name="splash_sync_step_1">INITIALIZING METEOROLOGICAL TELEMETRY...</string>
+    <string name="splash_sync_step_2">ACQUIRING GLOBAL NUMERICAL FORECASTING GRIDS...</string>
+    <string name="splash_sync_step_3">SYNCHRONIZING DUAL-POL DOPPLER REFLECTIVITY SWEEPS...</string>
+    <string name="splash_sync_step_4">CALIBRATING ATMOSPHERIC SENSORS &amp; REAL-TIME ALERTS...</string>
+    <string name="splash_network_title">HORIZON WEATHER TV</string>
+    <string name="splash_network_subtitle">CONTINUOUS METEOROLOGICAL BROADCAST NETWORK</string>
+    <string name="splash_channel_badge">CH 104 • 24/7</string>
+    <string name="badge_gps">GPS</string>
+    <string name="header_current_location">Current Location</string>
+    <string name="pip_channel_tag">LIVE DOPPLER 24/7</string>
+    <string name="forecast_dew_point_detail">Dew point %1$s</string>
+
+    <!-- Additional Common & Component UI Strings -->
+    <string name="common_remove">Remove</string>
+    <string name="common_rain">Rain</string>
+    <string name="weather_condition_icon">Weather Condition Icon</string>
+    <string name="astro_sun_and_moon">Sun and Moon</string>
+    <string name="astro_moon_phase">Moon Phase</string>
+    <string name="unit_toggle_metric">°C / km/h</string>
+    <string name="unit_toggle_imperial">°F / mph</string>
+    <string name="radar_timeline_now">NOW (%1$s)</string>
+    <string name="alert_test_effective_time">NOW</string>
+    <string name="alert_test_expires_time">IN 45 MINUTES</string>
+    <string name="settings_action_rate">RATE</string>
+    <string name="settings_action_share">SHARE</string>
+    <string name="settings_action_email">EMAIL</string>
+    <string name="settings_feedback_email_body_template">Horizon TV Broadcast App Feedback:\n\nApp Version: %1$s\nDevice: %2$s (Android %3$s)\n\nPlease enter your observations or bug report below:\n</string>
+    <string name="settings_sys_platform_value">Horizon TV Android Broadcast v%1$s (Build %2$d)</string>
+    <string name="settings_sys_platform_fallback">Horizon TV Android Broadcast</string>
+    <string name="settings_sys_provider_value">Open-Meteo Global Forecasting Engine (Free &amp; Open)</string>
+    <string name="settings_sys_radar_value">Dual-Pol 500kW Doppler Multi-Layer Engine</string>
+    <string name="settings_sys_astronomy_value">Synodic 29.53-Day Lunar &amp; Daylight Solar Arc Algorithm</string>
+    <string name="settings_sys_interval_value">Automatic 45-Second Telemetry Polling Active</string>
+    <string name="error_sync_failed">Failed to synchronize meteorological feeds: %1$s</string>
+    <string name="error_network_generic">Network error</string>
+    <string name="recharts_tooltip_pop_format">%1$d%% (%2$s)</string>
+    <string name="recharts_tooltip_wind_uv_format">%1$s • UV %2$d</string>
+    <string name="telemetry_humidity_rh">%1$d%% RH</string>
+
+    <!-- WMO Weather Codes -->
+    <string name="wmo_clear_sky">Clear Sky</string>
+    <string name="wmo_mainly_clear">Mainly Clear</string>
+    <string name="wmo_partly_cloudy">Partly Cloudy</string>
+    <string name="wmo_overcast">Overcast</string>
+    <string name="wmo_fog">Fog</string>
+    <string name="wmo_depositing_rime_fog">Depositing Rime Fog</string>
+    <string name="wmo_light_drizzle">Light Drizzle</string>
+    <string name="wmo_moderate_drizzle">Moderate Drizzle</string>
+    <string name="wmo_dense_drizzle">Dense Drizzle</string>
+    <string name="wmo_slight_rain">Slight Rain</string>
+    <string name="wmo_moderate_rain">Moderate Rain</string>
+    <string name="wmo_heavy_rain">Heavy Rain</string>
+    <string name="wmo_slight_snow">Slight Snow</string>
+    <string name="wmo_moderate_snow">Moderate Snow</string>
+    <string name="wmo_heavy_snow">Heavy Snow</string>
+    <string name="wmo_snow_grains">Snow Grains</string>
+    <string name="wmo_slight_rain_showers">Slight Rain Showers</string>
+    <string name="wmo_moderate_rain_showers">Moderate Rain Showers</string>
+    <string name="wmo_violent_rain_showers">Violent Rain Showers</string>
+    <string name="wmo_slight_snow_showers">Slight Snow Showers</string>
+    <string name="wmo_heavy_snow_showers">Heavy Snow Showers</string>
+    <string name="wmo_thunderstorm">Thunderstorm</string>
+    <string name="wmo_thunderstorm_hail">Thunderstorm with Hail</string>
+    <string name="wmo_severe_hail_thunderstorm">Severe Hail Thunderstorm</string>
+    <string name="wmo_atmospheric_conditions">Atmospheric Conditions</string>
+
+    <!-- Air Quality Index Statuses -->
+    <string name="aqi_good">Good</string>
+    <string name="aqi_moderate">Moderate</string>
+    <string name="aqi_unhealthy_sensitive">Unhealthy for Sensitive Groups</string>
+    <string name="aqi_unhealthy">Unhealthy</string>
+    <string name="aqi_very_unhealthy">Very Unhealthy</string>
+    <string name="aqi_hazardous">Hazardous</string>
+
+    <!-- Diurnal Periods -->
+    <string name="period_morning">Morning</string>
+    <string name="period_afternoon">Afternoon</string>
+    <string name="period_evening">Evening</string>
+    <string name="period_night">Night</string>
+
+    <!-- Moon Phases -->
+    <string name="moon_phase_new">New Moon</string>
+    <string name="moon_phase_waxing_crescent">Waxing Crescent</string>
+    <string name="moon_phase_first_quarter">First Quarter</string>
+    <string name="moon_phase_waxing_gibbous">Waxing Gibbous</string>
+    <string name="moon_phase_full">Full Moon</string>
+    <string name="moon_phase_waning_gibbous">Waning Gibbous</string>
+    <string name="moon_phase_last_quarter">Last Quarter</string>
+    <string name="moon_phase_waning_crescent">Waning Crescent</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.example.data.repository
 
+import androidx.annotation.StringRes
+import com.example.R
 import com.example.data.api.ApiClient
 import com.example.data.model.*
 import kotlinx.coroutines.Dispatchers
@@ -28,15 +30,8 @@ class WeatherRepository {
         isGpsDetected = false
     )
 
-    // Default bookmarked cities
-    fun getDefaultFavoriteCities(): List<CityLocation> = listOf(
-        defaultLocation,
-        CityLocation(name = "London", region = "Greater London", country = "United Kingdom", countryCode = "GB", latitude = 51.5074, longitude = -0.1278),
-        CityLocation(name = "Tokyo", region = "Tokyo", country = "Japan", countryCode = "JP", latitude = 35.6762, longitude = 139.6503),
-        CityLocation(name = "Sydney", region = "New South Wales", country = "Australia", countryCode = "AU", latitude = -33.8688, longitude = 151.2093),
-        CityLocation(name = "Paris", region = "Île-de-France", country = "France", countryCode = "FR", latitude = 48.8566, longitude = 2.3522),
-        CityLocation(name = "Toronto", region = "Ontario", country = "Canada", countryCode = "CA", latitude = 43.6532, longitude = -79.3832)
-    )
+    // Default bookmarked cities (empty initially to allow user customization)
+    fun getDefaultFavoriteCities(): List<CityLocation> = emptyList()
 
     suspend fun detectRealLocation(): CityLocation = withContext(Dispatchers.IO) {
         try {
@@ -126,9 +121,9 @@ class WeatherRepository {
             sunsetTime = sunset
         )
 
-        val diurnalPeriods = computeDiurnalPeriods(hourlyData, dailyData)
-        val hourlyPoints = computeHourlyPoints(hourlyData)
-        val dailyDays = computeDailyDays(dailyData)
+        val diurnalPeriods = computeDiurnalPeriods(hourlyData, dailyData, currentData)
+        val hourlyPoints = computeHourlyPoints(hourlyData, currentData)
+        val dailyDays = computeDailyDays(dailyData, currentData)
         val alerts = evaluateSevereWeatherAlerts(currentWeather, dailyDays)
         val headlines = generateRealLocalHeadlines(currentWeather, diurnalPeriods, alerts)
         val astronomical = calculateAstronomicalData(sunrise, sunset)
@@ -145,7 +140,11 @@ class WeatherRepository {
         Pair(currentWeather, packageData)
     }
 
-    private fun computeDiurnalPeriods(hourly: HourlyData, daily: DailyData): List<DiurnalPeriod> {
+    private fun computeDiurnalPeriods(
+        hourly: HourlyData,
+        daily: DailyData,
+        currentData: CurrentUnitsAndData
+    ): List<DiurnalPeriod> {
         val nowCal = Calendar.getInstance()
         val currentHour = nowCal.get(Calendar.HOUR_OF_DAY)
 
@@ -174,17 +173,17 @@ class WeatherRepository {
                 }
             }
 
-            val avgTemp = if (matchedTemps.isNotEmpty()) matchedTemps.average() else 20.0
-            val maxPop = if (matchedPops.isNotEmpty()) matchedPops.maxOrNull() ?: 0 else 10
-            val code = matchedCodes.firstOrNull() ?: 0
-            val wind = if (matchedWinds.isNotEmpty()) matchedWinds.average() else 12.0
+            val avgTemp = if (matchedTemps.isNotEmpty()) matchedTemps.average() else currentData.temperature2m
+            val maxPop = if (matchedPops.isNotEmpty()) matchedPops.maxOrNull() ?: 0 else 0
+            val code = matchedCodes.firstOrNull() ?: currentData.weatherCode
+            val wind = if (matchedWinds.isNotEmpty()) matchedWinds.average() else currentData.windSpeed10m
 
-            val isCurrent = when (cfg.first) {
-                "Morning" -> currentHour in 6..11
-                "Afternoon" -> currentHour in 12..17
-                "Evening" -> currentHour in 18..21
-                "Night" -> currentHour >= 22 || currentHour < 6
-                else -> false
+            val (isCurrent, periodRes) = when (cfg.first) {
+                "Morning" -> Pair(currentHour in 6..11, R.string.period_morning)
+                "Afternoon" -> Pair(currentHour in 12..17, R.string.period_afternoon)
+                "Evening" -> Pair(currentHour in 18..21, R.string.period_evening)
+                "Night" -> Pair(currentHour >= 22 || currentHour < 6, R.string.period_night)
+                else -> Pair(false, R.string.period_morning)
             }
 
             periods.add(
@@ -192,12 +191,13 @@ class WeatherRepository {
                     periodName = cfg.first,
                     timeRange = cfg.second,
                     tempC = avgTemp,
-                    feelsLikeC = avgTemp - 1.0,
+                    feelsLikeC = avgTemp - (currentData.temperature2m - currentData.apparentTemperature),
                     conditionText = getWeatherDescription(code),
                     weatherCode = code,
                     popPercent = maxPop,
                     windSpeedKmh = wind,
-                    isCurrent = isCurrent
+                    isCurrent = isCurrent,
+                    periodNameRes = periodRes
                 )
             )
         }
@@ -205,18 +205,21 @@ class WeatherRepository {
         return periods
     }
 
-    private fun computeHourlyPoints(hourly: HourlyData): List<HourlyPoint> {
+    private fun computeHourlyPoints(
+        hourly: HourlyData,
+        currentData: CurrentUnitsAndData
+    ): List<HourlyPoint> {
         val points = mutableListOf<HourlyPoint>()
         val count = minOf(hourly.time.size, 24)
         for (i in 0 until count) {
             val iso = hourly.time.getOrNull(i) ?: ""
             val timeLabel = if (iso.contains("T")) iso.substringAfter("T").take(5) else "12:00"
-            val temp = hourly.temperature2m.getOrNull(i) ?: 20.0
-            val feels = hourly.apparentTemperature.getOrNull(i) ?: temp
-            val code = hourly.weatherCode.getOrNull(i) ?: 0
+            val temp = hourly.temperature2m.getOrNull(i) ?: currentData.temperature2m
+            val feels = hourly.apparentTemperature.getOrNull(i) ?: currentData.apparentTemperature
+            val code = hourly.weatherCode.getOrNull(i) ?: currentData.weatherCode
             val pop = hourly.precipitationProbability.getOrNull(i) ?: 0
-            val wind = hourly.windSpeed10m.getOrNull(i) ?: 10.0
-            val humidity = hourly.relativeHumidity2m.getOrNull(i)?.roundToInt() ?: 50
+            val wind = hourly.windSpeed10m.getOrNull(i) ?: currentData.windSpeed10m
+            val humidity = hourly.relativeHumidity2m.getOrNull(i)?.roundToInt() ?: currentData.relativeHumidity2m.roundToInt()
 
             points.add(
                 HourlyPoint(
@@ -235,7 +238,10 @@ class WeatherRepository {
         return points
     }
 
-    private fun computeDailyDays(daily: DailyData): List<DailyForecastDay> {
+    private fun computeDailyDays(
+        daily: DailyData,
+        currentData: CurrentUnitsAndData
+    ): List<DailyForecastDay> {
         val days = mutableListOf<DailyForecastDay>()
         val count = minOf(daily.time.size, 14)
         val sdfParse = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -255,13 +261,13 @@ class WeatherRepository {
                 }
             } catch (_: Exception) {}
 
-            val maxT = daily.temperature2mMax.getOrNull(i) ?: 24.0
-            val minT = daily.temperature2mMin.getOrNull(i) ?: 16.0
-            val code = daily.weatherCode.getOrNull(i) ?: 0
+            val maxT = daily.temperature2mMax.getOrNull(i) ?: currentData.temperature2m
+            val minT = daily.temperature2mMin.getOrNull(i) ?: (currentData.temperature2m - 5.0)
+            val code = daily.weatherCode.getOrNull(i) ?: currentData.weatherCode
             val rain = daily.precipitationSum.getOrNull(i) ?: 0.0
-            val pop = daily.precipitationProbabilityMax.getOrNull(i) ?: 10
-            val uv = daily.uvIndexMax.getOrNull(i) ?: 5.0
-            val wind = daily.windSpeed10mMax.getOrNull(i) ?: 15.0
+            val pop = daily.precipitationProbabilityMax.getOrNull(i) ?: 0
+            val uv = daily.uvIndexMax.getOrNull(i) ?: currentData.uvIndex
+            val wind = daily.windSpeed10mMax.getOrNull(i) ?: currentData.windSpeed10m
 
             days.add(
                 DailyForecastDay(
@@ -413,15 +419,15 @@ class WeatherRepository {
 
         val illumination = ((1.0 - cos(2 * PI * phaseDays / 29.530588)) / 2.0 * 100.0).roundToInt().coerceIn(0, 100)
 
-        val phaseName = when {
-            phaseDays < 1.8 -> "New Moon"
-            phaseDays < 7.4 -> "Waxing Crescent"
-            phaseDays < 9.2 -> "First Quarter"
-            phaseDays < 13.8 -> "Waxing Gibbous"
-            phaseDays < 15.7 -> "Full Moon"
-            phaseDays < 22.1 -> "Waning Gibbous"
-            phaseDays < 23.9 -> "Last Quarter"
-            else -> "Waning Crescent"
+        val (phaseName, phaseRes) = when {
+            phaseDays < 1.8 -> Pair("New Moon", R.string.moon_phase_new)
+            phaseDays < 7.4 -> Pair("Waxing Crescent", R.string.moon_phase_waxing_crescent)
+            phaseDays < 9.2 -> Pair("First Quarter", R.string.moon_phase_first_quarter)
+            phaseDays < 13.8 -> Pair("Waxing Gibbous", R.string.moon_phase_waxing_gibbous)
+            phaseDays < 15.7 -> Pair("Full Moon", R.string.moon_phase_full)
+            phaseDays < 22.1 -> Pair("Waning Gibbous", R.string.moon_phase_waning_gibbous)
+            phaseDays < 23.9 -> Pair("Last Quarter", R.string.moon_phase_last_quarter)
+            else -> Pair("Waning Crescent", R.string.moon_phase_waning_crescent)
         }
 
         val daysUntilFull = ((14.765 - phaseDays + 29.53) % 29.53).roundToInt()
@@ -452,7 +458,8 @@ class WeatherRepository {
             daysUntilFullMoon = daysUntilFull,
             sunriseTime = sunrise,
             sunsetTime = sunset,
-            daylightProgressPercent = progress
+            daylightProgressPercent = progress,
+            moonPhaseResId = phaseRes
         )
     }
 
@@ -461,44 +468,44 @@ class WeatherRepository {
             id = "vod_1",
             category = "Severe Weather",
             title = "Inside the Eye of a Category 5 Atlantic Super-Storm",
-            presenter = "Chief Meteorologist Marcus Vance",
+            presenter = "Severe Weather Operations Center",
             duration = "14:20",
-            timestamp = "Today 16:30",
+            timestamp = "Field Report 16:30",
             description = "High-definition Doppler dissection of atmospheric barometric collapses and eyewall mesovortices.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/superstorm_radar_1080p.mp4",
+            videoUrl = "",
             accentColorHex = 0xFFDC2626
         ),
         VodStory(
             id = "vod_2",
             category = "Earth Science",
             title = "Jet Stream Fractures & Arctic Polar Vortex Dynamics",
-            presenter = "Dr. Elena Rostova",
+            presenter = "Atmospheric Dynamics Division",
             duration = "09:45",
-            timestamp = "Yesterday 20:00",
+            timestamp = "Synoptic Briefing",
             description = "How Rossby wave undulations trigger unprecedented temperature swings across northern temperate latitudes.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/polar_vortex_telemetry.mp4",
+            videoUrl = "",
             accentColorHex = 0xFF0284C7
         ),
         VodStory(
             id = "vod_3",
             category = "Forecasts",
             title = "Continental 30-Day Precipitation & Drought Outlook",
-            presenter = "Atmospheric Analyst Sarah Chen",
+            presenter = "Continental Climatology Center",
             duration = "08:12",
-            timestamp = "2 hours ago",
+            timestamp = "Long-Range Model",
             description = "Global climate indices and sea-surface anomalies signaling major multi-week rain systems.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/drought_outlook_synoptic.mp4",
+            videoUrl = "",
             accentColorHex = 0xFF10B981
         ),
         VodStory(
             id = "vod_4",
             category = "Climate & Nature",
             title = "Noctilucent Mesospheric Clouds: Night Shimmers Explored",
-            presenter = "Prof. Kenji Takahashi",
+            presenter = "Mesospheric Research Laboratory",
             duration = "11:55",
-            timestamp = "3 days ago",
+            timestamp = "Upper Atmosphere Study",
             description = "Spectacular ice crystal formations dancing on the threshold of space 80 kilometers above Earth.",
-            videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/broadcast/mesospheric_clouds_hd.mp4",
+            videoUrl = "",
             accentColorHex = 0xFF8B5CF6
         )
     )
@@ -539,6 +546,45 @@ class WeatherRepository {
             aqi <= 200 -> "Unhealthy"
             aqi <= 300 -> "Very Unhealthy"
             else -> "Hazardous"
+        }
+
+        @StringRes
+        fun getWeatherDescriptionRes(code: Int): Int = when (code) {
+            0 -> R.string.wmo_clear_sky
+            1 -> R.string.wmo_mainly_clear
+            2 -> R.string.wmo_partly_cloudy
+            3 -> R.string.wmo_overcast
+            45 -> R.string.wmo_fog
+            48 -> R.string.wmo_depositing_rime_fog
+            51 -> R.string.wmo_light_drizzle
+            53 -> R.string.wmo_moderate_drizzle
+            55 -> R.string.wmo_dense_drizzle
+            61 -> R.string.wmo_slight_rain
+            63 -> R.string.wmo_moderate_rain
+            65 -> R.string.wmo_heavy_rain
+            71 -> R.string.wmo_slight_snow
+            73 -> R.string.wmo_moderate_snow
+            75 -> R.string.wmo_heavy_snow
+            77 -> R.string.wmo_snow_grains
+            80 -> R.string.wmo_slight_rain_showers
+            81 -> R.string.wmo_moderate_rain_showers
+            82 -> R.string.wmo_violent_rain_showers
+            85 -> R.string.wmo_slight_snow_showers
+            86 -> R.string.wmo_heavy_snow_showers
+            95 -> R.string.wmo_thunderstorm
+            96 -> R.string.wmo_thunderstorm_hail
+            99 -> R.string.wmo_severe_hail_thunderstorm
+            else -> R.string.wmo_atmospheric_conditions
+        }
+
+        @StringRes
+        fun getAqiStatusRes(aqi: Int): Int = when {
+            aqi <= 50 -> R.string.aqi_good
+            aqi <= 100 -> R.string.aqi_moderate
+            aqi <= 150 -> R.string.aqi_unhealthy_sensitive
+            aqi <= 200 -> R.string.aqi_unhealthy
+            aqi <= 300 -> R.string.aqi_very_unhealthy
+            else -> R.string.aqi_hazardous
         }
 
         fun getWindCompass(degrees: Int): String {

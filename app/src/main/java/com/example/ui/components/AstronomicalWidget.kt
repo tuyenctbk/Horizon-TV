@@ -51,7 +51,7 @@ fun AstronomicalWidget(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.WbSunny,
-                    contentDescription = "Sun and Moon",
+                    contentDescription = stringResource(R.string.astro_sun_and_moon),
                     tint = SolarGold,
                     modifier = Modifier.size(18.dp)
                 )
@@ -188,7 +188,7 @@ fun AstronomicalWidget(
                     ) {
                         Icon(
                             Icons.Default.Brightness2,
-                            contentDescription = "Moon Phase",
+                            contentDescription = stringResource(R.string.astro_moon_phase),
                             tint = SleekOnBlueContainer,
                             modifier = Modifier.size(22.dp)
                         )
@@ -196,7 +196,7 @@ fun AstronomicalWidget(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = astronomical.moonPhaseName,
+                            text = stringResource(astronomical.moonPhaseResId),
                             color = SleekTextPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold

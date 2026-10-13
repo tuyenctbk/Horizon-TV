@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.DailyForecastDay
 import com.example.data.model.UnitSystem
+import com.example.data.repository.WeatherRepository
 import com.example.ui.theme.*
 import kotlin.math.roundToInt
 
@@ -195,7 +196,7 @@ fun RechartsFiveDayForecastView(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.WaterDrop,
-                                contentDescription = "Rain",
+                                contentDescription = stringResource(R.string.common_rain),
                                 tint = HorizonCyan,
                                 modifier = Modifier.size(10.dp)
                             )
@@ -472,7 +473,7 @@ fun RechartsFiveDayForecastView(
                                 WeatherConditionIcon(weatherCode = activeDay.weatherCode, size = 16.dp)
                             }
                             Text(
-                                text = activeDay.conditionText,
+                                text = stringResource(WeatherRepository.getWeatherDescriptionRes(activeDay.weatherCode)),
                                 color = SleekBluePrimary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -497,12 +498,14 @@ fun RechartsFiveDayForecastView(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(stringResource(R.string.recharts_tooltip_pop), color = Color(0xFFD1D5DB), fontSize = 10.sp)
-                                val rainDisplay = if (unitSystem == UnitSystem.METRIC) {
-                                    "${String.format(java.util.Locale.US, "%.1f", activeDay.rainMm)} mm"
+                                val rainUnit = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_mm) else stringResource(R.string.unit_in)
+                                val rainFormatted = if (unitSystem == UnitSystem.METRIC) {
+                                    String.format(java.util.Locale.US, "%.1f", activeDay.rainMm)
                                 } else {
-                                    "${String.format(java.util.Locale.US, "%.2f", activeDay.rainMm * 0.0393701)} in"
+                                    String.format(java.util.Locale.US, "%.2f", activeDay.rainMm * 0.0393701)
                                 }
-                                Text("${activeDay.popPercent}% ($rainDisplay)", color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                val rainDisplay = "$rainFormatted $rainUnit"
+                                Text(stringResource(R.string.recharts_tooltip_pop_format, activeDay.popPercent, rainDisplay), color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -513,7 +516,7 @@ fun RechartsFiveDayForecastView(
                                     "${activeDay.maxWindKmh.roundToInt()} km/h"
                                 else
                                     "${(activeDay.maxWindKmh * 0.621371).roundToInt()} mph"
-                                Text("$windDisplay • UV ${activeDay.maxUvIndex.roundToInt()}", color = Color.White, fontSize = 9.sp)
+                                Text(stringResource(R.string.recharts_tooltip_wind_uv_format, windDisplay, activeDay.maxUvIndex.roundToInt()), color = Color.White, fontSize = 9.sp)
                             }
                         }
                     }

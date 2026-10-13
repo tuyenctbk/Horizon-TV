@@ -88,7 +88,7 @@ fun HomeDashboardScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Warning, contentDescription = "Alert", tint = SleekRedText, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.common_warning), tint = SleekRedText, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -173,7 +173,8 @@ fun HomeDashboardScreen(
         // Real-Time Atmospheric Sensor Telemetry Visualizer (Micro-sensor periodic stream)
         RealTimeTelemetryVisualizer(
             currentWeather = currentWeather,
-            unitSystem = unitSystem
+            unitSystem = unitSystem,
+            hourlyPoints = weatherPackage.hourlyPoints
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -278,7 +279,7 @@ fun HomeDashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Bookmark, contentDescription = "Favorites", tint = SolarGold, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Bookmark, contentDescription = stringResource(R.string.common_favorite), tint = SolarGold, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.home_carousel_title),
@@ -388,7 +389,7 @@ fun HomeDashboardScreen(
                                     ) {
                                         Icon(
                                             Icons.Default.Close,
-                                            contentDescription = "Remove",
+                                            contentDescription = stringResource(R.string.common_remove),
                                             tint = if (isSelected) SleekBluePrimary else SleekTextSecondary,
                                             modifier = Modifier.size(14.dp)
                                         )
@@ -401,7 +402,11 @@ fun HomeDashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Coordinates: ${String.format(java.util.Locale.US, "%.1f, %.1f", city.latitude, city.longitude)}",
+                                    text = stringResource(
+                                        R.string.search_coordinates_format,
+                                        String.format(java.util.Locale.US, "%.1f", city.latitude),
+                                        String.format(java.util.Locale.US, "%.1f", city.longitude)
+                                    ),
                                     color = SleekTextSecondary,
                                     fontSize = 9.sp
                                 )
@@ -602,7 +607,7 @@ private fun LiveTvHeroCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-            Icon(Icons.Default.Tv, contentDescription = "Live TV", tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Tv, contentDescription = stringResource(R.string.nav_live_tv), tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -645,7 +650,7 @@ private fun LiveTvHeroCard(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "Play", tint = Color.White, modifier = Modifier.size(14.dp))
+                        Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.common_play_pause), tint = Color.White, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(stringResource(R.string.home_switch_broadcast), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
@@ -754,7 +759,7 @@ private fun MicroClimateSnapshotCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = currentWeather.conditionText.uppercase(),
+                    text = stringResource(WeatherRepository.getWeatherDescriptionRes(currentWeather.weatherCode)).uppercase(),
                     color = SolarGold,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
@@ -786,9 +791,10 @@ private fun MicroClimateSnapshotCard(
                 label = stringResource(R.string.home_humidity_label),
                 value = "${currentWeather.humidityPercent}%"
             )
+            val aqiStatusStr = stringResource(WeatherRepository.getAqiStatusRes(currentWeather.aqi))
             TelemetryMiniChip(
                 label = stringResource(R.string.home_aqi_label),
-                value = "${currentWeather.aqi} (${currentWeather.aqiStatus})"
+                value = "${currentWeather.aqi} ($aqiStatusStr)"
             )
         }
 
@@ -827,7 +833,7 @@ private fun MicroClimateSnapshotCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = period.periodName.take(3).uppercase(),
+                        text = stringResource(period.periodNameRes).take(3).uppercase(),
                         color = if (isCurr) SleekOnBlueContainer else SleekTextSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold

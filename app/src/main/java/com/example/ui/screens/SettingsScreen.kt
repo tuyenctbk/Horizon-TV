@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -322,6 +323,8 @@ fun SettingsScreen(
                     val testAlertTitle = stringResource(R.string.alert_test_title)
                     val testAlertSummary = stringResource(R.string.alert_test_summary)
                     val testAlertInstructions = stringResource(R.string.alert_test_instructions)
+                    val testEffectiveTime = stringResource(R.string.alert_test_effective_time)
+                    val testExpiresTime = stringResource(R.string.alert_test_expires_time)
 
                     Button(
                         onClick = {
@@ -329,8 +332,8 @@ fun SettingsScreen(
                                 id = "test_ebs_broadcast",
                                 title = testAlertTitle,
                                 severity = AlertSeverity.EMERGENCY,
-                                effectiveTime = "NOW",
-                                expiresTime = "IN 45 MINUTES",
+                                effectiveTime = testEffectiveTime,
+                                expiresTime = testExpiresTime,
                                 summary = testAlertSummary,
                                 safetyInstructions = testAlertInstructions
                             )
@@ -359,7 +362,7 @@ fun SettingsScreen(
                     icon = Icons.Default.Star,
                     title = stringResource(R.string.settings_rate_title),
                     subtitle = stringResource(R.string.settings_rate_subtitle),
-                    actionLabel = "RATE",
+                    actionLabel = stringResource(R.string.settings_action_rate),
                     accentColor = SolarGold,
                     onClick = {
                         onRateApp()
@@ -379,11 +382,13 @@ fun SettingsScreen(
                     }
                 )
 
+                val shareTitle = stringResource(R.string.settings_share_title)
+
                 SettingsActionCard(
                     icon = Icons.Default.Share,
-                    title = stringResource(R.string.settings_share_title),
+                    title = shareTitle,
                     subtitle = stringResource(R.string.settings_share_subtitle),
-                    actionLabel = "SHARE",
+                    actionLabel = stringResource(R.string.settings_action_share),
                     accentColor = SleekBluePrimary,
                     onClick = {
                         onShareApp()
@@ -393,7 +398,7 @@ fun SettingsScreen(
                                 putExtra(Intent.EXTRA_TEXT, shareText)
                                 type = "text/plain"
                             }
-                            val chooser = Intent.createChooser(sendIntent, "Share Horizon TV").apply {
+                            val chooser = Intent.createChooser(sendIntent, shareTitle).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                             context.startActivity(chooser)
@@ -401,11 +406,14 @@ fun SettingsScreen(
                     }
                 )
 
+                val emailTemplate = stringResource(R.string.settings_feedback_email_body_template)
+                val feedbackChooserTitle = stringResource(R.string.settings_feedback_title)
+
                 SettingsActionCard(
                     icon = Icons.Default.Email,
                     title = stringResource(R.string.settings_feedback_title),
                     subtitle = stringResource(R.string.settings_feedback_subtitle),
-                    actionLabel = "EMAIL",
+                    actionLabel = stringResource(R.string.settings_action_email),
                     accentColor = SleekGreenText,
                     onClick = {
                         val recipient = "tuyenctbk@gmail.com"
@@ -414,9 +422,15 @@ fun SettingsScreen(
                             val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
                             "${pInfo.versionName} (build $vc)"
                         } catch (_: Exception) {
-                            "1.5 (build 6)"
+                            "1.6 (build 7)"
                         }
-                        val emailBody = "Horizon TV Broadcast App Feedback:\n\nApp Version: $appVersion\nDevice: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.RELEASE})\n\nPlease enter your observations or bug report below:\n"
+                        val emailBody = String.format(
+                            java.util.Locale.US,
+                            emailTemplate,
+                            appVersion,
+                            "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}",
+                            android.os.Build.VERSION.RELEASE
+                        )
 
                         try {
                             val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
@@ -436,7 +450,7 @@ fun SettingsScreen(
                                     putExtra(Intent.EXTRA_TEXT, emailBody)
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
-                                val chooser = Intent.createChooser(fallbackIntent, "Send Meteorological Feedback").apply {
+                                val chooser = Intent.createChooser(fallbackIntent, feedbackChooserTitle).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 context.startActivity(chooser)
@@ -444,7 +458,7 @@ fun SettingsScreen(
                                 // Fallback when no email app is installed (e.g. Android TV devices)
                                 try {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
-                                    val clip = android.content.ClipData.newPlainText("Developer Email", recipient)
+                                    val clip = android.content.ClipData.newPlainText(feedbackChooserTitle, recipient)
                                     clipboard?.setPrimaryClip(clip)
                                     android.widget.Toast.makeText(
                                         context,
@@ -464,13 +478,16 @@ fun SettingsScreen(
         }
 
         item {
-            val platformInfo = try {
-                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
-                "Horizon TV Android Broadcast v${pInfo.versionName} (Build $vc)"
-            } catch (_: Exception) {
-                "Horizon TV Android Broadcast v1.5"
+            val (pVersion, pVc) = remember(context) {
+                try {
+                    val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                    val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
+                    Pair(pInfo.versionName ?: "1.6", vc)
+                } catch (_: Exception) {
+                    Pair("1.6", 7L)
+                }
             }
+            val platformInfo = stringResource(R.string.settings_sys_platform_value, pVersion, pVc)
 
             Column(
                 modifier = Modifier
@@ -481,10 +498,10 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SystemInfoRow(stringResource(R.string.settings_sys_platform), platformInfo)
-                SystemInfoRow(stringResource(R.string.settings_sys_provider), "Open-Meteo Global Forecasting Engine (Free & Open)")
-                SystemInfoRow(stringResource(R.string.settings_sys_radar), "Dual-Pol 500kW Doppler Multi-Layer Engine")
-                SystemInfoRow(stringResource(R.string.settings_sys_astronomy), "Synodic 29.53-Day Lunar & Daylight Solar Arc Algorithm")
-                SystemInfoRow(stringResource(R.string.settings_sys_interval), "Automatic 45-Second Telemetry Polling Active")
+                SystemInfoRow(stringResource(R.string.settings_sys_provider), stringResource(R.string.settings_sys_provider_value))
+                SystemInfoRow(stringResource(R.string.settings_sys_radar), stringResource(R.string.settings_sys_radar_value))
+                SystemInfoRow(stringResource(R.string.settings_sys_astronomy), stringResource(R.string.settings_sys_astronomy_value))
+                SystemInfoRow(stringResource(R.string.settings_sys_interval), stringResource(R.string.settings_sys_interval_value))
             }
         }
     }

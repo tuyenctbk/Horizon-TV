@@ -54,13 +54,14 @@ fun InteractiveRadarScreen(
     var inspectedPoint by remember { mutableStateOf<Offset?>(null) }
 
     // Dynamic 7 timeline labels (-30m, -20m, -10m, NOW, +10m, +20m, +30m)
-    val timeLabels = remember {
+    val nowTemplate = stringResource(R.string.radar_timeline_now)
+    val timeLabels = remember(nowTemplate) {
         val now = System.currentTimeMillis()
         val offsets = listOf(-30, -20, -10, 0, 10, 20, 30)
         val timeFmt = SimpleDateFormat("HH:mm", Locale.US)
         offsets.mapIndexed { idx, minOffset ->
             val t = now + minOffset * 60 * 1000L
-            if (idx == 3) "NOW (${timeFmt.format(Date(t))})" else timeFmt.format(Date(t))
+            if (idx == 3) String.format(nowTemplate, timeFmt.format(Date(t))) else timeFmt.format(Date(t))
         }
     }
 

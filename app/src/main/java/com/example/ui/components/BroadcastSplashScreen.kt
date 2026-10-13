@@ -62,12 +62,13 @@ fun BroadcastSplashScreen(
     )
 
     var syncStep by remember { mutableIntStateOf(0) }
-    val syncSteps = listOf(
-        "INITIALIZING HIGH-PRECISION METEOROLOGICAL TELEMETRY...",
-        "ACQUIRING GLOBAL NUMERICAL FORECASTING GRIDS...",
-        "SYNCHRONIZING DUAL-POL DOPPLER REFLECTIVITY SWEEPS...",
-        "CALIBRATING ATMOSPHERIC SENSORS & REAL-TIME ALERTS..."
-    )
+    val step1 = stringResource(R.string.splash_sync_step_1)
+    val step2 = stringResource(R.string.splash_sync_step_2)
+    val step3 = stringResource(R.string.splash_sync_step_3)
+    val step4 = stringResource(R.string.splash_sync_step_4)
+    val syncSteps = remember(step1, step2, step3, step4) {
+        listOf(step1, step2, step3, step4)
+    }
 
     LaunchedEffect(isLoading) {
         if (isLoading) {
@@ -170,7 +171,7 @@ fun BroadcastSplashScreen(
                     color = SevereRed
                 ) {
                     Text(
-                        text = "LIVE",
+                        text = stringResource(R.string.common_live),
                         color = Color.White,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
@@ -183,7 +184,7 @@ fun BroadcastSplashScreen(
                     color = Color(0xFF1E3A8A)
                 ) {
                     Text(
-                        text = "CH 104 • 24/7",
+                        text = stringResource(R.string.splash_channel_badge),
                         color = HorizonCyan,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
@@ -195,7 +196,7 @@ fun BroadcastSplashScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "HORIZON WEATHER TV",
+                text = stringResource(R.string.splash_network_title),
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
@@ -203,7 +204,7 @@ fun BroadcastSplashScreen(
             )
 
             Text(
-                text = "CONTINUOUS METEOROLOGICAL BROADCAST NETWORK",
+                text = stringResource(R.string.splash_network_subtitle),
                 color = HorizonCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
@@ -250,7 +251,7 @@ fun BroadcastSplashScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = SleekBluePrimary),
                             shape = RoundedCornerShape(percent = 50)
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.common_refresh), tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(stringResource(R.string.error_reconnect_button), color = Color.White, fontWeight = FontWeight.Bold)
                         }

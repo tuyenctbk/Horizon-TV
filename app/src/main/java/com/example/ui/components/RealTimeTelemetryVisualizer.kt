@@ -30,64 +30,56 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.CurrentWeather
+import com.example.data.model.HourlyPoint
 import com.example.data.model.UnitSystem
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.random.Random
 
 /**
  * Real-time data visualizer for temperature, humidity, and barometric pressure.
- * Uses local state with a periodic coroutine ticker to update micro-sensor telemetry every 2 seconds,
- * maintaining an active rolling sparkline history buffer and live needle/arc gauges.
+ * Visualizes actual atmospheric telemetry and hourly trendline history buffers with live gauges.
  */
 @Composable
 fun RealTimeTelemetryVisualizer(
     currentWeather: CurrentWeather,
     unitSystem: UnitSystem,
+    hourlyPoints: List<HourlyPoint> = emptyList(),
     modifier: Modifier = Modifier
 ) {
-    // Local telemetry state updated periodically
-    var liveTempC by remember(currentWeather.tempC) { mutableFloatStateOf(currentWeather.tempC.toFloat()) }
-    var liveHumidity by remember(currentWeather.humidityPercent) { mutableFloatStateOf(currentWeather.humidityPercent.toFloat()) }
-    var livePressureHpa by remember(currentWeather.pressureHpa) { mutableFloatStateOf(currentWeather.pressureHpa.toFloat()) }
-    var updateCount by remember { mutableIntStateOf(0) }
+    // Live telemetry states directly reflecting sensor measurements
+    val liveTempC = currentWeather.tempC.toFloat()
+    val liveHumidity = currentWeather.humidityPercent.toFloat()
+    val livePressureHpa = currentWeather.pressureHpa.toFloat()
+    var updateCount by remember { mutableIntStateOf(1) }
     var isLiveUpdating by remember { mutableStateOf(true) }
 
-    // Rolling history buffers for real-time trendlines (12 samples)
-    val tempHistory = remember { mutableStateListOf<Float>().apply { repeat(12) { add(currentWeather.tempC.toFloat()) } } }
-    val humidityHistory = remember { mutableStateListOf<Float>().apply { repeat(12) { add(currentWeather.humidityPercent.toFloat()) } } }
-    val pressureHistory = remember { mutableStateListOf<Float>().apply { repeat(12) { add(currentWeather.pressureHpa.toFloat()) } } }
+    // Rolling history buffers for real-time trendlines based on real hourly telemetry
+    val tempHistory = remember(currentWeather.tempC, hourlyPoints) {
+        if (hourlyPoints.isNotEmpty()) {
+            hourlyPoints.take(12).map { it.tempC.toFloat() }
+        } else {
+            List(12) { currentWeather.tempC.toFloat() }
+        }
+    }
+    val humidityHistory = remember(currentWeather.humidityPercent, hourlyPoints) {
+        if (hourlyPoints.isNotEmpty()) {
+            hourlyPoints.take(12).map { it.humidityPercent.toFloat() }
+        } else {
+            List(12) { currentWeather.humidityPercent.toFloat() }
+        }
+    }
+    val pressureHistory = remember(currentWeather.pressureHpa) {
+        List(12) { currentWeather.pressureHpa.toFloat() }
+    }
 
-    // Periodic local state telemetry update loop
+    // Telemetry sampling heartbeat
     LaunchedEffect(isLiveUpdating, currentWeather) {
         if (!isLiveUpdating) return@LaunchedEffect
         while (true) {
-            delay(2000) // 2-second micro-sensor telemetry frequency
-            val baseTemp = currentWeather.tempC.toFloat()
-            val baseHumid = currentWeather.humidityPercent.toFloat()
-            val basePress = currentWeather.pressureHpa.toFloat()
-
-            // Micro fluctuations simulating high-precision atmospheric telemetry sensors
-            val deltaTemp = (Random.nextFloat() - 0.5f) * 0.4f
-            val deltaHumid = (Random.nextFloat() - 0.5f) * 1.2f
-            val deltaPress = (Random.nextFloat() - 0.5f) * 0.3f
-
-            liveTempC = (baseTemp + deltaTemp).coerceIn(-40f, 60f)
-            liveHumidity = (baseHumid + deltaHumid).coerceIn(5f, 100f)
-            livePressureHpa = (basePress + deltaPress).coerceIn(900f, 1080f)
+            delay(2000)
             updateCount++
-
-            // Shift history buffers
-            if (tempHistory.size >= 12) tempHistory.removeAt(0)
-            tempHistory.add(liveTempC)
-
-            if (humidityHistory.size >= 12) humidityHistory.removeAt(0)
-            humidityHistory.add(liveHumidity)
-
-            if (pressureHistory.size >= 12) pressureHistory.removeAt(0)
-            pressureHistory.add(livePressureHpa)
         }
     }
 
@@ -153,7 +145,7 @@ fun RealTimeTelemetryVisualizer(
                 ) {
                     Icon(
                         imageVector = if (isLiveUpdating) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "Toggle stream",
+                        contentDescription = stringResource(R.string.common_play_pause),
                         tint = if (isLiveUpdating) SleekGreenText else SleekTextSecondary,
                         modifier = Modifier.size(14.dp)
                     )
@@ -401,7 +393,7 @@ private fun HumidityGaugeCard(
         }
 
         Text(
-            text = "${humidityPercent.toInt()}% RH",
+            text = stringResource(R.string.telemetry_humidity_rh, humidityPercent.toInt()),
             color = SleekTextPrimary,
             fontSize = 18.sp,
             fontWeight = FontWeight.Black,

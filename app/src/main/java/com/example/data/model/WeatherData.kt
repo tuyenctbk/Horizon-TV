@@ -1,5 +1,7 @@
 package com.example.data.model
 
+import androidx.annotation.StringRes
+import com.example.R
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -181,7 +183,8 @@ data class DiurnalPeriod(
     val weatherCode: Int,
     val popPercent: Int,    // Probability of precipitation
     val windSpeedKmh: Double,
-    val isCurrent: Boolean = false
+    val isCurrent: Boolean = false,
+    @StringRes val periodNameRes: Int = 0
 )
 
 data class HourlyPoint(
@@ -233,7 +236,8 @@ data class AstronomicalData(
     val daysUntilFullMoon: Int,
     val sunriseTime: String,
     val sunsetTime: String,
-    val daylightProgressPercent: Float // 0f to 1f
+    val daylightProgressPercent: Float, // 0f to 1f
+    @StringRes val moonPhaseResId: Int = R.string.moon_phase_new
 )
 
 data class VodStory(

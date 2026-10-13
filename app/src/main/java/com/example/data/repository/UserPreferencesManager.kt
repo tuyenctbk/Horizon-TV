@@ -28,6 +28,7 @@ class UserPreferencesManager(context: Context) {
         private const val KEY_SHARE_DECLINED = "key_share_declined"
         private const val KEY_LAST_SHARE_PROMPT_MS = "key_last_share_prompt_ms"
         private const val KEY_SHARE_DISMISS_COUNT = "key_share_dismiss_count"
+        private const val KEY_LAST_LOCATION = "key_last_location"
     }
 
     fun incrementLaunchCount(): Int {
@@ -177,6 +178,40 @@ class UserPreferencesManager(context: Context) {
                 array.put(obj)
             }
             prefs.edit().putString(KEY_FAVORITE_CITIES, array.toString()).apply()
+        } catch (_: Exception) {
+        }
+    }
+
+    fun getLastSelectedLocation(): CityLocation? {
+        val raw = prefs.getString(KEY_LAST_LOCATION, null) ?: return null
+        return try {
+            val obj = JSONObject(raw)
+            CityLocation(
+                name = obj.getString("name"),
+                region = obj.optString("region", ""),
+                country = obj.optString("country", ""),
+                countryCode = obj.optString("countryCode", ""),
+                latitude = obj.getDouble("latitude"),
+                longitude = obj.getDouble("longitude"),
+                isGpsDetected = obj.optBoolean("isGpsDetected", false)
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun saveLastSelectedLocation(city: CityLocation) {
+        try {
+            val obj = JSONObject().apply {
+                put("name", city.name)
+                put("region", city.region)
+                put("country", city.country)
+                put("countryCode", city.countryCode)
+                put("latitude", city.latitude)
+                put("longitude", city.longitude)
+                put("isGpsDetected", city.isGpsDetected)
+            }
+            prefs.edit().putString(KEY_LAST_LOCATION, obj.toString()).apply()
         } catch (_: Exception) {
         }
     }

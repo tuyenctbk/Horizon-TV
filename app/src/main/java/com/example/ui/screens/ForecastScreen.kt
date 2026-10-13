@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.*
+import com.example.data.repository.WeatherRepository
 import com.example.data.repository.FullWeatherPackage
 import com.example.ui.components.RechartsFiveDayForecastView
 import com.example.ui.components.WeatherConditionIcon
@@ -208,7 +209,7 @@ private fun ThirtySixHourDetailedView(
                                             color = if (isCurr) SleekBluePrimary else SleekSurfaceSecondary
                                         ) {
                                             Text(
-                                                text = period.periodName.uppercase(),
+                                                text = stringResource(period.periodNameRes).uppercase(),
                                                 color = if (isCurr) Color.White else SleekTextSecondary,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
@@ -221,7 +222,7 @@ private fun ThirtySixHourDetailedView(
                                         WeatherConditionIcon(weatherCode = period.weatherCode, size = 30.dp)
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Black)
-                                        Text(text = period.conditionText, color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(period.weatherCode)), color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(text = stringResource(R.string.forecast_rain_risk, period.popPercent), color = SleekBluePrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                     }
@@ -262,7 +263,7 @@ private fun ThirtySixHourDetailedView(
                                     color = if (isCurr) SleekBluePrimary else SleekSurfaceSecondary
                                 ) {
                                     Text(
-                                        text = period.periodName.uppercase(),
+                                        text = stringResource(period.periodNameRes).uppercase(),
                                         color = if (isCurr) Color.White else SleekTextSecondary,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
@@ -275,7 +276,7 @@ private fun ThirtySixHourDetailedView(
                                 WeatherConditionIcon(weatherCode = period.weatherCode, size = 34.dp)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                                Text(text = period.conditionText, color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(period.weatherCode)), color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(text = stringResource(R.string.forecast_rain_risk, period.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
@@ -315,7 +316,7 @@ private fun ThirtySixHourDetailedView(
                     icon = Icons.Default.WaterDrop,
                     title = stringResource(R.string.forecast_relative_humidity),
                     value = "${current.humidityPercent}%",
-                    detail = "Dew point $dewStr",
+                    detail = stringResource(R.string.forecast_dew_point_detail, dewStr),
                     accentColor = SleekBluePrimary,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -350,7 +351,7 @@ private fun ThirtySixHourDetailedView(
                     icon = Icons.Default.Air,
                     title = stringResource(R.string.forecast_wind_gust_vector),
                     value = windSpeedStr,
-                    detail = "Peak gusts $peakGustStr",
+                    detail = stringResource(R.string.forecast_peak_gusts, peakGustStr),
                     accentColor = SleekGreenText,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -453,7 +454,7 @@ private fun HourlyTrendChartView(pkg: FullWeatherPackage, unitSystem: UnitSystem
                     Spacer(modifier = Modifier.width(14.dp))
                     WeatherConditionIcon(weatherCode = pt.weatherCode, size = 20.dp)
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(text = pt.conditionText, color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(pt.weatherCode)), color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -507,19 +508,20 @@ private fun FourteenDayOutlookView(pkg: FullWeatherPackage, unitSystem: UnitSyst
                 Row(modifier = Modifier.width(180.dp), verticalAlignment = Alignment.CenterVertically) {
                     WeatherConditionIcon(weatherCode = day.weatherCode, size = 24.dp)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = day.conditionText, color = SleekTextPrimary, fontSize = 12.sp, maxLines = 1)
+                    Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(day.weatherCode)), color = SleekTextPrimary, fontSize = 12.sp, maxLines = 1)
                 }
 
                 // Precipitation volume
                 Column(modifier = Modifier.width(100.dp)) {
                     Text(text = stringResource(R.string.forecast_rain, day.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     if (day.rainMm > 0) {
-                        val rainLabel = if (unitSystem == UnitSystem.METRIC) {
-                            "${String.format(java.util.Locale.US, "%.1f", day.rainMm)} mm"
+                        val rainUnit = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_mm) else stringResource(R.string.unit_in)
+                        val rainValue = if (unitSystem == UnitSystem.METRIC) {
+                            String.format(java.util.Locale.US, "%.1f", day.rainMm)
                         } else {
-                            "${String.format(java.util.Locale.US, "%.2f", day.rainMm * 0.0393701)} in"
+                            String.format(java.util.Locale.US, "%.2f", day.rainMm * 0.0393701)
                         }
-                        Text(text = rainLabel, color = SleekTextSecondary, fontSize = 10.sp)
+                        Text(text = "$rainValue $rainUnit", color = SleekTextSecondary, fontSize = 10.sp)
                     }
                 }
 

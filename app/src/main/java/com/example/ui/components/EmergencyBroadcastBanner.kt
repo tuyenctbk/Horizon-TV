@@ -96,7 +96,7 @@ fun EmergencyBroadcastBanner(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Warning,
-                        contentDescription = "Emergency Alert",
+                        contentDescription = stringResource(R.string.emergency_broadcast),
                         tint = severityColor,
                         modifier = Modifier.size(20.dp)
                     )

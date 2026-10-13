@@ -90,12 +90,21 @@ class MainActivity : ComponentActivity() {
 
                                 // Main Content Area
                                 Box(modifier = Modifier.weight(1f)) {
+                                    val displayError = when {
+                                        uiState.errorResId != null -> {
+                                            val detail = uiState.errorDetail ?: stringResource(R.string.error_network_generic)
+                                            stringResource(uiState.errorResId!!, detail)
+                                        }
+                                        uiState.errorMessage != null -> uiState.errorMessage
+                                        else -> null
+                                    }
+
                                     if (uiState.isLoading && uiState.currentWeather == null) {
                                         BroadcastSplashScreen(isLoading = true)
-                                    } else if (uiState.errorMessage != null && uiState.currentWeather == null) {
+                                    } else if (displayError != null && uiState.currentWeather == null) {
                                         BroadcastSplashScreen(
                                             isLoading = false,
-                                            errorMessage = uiState.errorMessage,
+                                            errorMessage = displayError,
                                             onRetry = { viewModel.loadWeatherForLocation(uiState.currentLocation) }
                                         )
                                     } else if (uiState.currentScreen == TVScreen.LIVE_TV) {
@@ -233,13 +242,13 @@ class MainActivity : ComponentActivity() {
                                 onDirectionClick = { direction ->
                                     // Handle D-pad directional clicks
                                     when (direction) {
-                                        "RIGHT" -> {
-                                            val screens = TVScreen.values()
+                                        "RIGHT", "DOWN" -> {
+                                            val screens = TVScreen.entries
                                             val nextIndex = (uiState.currentScreen.ordinal + 1) % screens.size
                                             viewModel.setScreen(screens[nextIndex])
                                         }
-                                        "LEFT" -> {
-                                            val screens = TVScreen.values()
+                                        "LEFT", "UP" -> {
+                                            val screens = TVScreen.entries
                                             val prevIndex = (uiState.currentScreen.ordinal - 1 + screens.size) % screens.size
                                             viewModel.setScreen(screens[prevIndex])
                                         }
@@ -281,13 +290,13 @@ class MainActivity : ComponentActivity() {
         return when (keyCode) {
             KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> {
                 val current = viewModel.uiState.value.currentScreen
-                val screens = TVScreen.values()
+                val screens = TVScreen.entries
                 viewModel.setScreen(screens[(current.ordinal + 1) % screens.size])
                 true
             }
             KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> {
                 val current = viewModel.uiState.value.currentScreen
-                val screens = TVScreen.values()
+                val screens = TVScreen.entries
                 viewModel.setScreen(screens[(current.ordinal - 1 + screens.size) % screens.size])
                 true
             }

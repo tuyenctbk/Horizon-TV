@@ -321,7 +321,7 @@ private fun LBarContent(
         }
 
         Text(
-            text = currentWeather.conditionText.uppercase(),
+            text = stringResource(WeatherRepository.getWeatherDescriptionRes(currentWeather.weatherCode)).uppercase(),
             color = SolarGold,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
@@ -342,7 +342,8 @@ private fun LBarContent(
         LBarMetricRow(label = stringResource(R.string.home_humidity), value = "${currentWeather.humidityPercent}%")
         LBarMetricRow(label = stringResource(R.string.home_barometer), value = baroVal)
         LBarMetricRow(label = stringResource(R.string.home_dew_point), value = dewVal)
-        LBarMetricRow(label = stringResource(R.string.lbar_aqi), value = "${currentWeather.aqi} (${currentWeather.aqiStatus})")
+        val aqiStatusStr = stringResource(WeatherRepository.getAqiStatusRes(currentWeather.aqi))
+        LBarMetricRow(label = stringResource(R.string.lbar_aqi), value = "${currentWeather.aqi} ($aqiStatusStr)")
         LBarMetricRow(label = stringResource(R.string.lbar_uv_index), value = "${currentWeather.uvIndex.roundToInt()} / 11+")
         LBarMetricRow(label = stringResource(R.string.lbar_visibility), value = "${currentWeather.visibilityKm.roundToInt()} km")
 
@@ -370,7 +371,7 @@ private fun LBarContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = p.periodName, color = SleekTextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(p.periodNameRes), color = SleekTextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(text = stringResource(R.string.forecast_rain, p.popPercent), color = SleekBluePrimary, fontSize = 9.sp)
                 }

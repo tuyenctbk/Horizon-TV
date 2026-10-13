@@ -173,7 +173,7 @@ fun FloatingPiP(
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = "Live Doppler 24/7",
+                    text = stringResource(R.string.pip_channel_tag),
                     color = HorizonCyan,
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Bold
