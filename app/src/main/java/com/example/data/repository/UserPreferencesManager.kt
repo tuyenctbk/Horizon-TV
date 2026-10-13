@@ -76,37 +76,37 @@ class UserPreferencesManager(context: Context) {
 
     /**
      * Rating suggestion business logic:
-     * - Requires at least 3 separate app launches (user has experienced the broadcast)
+     * - Requires at least 5 separate app launches (user is thoroughly familiar with the broadcast)
      * - Has NOT rated or permanently declined
-     * - Dismiss count < 2
-     * - Minimum 7 days between subtle reminders if user previously chose "Later"
+     * - Dismiss count < 2 (maximum 2 dismissals ever allowed before permanent decline)
+     * - Minimum 14 days between gentle reminders if user previously chose "Later"
      */
     fun shouldShowRatingSuggestion(): Boolean {
         if (hasUserRated() || isRatingDeclinedPermanently()) return false
         if (getRatingDismissCount() >= 2) return false
-        if (getLaunchCount() < 3) return false
+        if (getLaunchCount() < 5) return false
         val lastPrompt = getLastRatingPromptMs()
-        val sevenDaysMs = 7L * 24 * 60 * 60 * 1000L
-        if (lastPrompt > 0 && (System.currentTimeMillis() - lastPrompt < sevenDaysMs)) return false
+        val fourteenDaysMs = 14L * 24 * 60 * 60 * 1000L
+        if (lastPrompt > 0 && (System.currentTimeMillis() - lastPrompt < fourteenDaysMs)) return false
         return true
     }
 
     /**
      * Share suggestion business logic:
-     * - Separated from rating prompt (never shows simultaneously)
-     * - Requires at least 5 app launches (well-engaged user)
+     * - Distinctly separated from rating prompt (never shows simultaneously)
+     * - Requires at least 10 app launches (well-engaged power user)
      * - Has NOT shared or permanently declined
-     * - Dismiss count < 2
-     * - Minimum 10 days since last share suggestion
+     * - Dismiss count < 2 (maximum 2 dismissals ever allowed before permanent decline)
+     * - Minimum 21 days since last share suggestion
      */
     fun shouldShowShareSuggestion(): Boolean {
         if (hasUserShared() || isShareDeclinedPermanently()) return false
         if (getShareDismissCount() >= 2) return false
         if (shouldShowRatingSuggestion()) return false
-        if (getLaunchCount() < 5) return false
+        if (getLaunchCount() < 10) return false
         val lastPrompt = getLastSharePromptMs()
-        val tenDaysMs = 10L * 24 * 60 * 60 * 1000L
-        if (lastPrompt > 0 && (System.currentTimeMillis() - lastPrompt < tenDaysMs)) return false
+        val twentyOneDaysMs = 21L * 24 * 60 * 60 * 1000L
+        if (lastPrompt > 0 && (System.currentTimeMillis() - lastPrompt < twentyOneDaysMs)) return false
         return true
     }
 

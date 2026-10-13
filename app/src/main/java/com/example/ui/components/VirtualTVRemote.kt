@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -92,14 +94,14 @@ fun VirtualTVRemote(
                 )
                 // LEFT
                 RemoteDirectionButton(
-                    icon = Icons.Default.KeyboardArrowLeft,
+                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     description = stringResource(R.string.remote_left),
                     modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
                     onClick = { onDirectionClick("LEFT") }
                 )
                 // RIGHT
                 RemoteDirectionButton(
-                    icon = Icons.Default.KeyboardArrowRight,
+                    icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     description = stringResource(R.string.remote_right),
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp),
                     onClick = { onDirectionClick("RIGHT") }

@@ -276,26 +276,31 @@ class MainActivity : ComponentActivity() {
     // Hardware Keyboard / TV Remote Event Dispatcher
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         return when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> {
                 val current = viewModel.uiState.value.currentScreen
                 val screens = TVScreen.values()
                 viewModel.setScreen(screens[(current.ordinal + 1) % screens.size])
                 true
             }
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
+            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> {
                 val current = viewModel.uiState.value.currentScreen
                 val screens = TVScreen.values()
                 viewModel.setScreen(screens[(current.ordinal - 1 + screens.size) % screens.size])
                 true
             }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                 if (viewModel.uiState.value.currentScreen == TVScreen.RADAR) {
                     viewModel.toggleRadarPlayback()
+                    true
+                } else {
+                    super.onKeyDown(keyCode, event)
                 }
-                true
             }
             KeyEvent.KEYCODE_BACK -> {
-                if (viewModel.uiState.value.activeAlertModal != null) {
+                if (viewModel.uiState.value.activeSuggestion != null) {
+                    viewModel.dismissSuggestion(false)
+                    true
+                } else if (viewModel.uiState.value.activeAlertModal != null) {
                     viewModel.dismissAlertModal()
                     true
                 } else if (viewModel.uiState.value.activeVodStory != null) {

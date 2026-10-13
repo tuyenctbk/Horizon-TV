@@ -83,6 +83,14 @@ class WeatherViewModel(
         detectAndLoadInitialLocation()
         startEmergencyPolling()
         startRadarLoop()
+        scheduleDelayedEngagementCheck()
+    }
+
+    private fun scheduleDelayedEngagementCheck() {
+        viewModelScope.launch {
+            delay(40_000) // Gentle 40-second delay to ensure user is comfortable before evaluating non-intrusive suggestions
+            checkAndShowEngagementSuggestion()
+        }
     }
 
     private fun detectAndLoadInitialLocation() {
@@ -108,10 +116,6 @@ class WeatherViewModel(
                         activeAlertModal = activeAlert // Show prominent emergency modal if alert active
                     )
                 }
-                // Check if eligible for rating or share suggestion (only when no urgent alert is active)
-                if (activeAlert == null) {
-                    checkAndShowEngagementSuggestion()
-                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -127,6 +131,8 @@ class WeatherViewModel(
         if (hasShownSuggestionInSession) return
         if (_uiState.value.activeSuggestion != null) return
         if (_uiState.value.activeAlertModal != null) return
+        if (_uiState.value.activeVodStory != null) return
+        if (_uiState.value.currentScreen == TVScreen.SEARCH) return
         if (preferencesManager.shouldShowRatingSuggestion()) {
             hasShownSuggestionInSession = true
             preferencesManager.recordRatingPromptShown()
@@ -135,6 +141,15 @@ class WeatherViewModel(
             hasShownSuggestionInSession = true
             preferencesManager.recordSharePromptShown()
             _uiState.update { it.copy(activeSuggestion = SuggestionType.SHARE) }
+        }
+    }
+
+    fun dismissSuggestion(permanently: Boolean = false) {
+        val current = _uiState.value.activeSuggestion ?: return
+        if (permanently) {
+            onSuggestionNever(current)
+        } else {
+            onSuggestionLater(current)
         }
     }
 

@@ -31,6 +31,9 @@ import androidx.compose.ui.window.Dialog
 import com.example.R
 import com.example.data.model.VodStory
 import com.example.ui.theme.*
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import kotlinx.coroutines.delay
 import kotlin.math.sin
 
 private data class VodCategoryItem(val id: String, val nameRes: Int)
@@ -266,6 +269,28 @@ private fun VodPlayerModal(
     var isPlaying by remember { mutableStateOf(true) }
     var isMuted by remember { mutableStateOf(false) }
 
+    val totalSeconds = remember(story.duration) {
+        val parts = story.duration.split(":")
+        if (parts.size == 2) {
+            val min = parts[0].toIntOrNull() ?: 0
+            val sec = parts[1].toIntOrNull() ?: 0
+            (min * 60 + sec).coerceAtLeast(10)
+        } else 240
+    }
+    var currentSeconds by remember(story.id) { mutableIntStateOf(0) }
+
+    LaunchedEffect(isPlaying, story.id) {
+        if (!isPlaying) return@LaunchedEffect
+        while (true) {
+            delay(1000)
+            if (currentSeconds < totalSeconds) {
+                currentSeconds++
+            } else {
+                currentSeconds = 0
+            }
+        }
+    }
+
     val infiniteTransition = rememberInfiniteTransition(label = "vodWave")
     val waveOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -375,35 +400,51 @@ private fun VodPlayerModal(
                     )
                 }
 
-                // Bottom Video Controls Bar
-                Row(
+                // Bottom Video Controls Bar with Real Progress
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.7f))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        IconButton(onClick = { isPlaying = !isPlaying }, modifier = Modifier.size(28.dp)) {
-                            Icon(
-                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = stringResource(R.string.common_play_pause),
-                                tint = HorizonCyan
-                            )
-                        }
-                        IconButton(onClick = { isMuted = !isMuted }, modifier = Modifier.size(28.dp)) {
-                            Icon(
-                                imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
-                                contentDescription = stringResource(R.string.home_audio),
-                                tint = TextSecondarySilver
-                            )
-                        }
-                        Text(text = "03:42 / ${story.duration}", color = TextSecondarySilver, fontSize = 10.sp)
-                    }
+                    val progress = (currentSeconds.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
+                        color = HorizonCyan,
+                        trackColor = Color.White.copy(alpha = 0.2f)
+                    )
 
-                    Text(text = stringResource(R.string.vod_produced_by), color = HorizonSky, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.75f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            IconButton(onClick = { isPlaying = !isPlaying }, modifier = Modifier.size(28.dp)) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = stringResource(R.string.common_play_pause),
+                                    tint = HorizonCyan
+                                )
+                            }
+                            IconButton(onClick = { isMuted = !isMuted }, modifier = Modifier.size(28.dp)) {
+                                Icon(
+                                    imageVector = if (isMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
+                                    contentDescription = stringResource(R.string.home_audio),
+                                    tint = TextSecondarySilver
+                                )
+                            }
+                            val elapsedText = String.format(java.util.Locale.US, "%02d:%02d", currentSeconds / 60, currentSeconds % 60)
+                            Text(text = "$elapsedText / ${story.duration}", color = TextSecondarySilver, fontSize = 10.sp)
+                        }
+
+                        Text(text = stringResource(R.string.vod_produced_by), color = HorizonSky, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 

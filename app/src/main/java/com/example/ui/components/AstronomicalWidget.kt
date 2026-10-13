@@ -20,9 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.AstronomicalData
 import com.example.ui.theme.*
 import kotlin.math.PI
@@ -55,7 +57,7 @@ fun AstronomicalWidget(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "CELESTIAL & LUNAR HORIZON",
+                    text = stringResource(R.string.astro_title),
                     color = SleekTextPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
@@ -63,7 +65,7 @@ fun AstronomicalWidget(
                 )
             }
             Text(
-                text = "REAL SYNODIC CYCLE",
+                text = stringResource(R.string.astro_synodic),
                 color = SleekBluePrimary,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold
@@ -86,12 +88,12 @@ fun AstronomicalWidget(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Sunrise ${astronomical.sunriseTime}",
+                        text = stringResource(R.string.astro_sunrise, astronomical.sunriseTime),
                         color = SleekTextSecondary,
                         fontSize = 11.sp
                     )
                     Text(
-                        text = "Sunset ${astronomical.sunsetTime}",
+                        text = stringResource(R.string.astro_sunset, astronomical.sunsetTime),
                         color = SleekTextSecondary,
                         fontSize = 11.sp
                     )
@@ -156,8 +158,8 @@ fun AstronomicalWidget(
 
                 Text(
                     text = if (astronomical.daylightProgressPercent in 0.01f..0.99f)
-                        "Daylight Progress: ${(astronomical.daylightProgressPercent * 100).toInt()}% of solar arc elapsed"
-                    else "Night Horizon: Sun is currently below local horizon",
+                        stringResource(R.string.astro_daylight_progress, (astronomical.daylightProgressPercent * 100).toInt())
+                    else stringResource(R.string.astro_night_horizon),
                     color = SleekBluePrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
@@ -200,7 +202,7 @@ fun AstronomicalWidget(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${astronomical.moonIlluminationPercent}% Illumination",
+                            text = stringResource(R.string.astro_illumination, astronomical.moonIlluminationPercent),
                             color = SleekBluePrimary,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -211,7 +213,7 @@ fun AstronomicalWidget(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "${astronomical.daysUntilFullMoon} days until next Full Moon",
+                    text = stringResource(R.string.astro_days_to_full, astronomical.daysUntilFullMoon),
                     color = SleekTextSecondary,
                     fontSize = 10.sp
                 )

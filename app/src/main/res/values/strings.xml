@@ -156,13 +156,13 @@
     <string name="forecast_tab_telemetry">Real-Time Telemetry</string>
     <string name="forecast_tab_extended">14-Day Outlook</string>
     <string name="forecast_fourteen_day_header">14-DAY EXTENDED METEOROLOGICAL OUTLOOK</string>
-    <string name="forecast_meteorological_outlook">METEOROLOGICAL OUTLOOK</string>
+    <string name="forecast_meteorological_outlook">METEOROLOGICAL OUTLOOK • %1$s</string>
     <string name="forecast_numerical_prediction">Numerical Weather Prediction Models &amp; Real-Time Telemetry</string>
     <string name="forecast_tab_5day">5-Day Forecast</string>
     <string name="forecast_tab_36hour">24h Trends</string>
     <string name="forecast_tab_24hour">Celestial / Moon</string>
     <string name="forecast_tab_14day">14-Day Extended</string>
-    <string name="forecast_rain_risk">Precipitation Chance</string>
+    <string name="forecast_rain_risk">%1$d%% Precip Chance</string>
     <string name="forecast_atmospheric_deepdive">ATMOSPHERIC TELEMETRY DEEP-DIVE</string>
     <string name="forecast_relative_humidity">Relative Humidity</string>
     <string name="forecast_dew_point">Dew Point</string>
@@ -361,7 +361,13 @@
     <string name="suggestion_share_positive">Share Broadcast Stream</string>
     <string name="suggestion_share_later">Later</string>
     <string name="suggestion_share_never">Don\'t Ask Again</string>
-    <string name="suggestion_share_text">Check out Horizon Weather TV — 24/7 live meteorological telemetry, interactive Doppler radar, and severe weather alerts! https://play.google.com/store/apps/details?id=com.aistudio.horizontv.wzpk</string>
+    <string name="suggestion_share_text">Check out Horizon Weather TV — 24/7 live meteorological telemetry, interactive Doppler radar, and severe weather alerts! https://play.google.com/store/apps/details?id=com.soloprono.horizontv</string>
+
+    <string name="search_empty_bookmarks_title">No Bookmarked Locations</string>
+    <string name="search_empty_bookmarks_desc">Use the search bar above to find cities and tap the bookmark icon to save them to your TV lineup.</string>
+    <string name="search_coordinates_format">Lat: %1$s, Lon: %2$s</string>
+    <string name="home_empty_favorites_title">No Saved Cities in Rotation</string>
+    <string name="home_empty_favorites_desc">Tap here to search and bookmark cities for your quick TV line-up</string>
 
     <!-- Loading & Error States -->
     <string name="loading_sync">SYNCHRONIZING HORIZON BROADCAST TELEMETRY...</string>

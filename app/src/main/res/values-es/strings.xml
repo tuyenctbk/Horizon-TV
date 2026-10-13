@@ -157,13 +157,13 @@
     <string name="forecast_tab_telemetry">Telemetría en Vivo</string>
     <string name="forecast_tab_extended">Perspectiva 14 Días</string>
     <string name="forecast_fourteen_day_header">PERSPECTIVA METEOROLÓGICA EXTENDIDA A 14 DÍAS</string>
-    <string name="forecast_meteorological_outlook">PERSPECTIVA METEOROLÓGICA</string>
+    <string name="forecast_meteorological_outlook">PERSPECTIVA METEOROLÓGICA • %1$s</string>
     <string name="forecast_numerical_prediction">Modelos de Predicción Meteorológica Numérica y Telemetría en Vivo</string>
     <string name="forecast_tab_5day">Pronóstico 5 Días</string>
     <string name="forecast_tab_36hour">Tendencias 24h</string>
     <string name="forecast_tab_24hour">Celestial / Luna</string>
     <string name="forecast_tab_14day">14 Días Extendido</string>
-    <string name="forecast_rain_risk">Probabilidad de Precipitación</string>
+    <string name="forecast_rain_risk">%1$d%% Probabilidad</string>
     <string name="forecast_atmospheric_deepdive">ANÁLISIS PROFUNDO DE TELEMETRÍA ATMOSFÉRICA</string>
     <string name="forecast_relative_humidity">Humedad Relativa</string>
     <string name="forecast_dew_point">Punto de Rocío</string>
@@ -287,7 +287,13 @@
     <string name="suggestion_share_positive">Compartir Transmisión</string>
     <string name="suggestion_share_later">Más Tarde</string>
     <string name="suggestion_share_never">No Volver a Preguntar</string>
-    <string name="suggestion_share_text">Descubra Horizon Weather TV — telemetría meteorológica en vivo 24/7, radar Doppler interactivo y alertas de clima severo: https://play.google.com/store/apps/details?id=com.aistudio.horizontv.wzpk</string>
+    <string name="suggestion_share_text">Descubra Horizon Weather TV — telemetría meteorológica en vivo 24/7, radar Doppler interactivo y alertas de clima severo: https://play.google.com/store/apps/details?id=com.soloprono.horizontv</string>
+
+    <string name="search_empty_bookmarks_title">Sin Ubicaciones Guardadas</string>
+    <string name="search_empty_bookmarks_desc">Use la barra de búsqueda para encontrar ciudades y toque el marcador para guardarlas en su alineación de TV.</string>
+    <string name="search_coordinates_format">Lat: %1$s, Lon: %2$s</string>
+    <string name="home_empty_favorites_title">Sin Ciudades Guardadas en Rotación</string>
+    <string name="home_empty_favorites_desc">Toque aquí para buscar y guardar ciudades en su rotación de TV</string>
 
     <!-- Tooltips & Granular Charts -->
     <string name="recharts_tooltip_max">Temp Máxima (Alta):</string>

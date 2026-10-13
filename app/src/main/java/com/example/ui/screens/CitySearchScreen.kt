@@ -213,14 +213,14 @@ fun CitySearchScreen(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "No Bookmarked Locations",
+                            text = stringResource(R.string.search_empty_bookmarks_title),
                             color = SleekTextPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Use the search bar above to find cities and tap the bookmark icon to save them to your TV lineup.",
+                            text = stringResource(R.string.search_empty_bookmarks_desc),
                             color = SleekTextSecondary,
                             fontSize = 12.sp,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -317,7 +317,11 @@ private fun CityResultCard(
                         fontSize = 11.sp
                     )
                     Text(
-                        text = "Lat: ${String.format(java.util.Locale.US, "%.2f", city.latitude)}, Lon: ${String.format(java.util.Locale.US, "%.2f", city.longitude)}",
+                        text = stringResource(
+                            R.string.search_coordinates_format,
+                            String.format(java.util.Locale.US, "%.2f", city.latitude),
+                            String.format(java.util.Locale.US, "%.2f", city.longitude)
+                        ),
                         color = SleekTextSecondary.copy(alpha = 0.8f),
                         fontSize = 10.sp
                     )

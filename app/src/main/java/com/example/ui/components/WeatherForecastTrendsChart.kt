@@ -47,7 +47,7 @@ fun WeatherForecastTrendsChart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "24-Hour Temperature & Precipitation Curve",
+                text = stringResource(R.string.trends_title),
                 color = SleekTextPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold

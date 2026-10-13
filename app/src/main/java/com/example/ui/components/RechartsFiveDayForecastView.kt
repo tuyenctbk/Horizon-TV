@@ -76,7 +76,7 @@ fun RechartsFiveDayForecastView(
                         color = SleekBlueContainer
                     ) {
                         Text(
-                            text = "RECHARTS VISUALIZATION",
+                            text = stringResource(R.string.recharts_badge),
                             color = SleekOnBlueContainer,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
@@ -85,7 +85,7 @@ fun RechartsFiveDayForecastView(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "5-DAY SYNOPTIC METEOROLOGICAL FORECAST",
+                        text = stringResource(R.string.recharts_title),
                         color = SleekTextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
@@ -94,7 +94,7 @@ fun RechartsFiveDayForecastView(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Area curve temperature gradients, Cartesian gridlines & precipitation chance bars",
+                    text = stringResource(R.string.recharts_subtitle),
                     color = SleekTextSecondary,
                     fontSize = 11.sp
                 )
@@ -108,13 +108,13 @@ fun RechartsFiveDayForecastView(
                     .padding(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                RechartsModeTab("ALL", isSelected = displayMode == RechartsDisplayMode.COMBINED, testTag = "recharts_tab_all") {
+                RechartsModeTab(stringResource(R.string.recharts_tab_all), isSelected = displayMode == RechartsDisplayMode.COMBINED, testTag = "recharts_tab_all") {
                     displayMode = RechartsDisplayMode.COMBINED
                 }
-                RechartsModeTab("TEMP", isSelected = displayMode == RechartsDisplayMode.TEMPERATURE_ONLY, testTag = "recharts_tab_temp") {
+                RechartsModeTab(stringResource(R.string.recharts_tab_temp), isSelected = displayMode == RechartsDisplayMode.TEMPERATURE_ONLY, testTag = "recharts_tab_temp") {
                     displayMode = RechartsDisplayMode.TEMPERATURE_ONLY
                 }
-                RechartsModeTab("RAIN", isSelected = displayMode == RechartsDisplayMode.PRECIPITATION_ONLY, testTag = "recharts_tab_rain") {
+                RechartsModeTab(stringResource(R.string.recharts_tab_rain), isSelected = displayMode == RechartsDisplayMode.PRECIPITATION_ONLY, testTag = "recharts_tab_rain") {
                     displayMode = RechartsDisplayMode.PRECIPITATION_ONLY
                 }
             }
@@ -139,7 +139,7 @@ fun RechartsFiveDayForecastView(
                 else
                     "${(day.minTempC * 9 / 5 + 32).roundToInt()}°"
 
-                val dayName = if (index == 0) "TODAY" else day.dayOfWeek.take(3).uppercase()
+                val dayName = if (index == 0) stringResource(R.string.recharts_today) else day.dayOfWeek.take(3).uppercase()
 
                 Surface(
                     shape = RoundedCornerShape(14.dp),
@@ -497,7 +497,12 @@ fun RechartsFiveDayForecastView(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(stringResource(R.string.recharts_tooltip_pop), color = Color(0xFFD1D5DB), fontSize = 10.sp)
-                                Text("${activeDay.popPercent}% (${activeDay.rainMm} mm)", color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                val rainDisplay = if (unitSystem == UnitSystem.METRIC) {
+                                    "${String.format(java.util.Locale.US, "%.1f", activeDay.rainMm)} mm"
+                                } else {
+                                    "${String.format(java.util.Locale.US, "%.2f", activeDay.rainMm * 0.0393701)} in"
+                                }
+                                Text("${activeDay.popPercent}% ($rainDisplay)", color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -525,13 +530,13 @@ fun RechartsFiveDayForecastView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                LegendIndicator(color = SolarGold, label = "High Temp Curve ($tempUnit)")
-                LegendIndicator(color = HorizonCyan, label = "Low Temp Curve ($tempUnit)")
-                LegendIndicator(color = HorizonCyan.copy(alpha = 0.5f), label = "Rain Probability (POP %)")
+                LegendIndicator(color = SolarGold, label = stringResource(R.string.recharts_legend_high, tempUnit))
+                LegendIndicator(color = HorizonCyan, label = stringResource(R.string.recharts_legend_low, tempUnit))
+                LegendIndicator(color = HorizonCyan.copy(alpha = 0.5f), label = stringResource(R.string.recharts_legend_pop))
             }
 
             Text(
-                text = "CLICK ANY DAY TO INSPECT TOOLTIP",
+                text = stringResource(R.string.recharts_hint),
                 color = SleekTextSecondary,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.SemiBold

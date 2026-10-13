@@ -73,7 +73,7 @@ fun WeatherAlertModal(
                         color = severityColor
                     ) {
                         Text(
-                            text = "${alert.severity} " + stringResource(R.string.alert_bulletin),
+                            text = stringResource(R.string.alert_bulletin, alert.severity),
                             color = Color.White,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,

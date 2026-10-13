@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -325,7 +326,9 @@ fun PersistentLBarLayout(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
-                        overflow = TextOverflow.Clip
+                        modifier = Modifier
+                            .weight(1f)
+                            .basicMarquee(iterations = Int.MAX_VALUE)
                     )
                 }
 

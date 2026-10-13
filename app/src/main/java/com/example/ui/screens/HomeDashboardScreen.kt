@@ -324,13 +324,13 @@ fun HomeDashboardScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "No Saved Cities in Rotation",
+                                text = stringResource(R.string.home_empty_favorites_title),
                                 color = SleekTextPrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Tap here to search and bookmark cities for your quick TV line-up",
+                                text = stringResource(R.string.home_empty_favorites_desc),
                                 color = SleekTextSecondary,
                                 fontSize = 10.sp
                             )

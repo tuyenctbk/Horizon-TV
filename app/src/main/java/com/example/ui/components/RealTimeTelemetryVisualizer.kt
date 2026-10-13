@@ -127,14 +127,14 @@ fun RealTimeTelemetryVisualizer(
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
-                        text = "REAL-TIME ATMOSPHERIC SENSOR TELEMETRY",
+                        text = stringResource(R.string.telemetry_header_title),
                         color = SleekTextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp
                     )
                     Text(
-                        text = if (isLiveUpdating) "Live local stream • Active sampling (every 2.0s) • Cycle #$updateCount" else "Telemetry feed paused",
+                        text = if (isLiveUpdating) stringResource(R.string.telemetry_live_status, updateCount) else stringResource(R.string.telemetry_paused_status),
                         color = SleekTextSecondary,
                         fontSize = 10.sp
                     )
@@ -159,7 +159,7 @@ fun RealTimeTelemetryVisualizer(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isLiveUpdating) "PAUSE" else "RESUME",
+                        text = if (isLiveUpdating) stringResource(R.string.telemetry_btn_pause) else stringResource(R.string.telemetry_btn_resume),
                         color = if (isLiveUpdating) SleekGreenText else SleekTextSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -308,10 +308,10 @@ private fun TemperatureGaugeCard(
         )
 
         val status = when {
-            tempC < 5f -> "Chilly / Cold"
-            tempC < 25f -> "Mild Comfort"
-            tempC < 32f -> "Warm"
-            else -> "High Heat"
+            tempC < 5f -> stringResource(R.string.telemetry_temp_chilly)
+            tempC < 25f -> stringResource(R.string.telemetry_temp_mild)
+            tempC < 32f -> stringResource(R.string.telemetry_temp_warm)
+            else -> stringResource(R.string.telemetry_temp_heat)
         }
         Text(text = status, color = SleekBluePrimary, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 
@@ -409,10 +409,10 @@ private fun HumidityGaugeCard(
         )
 
         val moistureStatus = when {
-            humidityPercent < 30f -> "Dry Air"
-            humidityPercent < 60f -> "Ideal Comfort"
-            humidityPercent < 80f -> "Humid"
-            else -> "High Moisture"
+            humidityPercent < 30f -> stringResource(R.string.telemetry_hum_dry)
+            humidityPercent < 60f -> stringResource(R.string.telemetry_hum_ideal)
+            humidityPercent < 80f -> stringResource(R.string.telemetry_hum_humid)
+            else -> stringResource(R.string.telemetry_hum_high)
         }
         Text(text = moistureStatus, color = SleekGreenText, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 
@@ -545,9 +545,9 @@ private fun BarometerGaugeCard(
         )
 
         val tendency = when {
-            pressureHpa < 1000f -> "Low (Storm Watch)"
-            pressureHpa < 1018f -> "Normal (Steady)"
-            else -> "High (Clear Skies)"
+            pressureHpa < 1000f -> stringResource(R.string.telemetry_press_low)
+            pressureHpa < 1018f -> stringResource(R.string.telemetry_press_normal)
+            else -> stringResource(R.string.telemetry_press_high)
         }
         Text(text = tendency, color = SolarGold, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 
