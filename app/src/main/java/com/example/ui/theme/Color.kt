@@ -59,9 +59,9 @@ val SevereRed = SleekRedText
 val RadarGreen = SleekGreenText
 val StormPurple = Color(0xFF7B1FA2)
 
-val TextPrimaryWhite = SleekTextPrimary
-val TextSecondarySilver = SleekTextSecondary
-val TextMuted = SleekTextMuted
+val TextPrimaryWhite = Color.White
+val TextSecondarySilver = Color(0xFFCBD5E1)
+val TextMuted = Color(0xFF94A3B8)
 
 val FocusCyanGlow = SleekBluePrimary
 

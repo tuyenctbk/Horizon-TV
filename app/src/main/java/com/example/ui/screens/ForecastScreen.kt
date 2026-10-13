@@ -64,14 +64,14 @@ fun ForecastScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.forecast_meteorological_outlook, currentLocation.name),
-                        color = SleekTextPrimary,
+                        color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.3).sp
                     )
                     Text(
                         text = stringResource(R.string.forecast_numerical_prediction),
-                        color = SleekTextSecondary,
+                        color = Color(0xFFCBD5E1),
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(10.dp))
@@ -99,14 +99,14 @@ fun ForecastScreen(
                     Column {
                         Text(
                             text = stringResource(R.string.forecast_meteorological_outlook, currentLocation.name),
-                            color = SleekTextPrimary,
+                            color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.3).sp
                         )
                         Text(
                             text = stringResource(R.string.forecast_numerical_prediction),
-                            color = SleekTextSecondary,
+                            color = Color(0xFFCBD5E1),
                             fontSize = 12.sp
                         )
                     }
@@ -288,7 +288,7 @@ private fun ThirtySixHourDetailedView(
                 // Deep-Dive Meteorological Metric Cards Grid
                 Text(
                     text = stringResource(R.string.forecast_atmospheric_deepdive),
-                    color = SleekTextPrimary,
+                    color = Color.White,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp
@@ -428,7 +428,7 @@ private fun HourlyTrendChartView(pkg: FullWeatherPackage, unitSystem: UnitSystem
         item {
             Text(
                 text = stringResource(R.string.forecast_granular_table),
-                color = SleekTextPrimary,
+                color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
@@ -475,7 +475,7 @@ private fun FourteenDayOutlookView(pkg: FullWeatherPackage, unitSystem: UnitSyst
         item {
             Text(
                 text = stringResource(R.string.forecast_14day_extended),
-                color = SleekTextPrimary,
+                color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp

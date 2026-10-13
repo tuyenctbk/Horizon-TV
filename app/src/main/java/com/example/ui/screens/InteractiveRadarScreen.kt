@@ -89,7 +89,6 @@ fun InteractiveRadarScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SleekBackground)
             .padding(16.dp)
             .testTag("interactive_radar_view")
     ) {
@@ -105,7 +104,7 @@ fun InteractiveRadarScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.radar_title),
-                        color = SleekTextPrimary,
+                        color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.3).sp
@@ -113,7 +112,7 @@ fun InteractiveRadarScreen(
                 }
                 Text(
                     text = stringResource(R.string.radar_subtitle, currentLocation.name),
-                    color = SleekTextSecondary,
+                    color = Color(0xFFCBD5E1),
                     fontSize = 12.sp
                 )
             }

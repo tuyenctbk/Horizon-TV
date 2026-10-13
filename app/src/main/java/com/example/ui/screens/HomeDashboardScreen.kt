@@ -610,7 +610,7 @@ private fun LiveTvHeroCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(170.dp)
+                .height(180.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(SleekDarkContainer)
                 .border(1.dp, Color(0xFF333333), RoundedCornerShape(16.dp))
@@ -654,15 +654,16 @@ private fun LiveTvHeroCard(
 
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(8.dp)
-                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp)
+                    .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = stringResource(R.string.home_presented_by),
                     color = Color(0xFFD4D4D4),
-                    fontSize = 9.sp
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }

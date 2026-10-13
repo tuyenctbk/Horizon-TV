@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            window.decorView.defaultFocusHighlightEnabled = false
+            window.decorView.defaultFocusHighlightEnabled = true
         }
 
         setContent {
@@ -98,6 +98,18 @@ class MainActivity : ComponentActivity() {
                                             errorMessage = uiState.errorMessage,
                                             onRetry = { viewModel.loadWeatherForLocation(uiState.currentLocation) }
                                         )
+                                    } else if (uiState.currentScreen == TVScreen.LIVE_TV) {
+                                        // Live TV has its own native integrated full-screen broadcast layout (Stage + L-Bar + Ticker)
+                                        LiveTVBroadcastScreen(
+                                            currentLocation = uiState.currentLocation,
+                                            currentWeather = uiState.currentWeather,
+                                            weatherPackage = uiState.weatherPackage,
+                                            unitSystem = uiState.unitSystem,
+                                            isAudioPlaying = uiState.isLiveAudioPlaying,
+                                            onToggleAudio = { viewModel.toggleLiveAudio() },
+                                            onTogglePip = { viewModel.togglePip() },
+                                            onOpenAlertModal = { viewModel.openAlertModal(it) }
+                                        )
                                     } else {
                                         PersistentLBarLayout(
                                             currentLocation = uiState.currentLocation,
@@ -125,16 +137,7 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                 }
                                                 TVScreen.LIVE_TV -> {
-                                                    LiveTVBroadcastScreen(
-                                                        currentLocation = uiState.currentLocation,
-                                                        currentWeather = uiState.currentWeather,
-                                                        weatherPackage = uiState.weatherPackage,
-                                                        unitSystem = uiState.unitSystem,
-                                                        isAudioPlaying = uiState.isLiveAudioPlaying,
-                                                        onToggleAudio = { viewModel.toggleLiveAudio() },
-                                                        onTogglePip = { viewModel.togglePip() },
-                                                        onOpenAlertModal = { viewModel.openAlertModal(it) }
-                                                    )
+                                                    // Handled above
                                                 }
                                                 TVScreen.FORECAST -> {
                                                     ForecastScreen(

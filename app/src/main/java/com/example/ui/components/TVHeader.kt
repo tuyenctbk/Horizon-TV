@@ -16,7 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -267,17 +269,26 @@ fun TVHeader(
             // Quick Control Shortcuts
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Unit Switcher
+                var isUnitFocused by remember { mutableStateOf(false) }
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
-                    color = SleekSurfaceSecondary,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
+                    color = if (isUnitFocused) SleekBlueContainer else SleekSurfaceSecondary,
+                    border = androidx.compose.foundation.BorderStroke(
+                        if (isUnitFocused) 2.dp else 1.dp,
+                        if (isUnitFocused) SleekBluePrimary else SleekBorder
+                    ),
                     modifier = Modifier
+                        .onFocusChanged { isUnitFocused = it.isFocused }
+                        .graphicsLayer {
+                            scaleX = if (isUnitFocused) 1.05f else 1.0f
+                            scaleY = if (isUnitFocused) 1.05f else 1.0f
+                        }
                         .clickable { onToggleUnits() }
                         .testTag("unit_toggle_button")
                 ) {
                     Text(
                         text = if (unitSystem == UnitSystem.METRIC) "°C / km/h" else "°F / mph",
-                        color = SleekTextPrimary,
+                        color = if (isUnitFocused) SleekOnBlueContainer else SleekTextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -285,10 +296,17 @@ fun TVHeader(
                 }
 
                 // Virtual TV Remote Shortcut
+                var isRemoteFocused by remember { mutableStateOf(false) }
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
-                    color = SleekBluePrimary,
+                    color = if (isRemoteFocused) SleekBlueActive else SleekBluePrimary,
+                    border = if (isRemoteFocused) androidx.compose.foundation.BorderStroke(2.dp, Color.White) else null,
                     modifier = Modifier
+                        .onFocusChanged { isRemoteFocused = it.isFocused }
+                        .graphicsLayer {
+                            scaleX = if (isRemoteFocused) 1.05f else 1.0f
+                            scaleY = if (isRemoteFocused) 1.05f else 1.0f
+                        }
                         .clickable { onOpenRemote() }
                         .testTag("open_remote_button")
                 ) {
@@ -323,15 +341,35 @@ fun TVNavButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val bg = if (isSelected) SleekBlueContainer else SleekSurfaceSecondary
-    val textColor = if (isSelected) SleekOnBlueContainer else SleekTextSecondary
-    val border = if (isSelected) SleekBluePrimary.copy(alpha = 0.25f) else SleekBorder.copy(alpha = 0.6f)
+    var isFocused by remember { mutableStateOf(false) }
+    val bg = when {
+        isFocused && isSelected -> SleekBlueActive
+        isFocused -> SleekBlueContainer.copy(alpha = 0.6f)
+        isSelected -> SleekBlueContainer
+        else -> SleekSurfaceSecondary
+    }
+    val textColor = when {
+        isFocused && isSelected -> Color.White
+        isFocused -> SleekBluePrimary
+        isSelected -> SleekOnBlueContainer
+        else -> SleekTextSecondary
+    }
+    val borderStroke = when {
+        isFocused -> androidx.compose.foundation.BorderStroke(2.dp, SleekBluePrimary)
+        isSelected -> androidx.compose.foundation.BorderStroke(1.dp, SleekBluePrimary.copy(alpha = 0.25f))
+        else -> androidx.compose.foundation.BorderStroke(1.dp, SleekBorder.copy(alpha = 0.6f))
+    }
 
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = bg,
-        border = androidx.compose.foundation.BorderStroke(1.dp, border),
+        border = borderStroke,
         modifier = Modifier
+            .onFocusChanged { isFocused = it.isFocused }
+            .graphicsLayer {
+                scaleX = if (isFocused) 1.06f else 1.0f
+                scaleY = if (isFocused) 1.06f else 1.0f
+            }
             .clickable { onClick() }
             .testTag("nav_btn_$title")
     ) {
@@ -350,7 +388,7 @@ fun TVNavButton(
                 text = title,
                 color = textColor,
                 fontSize = 12.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (isSelected || isFocused) FontWeight.Bold else FontWeight.Medium,
                 letterSpacing = 0.2.sp
             )
         }

@@ -60,14 +60,14 @@ fun SettingsScreen(
         item {
             Text(
                 text = stringResource(R.string.settings_header_title),
-                color = SleekTextPrimary,
+                color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp
             )
             Text(
                 text = stringResource(R.string.settings_header_subtitle),
-                color = SleekTextSecondary,
+                color = Color(0xFFCBD5E1),
                 fontSize = 12.sp
             )
         }
@@ -414,7 +414,7 @@ fun SettingsScreen(
                             val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
                             "${pInfo.versionName} (build $vc)"
                         } catch (_: Exception) {
-                            "1.3 (build 4)"
+                            "1.5 (build 6)"
                         }
                         val emailBody = "Horizon TV Broadcast App Feedback:\n\nApp Version: $appVersion\nDevice: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.RELEASE})\n\nPlease enter your observations or bug report below:\n"
 
@@ -469,7 +469,7 @@ fun SettingsScreen(
                 val vc = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pInfo)
                 "Horizon TV Android Broadcast v${pInfo.versionName} (Build $vc)"
             } catch (_: Exception) {
-                "Horizon TV Android Broadcast v1.3"
+                "Horizon TV Android Broadcast v1.5"
             }
 
             Column(

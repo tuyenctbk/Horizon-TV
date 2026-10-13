@@ -48,14 +48,14 @@ fun CitySearchScreen(
         // Header
         Text(
             text = stringResource(R.string.search_header_title),
-            color = SleekTextPrimary,
+            color = Color.White,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = (-0.3).sp
         )
         Text(
             text = stringResource(R.string.search_header_subtitle),
-            color = SleekTextSecondary,
+            color = Color(0xFFCBD5E1),
             fontSize = 12.sp
         )
 
@@ -175,7 +175,7 @@ fun CitySearchScreen(
                 )
                 Text(
                     text = stringResource(R.string.search_saved_subtitle),
-                    color = SleekTextSecondary,
+                    color = Color(0xFFCBD5E1),
                     fontSize = 10.sp
                 )
             }
