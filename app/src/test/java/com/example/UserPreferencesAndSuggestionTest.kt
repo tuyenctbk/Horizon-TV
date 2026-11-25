@@ -195,4 +195,19 @@ class UserPreferencesAndSuggestionTest {
         viewModel.openOnboardingTour()
         assertTrue("User should be able to replay onboarding tour from Settings", viewModel.uiState.value.isOnboardingVisible)
     }
+
+    @Test
+    fun testScheduleRemindersPersistenceAndDaytimeHelpers() {
+        assertTrue(preferencesManager.getRemindedScheduleIds().isEmpty())
+        preferencesManager.saveRemindedScheduleIds(setOf("epg_ch1_1_tokyo", "epg_ch2_1_tokyo"))
+        val restored = preferencesManager.getRemindedScheduleIds()
+        assertEquals(setOf("epg_ch1_1_tokyo", "epg_ch2_1_tokyo"), restored)
+
+        assertTrue(com.example.ui.components.isHourDaytime("06:00"))
+        assertTrue(com.example.ui.components.isHourDaytime("14:00"))
+        assertTrue(com.example.ui.components.isHourDaytime("18:00"))
+        assertFalse(com.example.ui.components.isHourDaytime("00:00"))
+        assertFalse(com.example.ui.components.isHourDaytime("03:00"))
+        assertFalse(com.example.ui.components.isHourDaytime("22:00"))
+    }
 }

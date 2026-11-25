@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,6 +48,9 @@ import com.example.ui.components.LottieWeatherAnimation
 import com.example.ui.components.RechartsFiveDayForecastView
 import com.example.ui.components.SevenDayForecastComponent
 import com.example.ui.components.WeatherForecastTrendsChart
+import com.example.ui.components.isDiurnalPeriodDaytime
+import com.example.ui.components.isHourDaytime
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import kotlin.math.roundToInt
 
@@ -63,7 +67,7 @@ fun ForecastScreen(
         val loadingDesc = stringResource(R.string.seven_day_loading)
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
-                color = HorizonCyan,
+                color = BroadcastCyan,
                 modifier = Modifier.semantics { contentDescription = loadingDesc }
             )
         }
@@ -202,11 +206,18 @@ private fun ForecastTabButton(
     tag: String = "",
     onClick: () -> Unit
 ) {
+    val bgColor by animateColorAsState(
+        targetValue = if (isSelected) SleekBluePrimary else Color.Transparent,
+        animationSpec = tween(180),
+        label = "forecastTabBg"
+    )
     Surface(
         shape = RoundedCornerShape(percent = 50),
-        color = if (isSelected) SleekBluePrimary else Color.Transparent,
+        color = bgColor,
         modifier = Modifier
             .then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
+            .clip(RoundedCornerShape(percent = 50))
+            .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
             .semantics(mergeDescendants = true) {
                 role = Role.Tab
                 selected = isSelected
@@ -287,7 +298,11 @@ private fun ThirtySixHourDetailedView(
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        LottieWeatherAnimation(weatherCode = period.weatherCode, size = 32.dp)
+                                        LottieWeatherAnimation(
+                                            weatherCode = period.weatherCode,
+                                            isDay = isDiurnalPeriodDaytime(period),
+                                            size = 32.dp
+                                        )
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Black)
                                         Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(period.weatherCode)), color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
@@ -341,7 +356,11 @@ private fun ThirtySixHourDetailedView(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                LottieWeatherAnimation(weatherCode = period.weatherCode, size = 36.dp)
+                                LottieWeatherAnimation(
+                                    weatherCode = period.weatherCode,
+                                    isDay = isDiurnalPeriodDaytime(period),
+                                    size = 36.dp
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Black)
                                 Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(period.weatherCode)), color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
@@ -522,7 +541,11 @@ private fun HourlyTrendChartView(pkg: FullWeatherPackage, unitSystem: UnitSystem
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = pt.timeLabel, color = SleekBluePrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(14.dp))
-                    LottieWeatherAnimation(weatherCode = pt.weatherCode, size = 22.dp)
+                    LottieWeatherAnimation(
+                        weatherCode = pt.weatherCode,
+                        isDay = isHourDaytime(pt.timeLabel),
+                        size = 22.dp
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(pt.weatherCode)), color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }

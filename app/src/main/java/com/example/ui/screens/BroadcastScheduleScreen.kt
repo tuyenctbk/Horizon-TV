@@ -46,6 +46,7 @@ import com.example.data.model.BroadcastScheduleSlot
 import com.example.data.model.CityLocation
 import com.example.data.model.VodStory
 import com.example.ui.components.LottieWeatherAnimation
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -173,7 +174,7 @@ fun BroadcastScheduleScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = clockFmt.format(Date(nowMs)),
-                        color = HorizonCyan,
+                        color = BroadcastCyan,
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -243,6 +244,7 @@ fun BroadcastScheduleScreen(
                     modifier = Modifier
                         .heightIn(min = 38.dp)
                         .clip(RoundedCornerShape(20.dp))
+                        .tvFocusVisual(shape = RoundedCornerShape(20.dp), focusBorderColor = BroadcastCyan)
                         .semantics(mergeDescendants = true) {
                             role = Role.Tab
                             selected = isSelected
@@ -391,6 +393,7 @@ private fun EpgModeToggleChip(
         modifier = Modifier
             .minimumInteractiveComponentSize()
             .clip(RoundedCornerShape(9.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(9.dp), focusBorderColor = SleekBluePrimary)
             .semantics(mergeDescendants = true) {
                 role = Role.Tab
                 selected = isSelected
@@ -489,7 +492,7 @@ private fun EpgNowAiringCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${slot.channelNumber} • ${stringResource(slot.channelNameRes)}",
-                            color = HorizonCyan,
+                            color = BroadcastCyan,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -643,7 +646,7 @@ private fun EpgTimelineGridView(
                 ) {
                     Text(
                         text = stringResource(R.string.epg_timeline_header),
-                        color = HorizonCyan,
+                        color = BroadcastCyan,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 0.8.sp
@@ -764,13 +767,14 @@ private fun EpgTimelineGridView(
                                     .width(timelineTotalWidth)
                                     .fillMaxHeight()
                             ) {
-                                Row(
+                                Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(vertical = 6.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        .padding(vertical = 6.dp)
                                 ) {
                                     channelSlots.sortedBy { it.startEpochMs }.forEach { slot ->
+                                        val startOffsetMin = ((slot.startEpochMs - minStartMs) / 60_000f).coerceAtLeast(0f)
+                                        val slotOffsetDp = (startOffsetMin * dpPerMinute).dp
                                         val blockWidth = ((slot.durationMinutes * dpPerMinute) - 4f)
                                             .coerceAtLeast(110f).dp
                                         val isOnAir = nowMs in slot.startEpochMs until slot.endEpochMs
@@ -795,9 +799,11 @@ private fun EpgTimelineGridView(
                                                 color = if (isOnAir) accent else Color(0xFF233657)
                                             ),
                                             modifier = Modifier
+                                                .offset(x = slotOffsetDp)
                                                 .width(blockWidth)
                                                 .fillMaxHeight()
                                                 .clip(RoundedCornerShape(10.dp))
+                                                .tvFocusVisual(shape = RoundedCornerShape(10.dp), focusBorderColor = BroadcastCyan, focusedScale = 1.02f)
                                                 .semantics(mergeDescendants = true) {
                                                     role = Role.Button
                                                     contentDescription = "${slot.channelNumber}, $statusLabel, ${slot.programTitle}, $slotTimeRange"
@@ -998,7 +1004,7 @@ private fun EpgChronologicalListView(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "${slot.channelNumber} • ${stringResource(slot.channelNameRes)}",
-                                color = if (isOnAir) HorizonCyan else SleekBluePrimary,
+                                color = if (isOnAir) BroadcastCyan else SleekBluePrimary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1055,7 +1061,7 @@ private fun EpgChronologicalListView(
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "${slot.categoryLabel} • ${slot.presenter}",
-                                color = if (isOnAir) HorizonCyan else SleekBluePrimary,
+                                color = if (isOnAir) BroadcastCyan else SleekBluePrimary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold
                             )

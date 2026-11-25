@@ -124,6 +124,7 @@ fun VirtualTVRemote(
                         .size(54.dp)
                         .clip(CircleShape)
                         .background(SleekBluePrimary)
+                        .tvFocusVisual(shape = CircleShape, focusBorderColor = BroadcastCyan)
                         .semantics(mergeDescendants = true) {
                             role = Role.Button
                             contentDescription = okLabel
@@ -143,7 +144,7 @@ fun VirtualTVRemote(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Fast Television Shortcuts Row
+            // Fast Television Shortcuts Row 1
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -181,6 +182,39 @@ fun VirtualTVRemote(
                     }
                 )
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Fast Television Shortcuts Row 2 (AI Desk, Guide, Forecast)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                RemoteQuickAction(
+                    icon = Icons.Default.AutoAwesome,
+                    label = stringResource(R.string.nav_ai_desk),
+                    onClick = {
+                        onNavigate(TVScreen.AI_DESK)
+                        onDismiss()
+                    }
+                )
+                RemoteQuickAction(
+                    icon = Icons.Default.ViewTimeline,
+                    label = stringResource(R.string.nav_schedule),
+                    onClick = {
+                        onNavigate(TVScreen.SCHEDULE)
+                        onDismiss()
+                    }
+                )
+                RemoteQuickAction(
+                    icon = Icons.Default.Timeline,
+                    label = stringResource(R.string.nav_forecast),
+                    onClick = {
+                        onNavigate(TVScreen.FORECAST)
+                        onDismiss()
+                    }
+                )
+            }
         }
     }
 }
@@ -197,6 +231,7 @@ private fun RemoteDirectionButton(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .size(40.dp)
+            .tvFocusVisual(shape = CircleShape, focusBorderColor = SleekBluePrimary)
     ) {
         Icon(
             imageVector = icon,
@@ -217,11 +252,14 @@ private fun RemoteQuickAction(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .minimumInteractiveComponentSize()
+            .clip(RoundedCornerShape(10.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(10.dp), focusBorderColor = SleekBluePrimary)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = label
             }
             .clickable(onClickLabel = label) { onClick() }
+            .padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
         Surface(
             shape = CircleShape,

@@ -42,6 +42,8 @@ import com.example.data.model.*
 import com.example.data.repository.FullWeatherPackage
 import com.example.data.repository.WeatherRepository
 import com.example.ui.components.LottieWeatherAnimation
+import com.example.ui.components.isDiurnalPeriodDaytime
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -220,12 +222,18 @@ private fun LBarContent(
                     letterSpacing = 0.5.sp
                 )
             }
-            Text(
-                text = stringResource(R.string.lbar_channel_tag),
-                color = SolarGold,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = SleekYellowContainer
+            ) {
+                Text(
+                    text = stringResource(R.string.lbar_ch),
+                    color = SleekYellowText,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
         }
 
         Text(
@@ -353,7 +361,11 @@ private fun LBarContent(
                     Text(text = stringResource(R.string.forecast_rain, p.popPercent), color = SleekBluePrimary, fontSize = 9.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    LottieWeatherAnimation(weatherCode = p.weatherCode, size = 18.dp)
+                    LottieWeatherAnimation(
+                        weatherCode = p.weatherCode,
+                        isDay = isDiurnalPeriodDaytime(p),
+                        size = 18.dp
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(text = pTemp, color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
@@ -457,6 +469,20 @@ private fun BroadcastStage(
                 center = Offset(windEndX, windEndY)
             )
 
+            // Luminous trailing radar sweep wedge
+            drawArc(
+                brush = Brush.radialGradient(
+                    colors = listOf(BroadcastCyan.copy(alpha = 0.28f), Color.Transparent),
+                    center = Offset(cx, cy),
+                    radius = scopeRadius.coerceAtLeast(1f)
+                ),
+                startAngle = sweepAngle - 38f,
+                sweepAngle = 38f,
+                useCenter = true,
+                topLeft = Offset(cx - scopeRadius, cy - scopeRadius),
+                size = androidx.compose.ui.geometry.Size(scopeRadius * 2f, scopeRadius * 2f)
+            )
+
             // Active Sweep Line
             val rad = Math.toRadians(sweepAngle.toDouble())
             val endX = cx + (scopeRadius * cos(rad)).toFloat()
@@ -464,7 +490,7 @@ private fun BroadcastStage(
 
             drawLine(
                 brush = Brush.linearGradient(
-                    colors = listOf(Color(0xFF38BDF8), Color.Transparent),
+                    colors = listOf(BroadcastCyan, Color.Transparent),
                     start = Offset(cx, cy),
                     end = Offset(endX, endY)
                 ),
@@ -474,8 +500,19 @@ private fun BroadcastStage(
             )
 
             // Station center marker
-            drawCircle(color = Color(0xFF38BDF8), radius = 4.5f, center = Offset(cx, cy))
+            drawCircle(color = BroadcastCyan, radius = 4.5f, center = Offset(cx, cy))
         }
+
+        val liveTallyTransition = rememberInfiniteTransition(label = "liveTallyPulse")
+        val liveTallyAlpha by liveTallyTransition.animateFloat(
+            initialValue = 0.35f,
+            targetValue = 1.0f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(750, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "liveTallyAlpha"
+        )
 
         // Broadcast HUD Overlays
         // Top-Left Bug
@@ -489,18 +526,29 @@ private fun BroadcastStage(
                 shape = RoundedCornerShape(4.dp),
                 color = SevereRed
             ) {
-                Text(
-                    text = stringResource(R.string.livetv_live_broadcast),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = liveTallyAlpha))
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = stringResource(R.string.livetv_live_broadcast),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.livetv_doppler_specs),
-                color = HorizonCyan,
+                color = BroadcastCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -517,9 +565,10 @@ private fun BroadcastStage(
             Surface(
                 shape = RoundedCornerShape(6.dp),
                 color = Color.Black.copy(alpha = 0.7f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, TVCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BroadcastCyan.copy(alpha = 0.35f)),
                 modifier = Modifier
                     .minimumInteractiveComponentSize()
+                    .tvFocusVisual(shape = RoundedCornerShape(6.dp), focusBorderColor = BroadcastCyan)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
                         stateDescription = audioStateLabel
@@ -533,7 +582,7 @@ private fun BroadcastStage(
                     Icon(
                         imageVector = if (isAudioPlaying) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
                         contentDescription = stringResource(R.string.home_audio),
-                        tint = if (isAudioPlaying) HorizonCyan else TextSecondarySilver,
+                        tint = if (isAudioPlaying) BroadcastCyan else TextSecondarySilver,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -550,9 +599,10 @@ private fun BroadcastStage(
             Surface(
                 shape = RoundedCornerShape(6.dp),
                 color = Color.Black.copy(alpha = 0.7f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, TVCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BroadcastCyan.copy(alpha = 0.35f)),
                 modifier = Modifier
                     .minimumInteractiveComponentSize()
+                    .tvFocusVisual(shape = RoundedCornerShape(6.dp), focusBorderColor = BroadcastCyan)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
                     }
@@ -565,7 +615,7 @@ private fun BroadcastStage(
                     Icon(
                         Icons.Default.PictureInPictureAlt,
                         contentDescription = pipLabel,
-                        tint = HorizonCyan,
+                        tint = BroadcastCyan,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))

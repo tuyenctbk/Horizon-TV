@@ -76,6 +76,7 @@ class WeatherViewModel(
     private val repository: WeatherRepository = WeatherRepository(application)
     private val preferencesManager = UserPreferencesManager(application)
     private var searchJob: Job? = null
+    private var loadWeatherJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         WeatherUiState(
@@ -86,6 +87,7 @@ class WeatherViewModel(
             isLiveAudioPlaying = preferencesManager.isLiveAudioPlaying(),
             isLBarVisible = preferencesManager.isLBarVisible(),
             favoriteCities = preferencesManager.getFavoriteCities() ?: repository.getDefaultFavoriteCities(),
+            remindedScheduleIds = preferencesManager.getRemindedScheduleIds(),
             vodStories = emptyList(),
             isBackgroundAlertsEnabled = preferencesManager.isBackgroundAlertsEnabled(),
             backgroundSyncIntervalMinutes = preferencesManager.getBackgroundSyncIntervalMinutes(),
@@ -163,7 +165,8 @@ class WeatherViewModel(
 
     fun loadWeatherForLocation(location: CityLocation) {
         preferencesManager.saveLastSelectedLocation(location)
-        viewModelScope.launch {
+        loadWeatherJob?.cancel()
+        loadWeatherJob = viewModelScope.launch {
             // Hydrate immediately from Room cache for this location if available so cold starts are instant
             val preCached = repository.loadCachedWeatherSnapshot(
                 location = location,
@@ -195,6 +198,7 @@ class WeatherViewModel(
                         weatherPackage = preCached.weatherPackage,
                         vodStories = cachedVods,
                         broadcastSchedule = cachedSchedule,
+                        activeAlertModal = null,
                         lastSyncedAtMs = preCached.cachedAtEpochMs
                     )
                 }
@@ -205,7 +209,8 @@ class WeatherViewModel(
                         errorMessage = null,
                         errorResId = null,
                         errorDetail = null,
-                        currentLocation = location
+                        currentLocation = location,
+                        activeAlertModal = null
                     )
                 }
             }
@@ -217,7 +222,11 @@ class WeatherViewModel(
                     location = location
                 )
                 val unit = _uiState.value.unitSystem
-                val activeAlert = fullPkg.alerts.firstOrNull { it.id !in _uiState.value.dismissedAlertIds }
+                // Only auto-open blocking full-screen modal for EMERGENCY severity;
+                // WARNING/WATCH/ADVISORY remain prominently actionable in the top alert banner & L-Bar ticker.
+                val urgentEmergencyModal = fullPkg.alerts.firstOrNull {
+                    it.severity == AlertSeverity.EMERGENCY && it.id !in _uiState.value.dismissedAlertIds
+                }
                 val liveVods = repository.buildLiveVodDispatches(
                     location = location,
                     current = current,
@@ -239,7 +248,7 @@ class WeatherViewModel(
                         weatherPackage = fullPkg,
                         vodStories = liveVods,
                         broadcastSchedule = liveSchedule,
-                        activeAlertModal = activeAlert,
+                        activeAlertModal = urgentEmergencyModal,
                         isOfflineCacheMode = false,
                         lastSyncedAtMs = System.currentTimeMillis(),
                         errorMessage = null,
@@ -247,6 +256,8 @@ class WeatherViewModel(
                         errorDetail = null
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 // Network outage: restore last known snapshot from local Room database
                 val fallbackSnapshot = preCached ?: repository.loadCachedWeatherSnapshot(
@@ -305,6 +316,7 @@ class WeatherViewModel(
             } else {
                 state.remindedScheduleIds + slotId
             }
+            preferencesManager.saveRemindedScheduleIds(updated)
             state.copy(remindedScheduleIds = updated)
         }
     }
@@ -617,6 +629,8 @@ class WeatherViewModel(
                 val loc = _uiState.value.currentLocation
                 try {
                     val (current, fullPkg) = repository.fetchRealWeatherData(loc.latitude, loc.longitude, location = loc)
+                    // Discard stale poll if the user switched cities while request was in-flight
+                    if (_uiState.value.currentLocation != loc) continue
                     val unit = _uiState.value.unitSystem
                     val liveVods = repository.buildLiveVodDispatches(loc, current, fullPkg, unit)
                     val liveSchedule = repository.buildLiveBroadcastSchedule(loc, current, fullPkg, liveVods, unit)
@@ -631,12 +645,28 @@ class WeatherViewModel(
                         )
                     }
                 } catch (_: Exception) {
-                    if (_uiState.value.currentWeather != null) {
+                    if (_uiState.value.currentLocation == loc && _uiState.value.currentWeather != null) {
                         _uiState.update { it.copy(isOfflineCacheMode = true) }
                     }
                 }
             }
         }
+    }
+
+    fun cycleFavoriteCity(forward: Boolean) {
+        val favorites = _uiState.value.favoriteCities
+        if (favorites.isEmpty()) return
+        val currentIdx = favorites.indexOfFirst {
+            it.name.equals(_uiState.value.currentLocation.name, ignoreCase = true)
+        }
+        val nextIdx = if (currentIdx == -1) {
+            0
+        } else if (forward) {
+            (currentIdx + 1) % favorites.size
+        } else {
+            (currentIdx - 1 + favorites.size) % favorites.size
+        }
+        loadWeatherForLocation(favorites[nextIdx])
     }
 
     private fun startRadarLoop() {
@@ -657,6 +687,8 @@ class WeatherViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        loadWeatherJob?.cancel()
+        searchJob?.cancel()
         pollingJob?.cancel()
         radarTimerJob?.cancel()
     }

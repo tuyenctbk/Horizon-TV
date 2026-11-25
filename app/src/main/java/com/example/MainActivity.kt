@@ -135,167 +135,178 @@ class MainActivity : ComponentActivity() {
                                             errorMessage = displayError,
                                             onRetry = { viewModel.loadWeatherForLocation(uiState.currentLocation) }
                                         )
-                                    } else if (uiState.currentScreen == TVScreen.LIVE_TV) {
-                                        // Live TV has its own native integrated full-screen broadcast layout (Stage + L-Bar + Ticker)
-                                        LiveTVBroadcastScreen(
-                                            currentLocation = uiState.currentLocation,
-                                            currentWeather = uiState.currentWeather,
-                                            weatherPackage = uiState.weatherPackage,
-                                            unitSystem = uiState.unitSystem,
-                                            isAudioPlaying = uiState.isLiveAudioPlaying,
-                                            onToggleAudio = { viewModel.toggleLiveAudio() },
-                                            onTogglePip = { viewModel.togglePip() },
-                                            onOpenAlertModal = { viewModel.openAlertModal(it) }
-                                        )
                                     } else {
-                                        PersistentLBarLayout(
-                                            currentLocation = uiState.currentLocation,
-                                            currentWeather = uiState.currentWeather,
-                                            weatherPackage = uiState.weatherPackage,
-                                            unitSystem = uiState.unitSystem,
-                                            isLBarVisible = uiState.isLBarVisible,
-                                            onToggleLBar = { viewModel.toggleLBar() }
-                                        ) {
-                                            AnimatedContent(
-                                                targetState = uiState.currentScreen,
-                                                transitionSpec = {
-                                                    (fadeIn(tween(240)) + slideInVertically(tween(240)) { it / 28 }) togetherWith
-                                                        fadeOut(tween(170))
-                                                },
-                                                label = "screenTransition"
-                                            ) { targetScreen ->
-                                                when (targetScreen) {
-                                                    TVScreen.HOME -> {
-                                                        HomeDashboardScreen(
-                                                            currentLocation = uiState.currentLocation,
-                                                            currentWeather = uiState.currentWeather,
-                                                            weatherPackage = uiState.weatherPackage,
-                                                            favoriteCities = uiState.favoriteCities,
-                                                            unitSystem = uiState.unitSystem,
-                                                            vodStories = uiState.vodStories,
-                                                            onSelectCity = { viewModel.loadWeatherForLocation(it) },
-                                                            onNavigate = { viewModel.setScreen(it) },
-                                                            onPlayVodStory = { viewModel.playVodStory(it) },
-                                                            onOpenAlertModal = { viewModel.openAlertModal(it) },
-                                                            onRemoveCity = { viewModel.removeFavorite(it) },
-                                                            onDismissAlert = { viewModel.dismissAlert(it.id) },
-                                                            isOfflineMode = uiState.isOfflineCacheMode
-                                                        )
-                                                    }
-                                                    TVScreen.LIVE_TV -> {
-                                                        // Handled above
-                                                    }
-                                                    TVScreen.FORECAST -> {
-                                                        ForecastScreen(
-                                                            currentLocation = uiState.currentLocation,
-                                                            currentWeather = uiState.currentWeather,
-                                                            weatherPackage = uiState.weatherPackage,
-                                                            unitSystem = uiState.unitSystem,
-                                                            isOfflineMode = uiState.isOfflineCacheMode
-                                                        )
-                                                    }
-                                                    TVScreen.AI_DESK -> {
-                                                        AiMeteorologistScreen(
-                                                            currentLocation = uiState.currentLocation,
-                                                            currentWeather = uiState.currentWeather,
-                                                            weatherPackage = uiState.weatherPackage,
-                                                            unitSystem = uiState.unitSystem,
-                                                            aiViewModel = aiViewModel
-                                                        )
-                                                    }
-                                                    TVScreen.RADAR -> {
-                                                        InteractiveRadarScreen(
-                                                            currentLocation = uiState.currentLocation,
-                                                            currentWeather = uiState.currentWeather,
-                                                            unitSystem = uiState.unitSystem,
-                                                            selectedLayer = uiState.radarSelectedLayer,
-                                                            isPlaying = uiState.isRadarPlaying,
-                                                            frameIndex = uiState.radarFrameIndex,
-                                                            radarPackage = uiState.radarPackage,
-                                                            isLoadingRadar = uiState.isLoadingRadar,
-                                                            radarOpacity = uiState.radarOpacity,
-                                                            onSelectLayer = { viewModel.setRadarLayer(it) },
-                                                            onTogglePlay = { viewModel.toggleRadarPlayback() },
-                                                            onSelectFrame = { viewModel.setRadarFrameIndex(it) },
-                                                            onCycleOpacity = { viewModel.cycleRadarOpacity() },
-                                                            onRefreshRadar = { viewModel.refreshRadarMetadata() }
-                                                        )
-                                                    }
-                                                    TVScreen.VOD -> {
-                                                        VideoOnDemandScreen(
-                                                            stories = uiState.vodStories,
-                                                            activePlayingStory = uiState.activeVodStory,
-                                                            onPlayStory = { viewModel.playVodStory(it) },
-                                                            onOpenSchedule = { viewModel.setScreen(TVScreen.SCHEDULE) }
-                                                        )
-                                                    }
-                                                    TVScreen.SCHEDULE -> {
-                                                        BroadcastScheduleScreen(
-                                                            currentLocation = uiState.currentLocation,
-                                                            scheduleSlots = uiState.broadcastSchedule,
-                                                            remindedSlotIds = uiState.remindedScheduleIds,
-                                                            activePlayingStory = uiState.activeVodStory,
-                                                            allVodStories = uiState.vodStories,
-                                                            isOfflineCacheMode = uiState.isOfflineCacheMode,
-                                                            onPlayStory = { viewModel.playVodStory(it) },
-                                                            onToggleReminder = { viewModel.toggleScheduleReminder(it) },
-                                                            onRefresh = { viewModel.loadWeatherForLocation(uiState.currentLocation) }
-                                                        )
-                                                    }
-                                                    TVScreen.SEARCH -> {
-                                                        CitySearchScreen(
-                                                            searchQuery = uiState.searchQuery,
-                                                            searchResults = uiState.searchResults,
-                                                            isSearching = uiState.isSearching,
-                                                            favoriteCities = uiState.favoriteCities,
-                                                            currentLocation = uiState.currentLocation,
-                                                            onQueryChange = { viewModel.searchCities(it) },
-                                                            onSelectCity = {
-                                                                viewModel.loadWeatherForLocation(it)
-                                                                viewModel.setScreen(TVScreen.HOME)
-                                                            },
-                                                            onAutoDetectGps = { viewModel.autoDetectGpsLocation() },
-                                                            onToggleFavorite = { city ->
-                                                                viewModel.toggleFavorite(city)
-                                                            },
-                                                            onRemoveFavorite = { city ->
-                                                                viewModel.removeFavorite(city)
+                                        AnimatedContent(
+                                            targetState = uiState.currentScreen == TVScreen.LIVE_TV,
+                                            transitionSpec = {
+                                                fadeIn(tween(260)) togetherWith fadeOut(tween(180))
+                                            },
+                                            label = "broadcastModeTransition"
+                                        ) { isLiveTvFullStage ->
+                                            if (isLiveTvFullStage) {
+                                                // Live TV has its own native integrated full-screen broadcast layout (Stage + L-Bar + Ticker)
+                                                LiveTVBroadcastScreen(
+                                                    currentLocation = uiState.currentLocation,
+                                                    currentWeather = uiState.currentWeather,
+                                                    weatherPackage = uiState.weatherPackage,
+                                                    unitSystem = uiState.unitSystem,
+                                                    isAudioPlaying = uiState.isLiveAudioPlaying,
+                                                    onToggleAudio = { viewModel.toggleLiveAudio() },
+                                                    onTogglePip = { viewModel.togglePip() },
+                                                    onOpenAlertModal = { viewModel.openAlertModal(it) }
+                                                )
+                                            } else {
+                                                PersistentLBarLayout(
+                                                    currentLocation = uiState.currentLocation,
+                                                    currentWeather = uiState.currentWeather,
+                                                    weatherPackage = uiState.weatherPackage,
+                                                    unitSystem = uiState.unitSystem,
+                                                    isLBarVisible = uiState.isLBarVisible,
+                                                    onToggleLBar = { viewModel.toggleLBar() },
+                                                    onAlertClick = { viewModel.openAlertModal(it) }
+                                                ) {
+                                                    AnimatedContent(
+                                                        targetState = uiState.currentScreen,
+                                                        transitionSpec = {
+                                                            (fadeIn(tween(240)) + slideInVertically(tween(240)) { it / 28 }) togetherWith
+                                                                fadeOut(tween(170))
+                                                        },
+                                                        label = "screenTransition"
+                                                    ) { targetScreen ->
+                                                        when (targetScreen) {
+                                                            TVScreen.HOME -> {
+                                                                HomeDashboardScreen(
+                                                                    currentLocation = uiState.currentLocation,
+                                                                    currentWeather = uiState.currentWeather,
+                                                                    weatherPackage = uiState.weatherPackage,
+                                                                    favoriteCities = uiState.favoriteCities,
+                                                                    unitSystem = uiState.unitSystem,
+                                                                    vodStories = uiState.vodStories,
+                                                                    onSelectCity = { viewModel.loadWeatherForLocation(it) },
+                                                                    onNavigate = { viewModel.setScreen(it) },
+                                                                    onPlayVodStory = { viewModel.playVodStory(it) },
+                                                                    onOpenAlertModal = { viewModel.openAlertModal(it) },
+                                                                    onRemoveCity = { viewModel.removeFavorite(it) },
+                                                                    onDismissAlert = { viewModel.dismissAlert(it.id) },
+                                                                    isOfflineMode = uiState.isOfflineCacheMode
+                                                                )
                                                             }
-                                                        )
-                                                    }
-                                                    TVScreen.SETTINGS -> {
-                                                        SettingsScreen(
-                                                            unitSystem = uiState.unitSystem,
-                                                            isCrtGrainEnabled = uiState.isCrtGrainEnabled,
-                                                            isVirtualRemoteVisible = uiState.isVirtualRemoteVisible,
-                                                            isLiveAudioPlaying = uiState.isLiveAudioPlaying,
-                                                            aiQuota = aiUiState.quota,
-                                                            aiResetCountdown = aiViewModel.formatResetCountdown(aiUiState.quota.millisUntilReset),
-                                                            currentByokKey = aiViewModel.getCurrentByokKey(),
-                                                            onToggleUnits = { viewModel.toggleUnitSystem() },
-                                                            onSelectUnitSystem = { viewModel.setUnitSystem(it) },
-                                                            onToggleCrtGrain = { viewModel.toggleCrtGrain() },
-                                                            onToggleVirtualRemote = { viewModel.toggleVirtualRemote() },
-                                                            onToggleLiveAudio = { viewModel.toggleLiveAudio() },
-                                                            onToggleAiEcoLite = { aiViewModel.toggleEcoLiteMode() },
-                                                            onClaimAiGraceCredits = { aiViewModel.claimDailyGraceCredits() },
-                                                            onSaveByokKey = { aiViewModel.saveByokKey(it) },
-                                                            onClearByokKey = { aiViewModel.clearByokKey() },
-                                                            isBackgroundAlertsEnabled = uiState.isBackgroundAlertsEnabled,
-                                                            backgroundSyncIntervalMinutes = uiState.backgroundSyncIntervalMinutes,
-                                                            lastBackgroundSyncSummary = uiState.lastBackgroundSyncSummary,
-                                                            onToggleBackgroundAlerts = { viewModel.toggleBackgroundAlerts() },
-                                                            onSelectBackgroundInterval = { viewModel.setBackgroundSyncInterval(it) },
-                                                            onSyncBackgroundNow = { viewModel.triggerImmediateBackgroundWeatherCheck() },
-                                                            onTestPushNotification = { viewModel.triggerTestSeverePushNotification(it) },
-                                                            onTriggerTestAlert = { viewModel.openAlertModal(it) },
-                                                            onRateApp = { viewModel.onSuggestionPositive(SuggestionType.RATE) },
-                                                            onShareApp = { viewModel.onSuggestionPositive(SuggestionType.SHARE) },
-                                                            onOpenOnboardingTour = { viewModel.openOnboardingTour() },
-                                                            cachedStationCount = uiState.cachedStationCount,
-                                                            lastSyncedAtMs = uiState.lastSyncedAtMs,
-                                                            onClearWeatherCache = { viewModel.clearLocalWeatherCache() }
-                                                        )
+                                                            TVScreen.LIVE_TV -> {
+                                                                // Handled by outer broadcastModeTransition
+                                                            }
+                                                            TVScreen.FORECAST -> {
+                                                                ForecastScreen(
+                                                                    currentLocation = uiState.currentLocation,
+                                                                    currentWeather = uiState.currentWeather,
+                                                                    weatherPackage = uiState.weatherPackage,
+                                                                    unitSystem = uiState.unitSystem,
+                                                                    isOfflineMode = uiState.isOfflineCacheMode
+                                                                )
+                                                            }
+                                                            TVScreen.AI_DESK -> {
+                                                                AiMeteorologistScreen(
+                                                                    currentLocation = uiState.currentLocation,
+                                                                    currentWeather = uiState.currentWeather,
+                                                                    weatherPackage = uiState.weatherPackage,
+                                                                    unitSystem = uiState.unitSystem,
+                                                                    aiViewModel = aiViewModel
+                                                                )
+                                                            }
+                                                            TVScreen.RADAR -> {
+                                                                InteractiveRadarScreen(
+                                                                    currentLocation = uiState.currentLocation,
+                                                                    currentWeather = uiState.currentWeather,
+                                                                    unitSystem = uiState.unitSystem,
+                                                                    selectedLayer = uiState.radarSelectedLayer,
+                                                                    isPlaying = uiState.isRadarPlaying,
+                                                                    frameIndex = uiState.radarFrameIndex,
+                                                                    radarPackage = uiState.radarPackage,
+                                                                    isLoadingRadar = uiState.isLoadingRadar,
+                                                                    radarOpacity = uiState.radarOpacity,
+                                                                    onSelectLayer = { viewModel.setRadarLayer(it) },
+                                                                    onTogglePlay = { viewModel.toggleRadarPlayback() },
+                                                                    onSelectFrame = { viewModel.setRadarFrameIndex(it) },
+                                                                    onCycleOpacity = { viewModel.cycleRadarOpacity() },
+                                                                    onRefreshRadar = { viewModel.refreshRadarMetadata() }
+                                                                )
+                                                            }
+                                                            TVScreen.VOD -> {
+                                                                VideoOnDemandScreen(
+                                                                    stories = uiState.vodStories,
+                                                                    activePlayingStory = null,
+                                                                    onPlayStory = { viewModel.playVodStory(it) },
+                                                                    onOpenSchedule = { viewModel.setScreen(TVScreen.SCHEDULE) }
+                                                                )
+                                                            }
+                                                            TVScreen.SCHEDULE -> {
+                                                                BroadcastScheduleScreen(
+                                                                    currentLocation = uiState.currentLocation,
+                                                                    scheduleSlots = uiState.broadcastSchedule,
+                                                                    remindedSlotIds = uiState.remindedScheduleIds,
+                                                                    activePlayingStory = null,
+                                                                    allVodStories = uiState.vodStories,
+                                                                    isOfflineCacheMode = uiState.isOfflineCacheMode,
+                                                                    onPlayStory = { viewModel.playVodStory(it) },
+                                                                    onToggleReminder = { viewModel.toggleScheduleReminder(it) },
+                                                                    onRefresh = { viewModel.loadWeatherForLocation(uiState.currentLocation) }
+                                                                )
+                                                            }
+                                                            TVScreen.SEARCH -> {
+                                                                CitySearchScreen(
+                                                                    searchQuery = uiState.searchQuery,
+                                                                    searchResults = uiState.searchResults,
+                                                                    isSearching = uiState.isSearching,
+                                                                    favoriteCities = uiState.favoriteCities,
+                                                                    currentLocation = uiState.currentLocation,
+                                                                    onQueryChange = { viewModel.searchCities(it) },
+                                                                    onSelectCity = {
+                                                                        viewModel.loadWeatherForLocation(it)
+                                                                        viewModel.setScreen(TVScreen.HOME)
+                                                                    },
+                                                                    onAutoDetectGps = { viewModel.autoDetectGpsLocation() },
+                                                                    onToggleFavorite = { city ->
+                                                                        viewModel.toggleFavorite(city)
+                                                                    },
+                                                                    onRemoveFavorite = { city ->
+                                                                        viewModel.removeFavorite(city)
+                                                                    }
+                                                                )
+                                                            }
+                                                            TVScreen.SETTINGS -> {
+                                                                SettingsScreen(
+                                                                    unitSystem = uiState.unitSystem,
+                                                                    isCrtGrainEnabled = uiState.isCrtGrainEnabled,
+                                                                    isVirtualRemoteVisible = uiState.isVirtualRemoteVisible,
+                                                                    isLiveAudioPlaying = uiState.isLiveAudioPlaying,
+                                                                    aiQuota = aiUiState.quota,
+                                                                    aiResetCountdown = aiViewModel.formatResetCountdown(aiUiState.quota.millisUntilReset),
+                                                                    currentByokKey = aiViewModel.getCurrentByokKey(),
+                                                                    onToggleUnits = { viewModel.toggleUnitSystem() },
+                                                                    onSelectUnitSystem = { viewModel.setUnitSystem(it) },
+                                                                    onToggleCrtGrain = { viewModel.toggleCrtGrain() },
+                                                                    onToggleVirtualRemote = { viewModel.toggleVirtualRemote() },
+                                                                    onToggleLiveAudio = { viewModel.toggleLiveAudio() },
+                                                                    onToggleAiEcoLite = { aiViewModel.toggleEcoLiteMode() },
+                                                                    onClaimAiGraceCredits = { aiViewModel.claimDailyGraceCredits() },
+                                                                    onSaveByokKey = { aiViewModel.saveByokKey(it) },
+                                                                    onClearByokKey = { aiViewModel.clearByokKey() },
+                                                                    isBackgroundAlertsEnabled = uiState.isBackgroundAlertsEnabled,
+                                                                    backgroundSyncIntervalMinutes = uiState.backgroundSyncIntervalMinutes,
+                                                                    lastBackgroundSyncSummary = uiState.lastBackgroundSyncSummary,
+                                                                    onToggleBackgroundAlerts = { viewModel.toggleBackgroundAlerts() },
+                                                                    onSelectBackgroundInterval = { viewModel.setBackgroundSyncInterval(it) },
+                                                                    onSyncBackgroundNow = { viewModel.triggerImmediateBackgroundWeatherCheck() },
+                                                                    onTestPushNotification = { viewModel.triggerTestSeverePushNotification(it) },
+                                                                    onTriggerTestAlert = { viewModel.openAlertModal(it) },
+                                                                    onRateApp = { viewModel.onSuggestionPositive(SuggestionType.RATE) },
+                                                                    onShareApp = { viewModel.onSuggestionPositive(SuggestionType.SHARE) },
+                                                                    onOpenOnboardingTour = { viewModel.openOnboardingTour() },
+                                                                    cachedStationCount = uiState.cachedStationCount,
+                                                                    lastSyncedAtMs = uiState.lastSyncedAtMs,
+                                                                    onClearWeatherCache = { viewModel.clearLocalWeatherCache() }
+                                                                )
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -327,27 +338,62 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = { viewModel.toggleVirtualRemote() },
                                 onNavigate = { viewModel.setScreen(it) },
                                 onDirectionClick = { direction ->
-                                    // Handle D-pad directional clicks
                                     when (direction) {
-                                        "RIGHT", "DOWN" -> {
+                                        "RIGHT" -> {
                                             val screens = TVScreen.entries
                                             val nextIndex = (uiState.currentScreen.ordinal + 1) % screens.size
                                             viewModel.setScreen(screens[nextIndex])
                                         }
-                                        "LEFT", "UP" -> {
+                                        "LEFT" -> {
                                             val screens = TVScreen.entries
                                             val prevIndex = (uiState.currentScreen.ordinal - 1 + screens.size) % screens.size
                                             viewModel.setScreen(screens[prevIndex])
                                         }
+                                        "DOWN" -> {
+                                            if (uiState.favoriteCities.isNotEmpty()) {
+                                                viewModel.cycleFavoriteCity(forward = true)
+                                            } else {
+                                                val screens = TVScreen.entries
+                                                val nextIndex = (uiState.currentScreen.ordinal + 1) % screens.size
+                                                viewModel.setScreen(screens[nextIndex])
+                                            }
+                                        }
+                                        "UP" -> {
+                                            if (uiState.favoriteCities.isNotEmpty()) {
+                                                viewModel.cycleFavoriteCity(forward = false)
+                                            } else {
+                                                val screens = TVScreen.entries
+                                                val prevIndex = (uiState.currentScreen.ordinal - 1 + screens.size) % screens.size
+                                                viewModel.setScreen(screens[prevIndex])
+                                            }
+                                        }
                                         "OK" -> {
-                                            // Trigger action on current screen
-                                            if (uiState.currentScreen == TVScreen.RADAR) {
-                                                viewModel.toggleRadarPlayback()
+                                            when (uiState.currentScreen) {
+                                                TVScreen.RADAR -> viewModel.toggleRadarPlayback()
+                                                TVScreen.LIVE_TV -> viewModel.toggleLiveAudio()
+                                                TVScreen.HOME -> viewModel.setScreen(TVScreen.LIVE_TV)
+                                                TVScreen.VOD -> uiState.vodStories.firstOrNull()?.let { viewModel.playVodStory(it) }
+                                                TVScreen.SCHEDULE -> uiState.broadcastSchedule.firstOrNull()?.let { viewModel.playVodStory(it.linkedVodStory) }
+                                                else -> viewModel.toggleLBar()
                                             }
                                         }
                                     }
                                 }
                             )
+
+                            // Global VOD Broadcast Player Modal (works from Home, VOD Hub, and Broadcast Guide)
+                            uiState.activeVodStory?.let { story ->
+                                val storyPool = remember(uiState.vodStories, uiState.broadcastSchedule) {
+                                    (uiState.vodStories + uiState.broadcastSchedule.map { it.linkedVodStory })
+                                        .distinctBy { it.id }
+                                }
+                                VodPlayerModal(
+                                    story = story,
+                                    allStories = storyPool,
+                                    onDismiss = { viewModel.playVodStory(null) },
+                                    onSwitchStory = { viewModel.playVodStory(it) }
+                                )
+                            }
 
                             // Weather Alert Emergency Modal
                             WeatherAlertModal(
@@ -430,8 +476,21 @@ class MainActivity : ComponentActivity() {
                 true
             }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                if (viewModel.uiState.value.currentScreen == TVScreen.RADAR) {
-                    viewModel.toggleRadarPlayback()
+                when (viewModel.uiState.value.currentScreen) {
+                    TVScreen.RADAR -> {
+                        viewModel.toggleRadarPlayback()
+                        true
+                    }
+                    TVScreen.LIVE_TV -> {
+                        viewModel.toggleLiveAudio()
+                        true
+                    }
+                    else -> super.onKeyDown(keyCode, event)
+                }
+            }
+            KeyEvent.KEYCODE_INFO, KeyEvent.KEYCODE_MENU -> {
+                if (viewModel.uiState.value.currentScreen != TVScreen.LIVE_TV) {
+                    viewModel.toggleLBar()
                     true
                 } else {
                     super.onKeyDown(keyCode, event)

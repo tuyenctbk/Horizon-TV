@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +44,8 @@ import com.example.ui.components.RealTimeTelemetryVisualizer
 import com.example.ui.components.LottieWeatherAnimation
 import com.example.ui.components.RechartsFiveDayForecastView
 import com.example.ui.components.SevenDayForecastComponent
+import com.example.ui.components.isDiurnalPeriodDaytime
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import kotlin.math.roundToInt
 
@@ -76,7 +83,7 @@ fun HomeDashboardScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
-                    color = HorizonCyan,
+                    color = BroadcastCyan,
                     modifier = Modifier.semantics { contentDescription = loadingDesc }
                 )
             }
@@ -144,6 +151,7 @@ fun HomeDashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(22.dp))
+                .tvFocusVisual(shape = RoundedCornerShape(22.dp), focusBorderColor = BroadcastCyan, focusedScale = 1.02f)
                 .semantics(mergeDescendants = true) {
                     role = Role.Button
                 }
@@ -416,6 +424,8 @@ fun HomeDashboardScreen(
                                 if (isSelected) SleekBluePrimary else SleekBorder
                             ),
                             modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .tvFocusVisual(shape = RoundedCornerShape(16.dp), focusBorderColor = SleekBluePrimary)
                                 .semantics {
                                     role = Role.Button
                                     selected = isSelected
@@ -530,8 +540,10 @@ fun HomeDashboardScreen(
                     Column(
                         modifier = Modifier
                             .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(SleekSurfaceSecondary, RoundedCornerShape(16.dp))
                             .border(1.dp, SleekBorder, RoundedCornerShape(16.dp))
+                            .tvFocusVisual(shape = RoundedCornerShape(16.dp), focusBorderColor = Color(story.accentColorHex))
                             .semantics(mergeDescendants = true) { role = Role.Button }
                             .clickable(onClickLabel = story.title) { onPlayVodStory(story) }
                             .padding(14.dp)
@@ -599,6 +611,7 @@ private fun ActionShortcutCard(
         border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.25f)),
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(20.dp), focusBorderColor = accentColor)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "$title, $subtitle"
@@ -697,8 +710,13 @@ private fun LiveTvHeroCard(
                 .fillMaxWidth()
                 .height(180.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(SleekDarkContainer)
-                .border(1.dp, Color(0xFF333333), RoundedCornerShape(16.dp))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(Color(0xFF0E2144), Color(0xFF0A1428), Color(0xFF050A14))
+                    )
+                )
+                .border(1.dp, BroadcastCyan.copy(alpha = 0.28f), RoundedCornerShape(16.dp))
+                .tvFocusVisual(shape = RoundedCornerShape(16.dp), focusBorderColor = BroadcastCyan, focusedScale = 1.02f)
                 .semantics(mergeDescendants = true) {
                     role = Role.Button
                 }
@@ -829,13 +847,19 @@ private fun MicroClimateSnapshotCard(
                 "${(currentWeather.feelsLikeC * 9 / 5 + 32).roundToInt()}°F"
 
             Column {
-                Text(
-                    text = displayTemp,
-                    color = SleekTextPrimary,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = (-1).sp
-                )
+                AnimatedContent(
+                    targetState = displayTemp,
+                    transitionSpec = { fadeIn(tween(260)) togetherWith fadeOut(tween(180)) },
+                    label = "heroTempCrossfade"
+                ) { targetTemp ->
+                    Text(
+                        text = targetTemp,
+                        color = SleekTextPrimary,
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-1).sp
+                    )
+                }
                 Text(
                     text = stringResource(R.string.home_feels_like, displayFeels),
                     color = SleekBluePrimary,
@@ -925,7 +949,11 @@ private fun MicroClimateSnapshotCard(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    LottieWeatherAnimation(weatherCode = period.weatherCode, size = 18.dp)
+                    LottieWeatherAnimation(
+                        weatherCode = period.weatherCode,
+                        isDay = isDiurnalPeriodDaytime(period),
+                        size = 18.dp
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = periodTemp,

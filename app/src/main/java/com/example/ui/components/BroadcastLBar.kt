@@ -164,7 +164,7 @@ fun BroadcastLBar(
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = channelLiveLabel,
-                            color = HorizonCyan,
+                            color = BroadcastCyan,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 0.5.sp
@@ -239,8 +239,9 @@ fun BroadcastLBar(
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = if (hasActiveAlert) SevereRed else SleekBluePrimary,
-                        modifier = if (hasActiveAlert && onAlertClick != null && primaryAlert != null) {
+                        modifier = if (primaryAlert != null && onAlertClick != null) {
                             Modifier
+                                .tvFocusVisual(shape = RoundedCornerShape(4.dp), focusBorderColor = BroadcastAmber)
                                 .clickable(role = Role.Button) { onAlertClick(primaryAlert) }
                                 .semantics(mergeDescendants = true) {
                                     role = Role.Button
@@ -362,7 +363,11 @@ fun BroadcastLBar(
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace
                                 )
-                                LottieWeatherAnimation(weatherCode = pt.weatherCode, size = 18.dp)
+                                LottieWeatherAnimation(
+                                    weatherCode = pt.weatherCode,
+                                    isDay = isHourDaytime(pt.timeLabel),
+                                    size = 18.dp
+                                )
                                 Text(
                                     text = tempLabel,
                                     color = SleekTextPrimary,
@@ -392,6 +397,7 @@ fun BroadcastLBar(
                             color = if (isSidebarExpanded) SleekBlueContainer else SleekSurfaceSecondary,
                             border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
                             modifier = Modifier
+                                .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
                                 .clickable(role = Role.Button) { onToggleSidebar() }
                                 .semantics(mergeDescendants = true) {
                                     role = Role.Button

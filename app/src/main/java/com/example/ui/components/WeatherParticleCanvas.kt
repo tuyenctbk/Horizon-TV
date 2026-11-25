@@ -287,6 +287,24 @@ fun WeatherParticleCanvas(
                 center = sunCenter
             )
 
+            // Volumetric oscillating golden sunbeams
+            val beamRadius = maxOf(w, h) * 0.72f
+            listOf(118f, 138f, 158f).forEachIndexed { idx, baseDeg ->
+                val beamAngle = baseDeg + sunBeamAngle * (if (idx % 2 == 0) 1f else -0.7f)
+                drawArc(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0x18FFE082), Color.Transparent),
+                        center = sunCenter,
+                        radius = beamRadius
+                    ),
+                    startAngle = beamAngle,
+                    sweepAngle = 11f,
+                    useCenter = true,
+                    topLeft = Offset(sunCenter.x - beamRadius, sunCenter.y - beamRadius),
+                    size = Size(beamRadius * 2f, beamRadius * 2f)
+                )
+            }
+
             // Floating solar dust motes / sun sparkles
             sunMotes.forEach { mote ->
                 // Motes float upward gently

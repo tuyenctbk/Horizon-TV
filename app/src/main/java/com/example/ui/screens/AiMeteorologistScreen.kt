@@ -51,6 +51,7 @@ import com.example.data.repository.FullWeatherPackage
 import com.example.ui.components.AiQuotaRecoveryCard
 import com.example.ui.components.AiSoftNudgeBanner
 import com.example.ui.components.ByokApiKeyDialog
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.AiBriefingUiState
 import com.example.ui.viewmodel.AiMeteorologistViewModel
@@ -69,7 +70,7 @@ fun AiMeteorologistScreen(
         val loadingDesc = stringResource(R.string.ai_briefing_loading)
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
-                color = HorizonCyan,
+                color = BroadcastCyan,
                 modifier = Modifier.semantics { contentDescription = loadingDesc }
             )
         }
@@ -114,6 +115,10 @@ fun AiMeteorologistScreen(
 
     LaunchedEffect(Unit) {
         aiViewModel.refreshQuota()
+    }
+
+    LaunchedEffect(currentLocation.name, unitSystem) {
+        aiViewModel.syncStationContext(currentLocation, unitSystem)
     }
 
     val resetCountdown = remember(uiState.quota.millisUntilReset) {
@@ -205,6 +210,7 @@ fun AiMeteorologistScreen(
                 color = SleekSurface,
                 border = BorderStroke(1.dp, SleekBorder),
                 modifier = Modifier
+                    .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = BroadcastCyan)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
                         contentDescription = quotaText

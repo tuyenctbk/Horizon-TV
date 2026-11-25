@@ -463,6 +463,7 @@ private fun SevenDayRowItem(
             .clip(RoundedCornerShape(16.dp))
             .background(rowBackground)
             .border(1.dp, rowBorder, RoundedCornerShape(16.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(16.dp), focusBorderColor = SleekBluePrimary, focusedScale = 1.015f)
             .semantics {
                 role = Role.Button
                 stateDescription = stateLabel

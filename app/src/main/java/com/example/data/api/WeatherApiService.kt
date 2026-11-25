@@ -1,5 +1,6 @@
 package com.example.data.api
 
+import com.example.BuildConfig
 import com.example.data.model.GeocodingResponse
 import com.example.data.model.IpApiResponse
 import com.example.data.model.OpenMeteoAirQualityResponse
@@ -76,7 +77,11 @@ object ApiClient {
         .readTimeout(12, TimeUnit.SECONDS)
         .addInterceptor(
             HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BASIC
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BASIC
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
             }
         )
         .build()

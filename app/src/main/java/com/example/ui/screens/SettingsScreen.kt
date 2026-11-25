@@ -49,6 +49,7 @@ import com.example.data.model.SevereWeatherAlert
 import com.example.data.model.UnitSystem
 import com.example.data.worker.SevereWeatherAlertNotificationHelper
 import com.example.ui.components.ByokApiKeyDialog
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 
 @Composable
@@ -235,6 +236,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
+                                .tvFocusVisual(shape = RoundedCornerShape(12.dp), focusBorderColor = SleekBluePrimary)
                                 .semantics(mergeDescendants = true) {
                                     role = Role.RadioButton
                                     selected = isCelsius
@@ -293,6 +295,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
+                                .tvFocusVisual(shape = RoundedCornerShape(12.dp), focusBorderColor = SleekBluePrimary)
                                 .semantics(mergeDescendants = true) {
                                     role = Role.RadioButton
                                     selected = isFahrenheit
@@ -624,6 +627,7 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(10.dp))
+                                    .tvFocusVisual(shape = RoundedCornerShape(10.dp), focusBorderColor = SleekBluePrimary)
                                     .semantics(mergeDescendants = true) {
                                         role = Role.RadioButton
                                         selected = isIntervalSelected
@@ -661,25 +665,86 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     val syncNowLabel = stringResource(R.string.settings_bg_sync_now_btn)
-                    OutlinedButton(
-                        onClick = onSyncBackgroundNow,
-                        shape = RoundedCornerShape(percent = 50),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .testTag("bg_sync_now_button")
+                    val testPushLabel = stringResource(R.string.settings_bg_test_push_btn)
+                    val simulatedTestAlert = SevereWeatherAlert(
+                        id = "ebs_test_${System.currentTimeMillis()}",
+                        severity = AlertSeverity.EMERGENCY,
+                        title = testAlertTitle,
+                        summary = testAlertSummary,
+                        safetyInstructions = testAlertInstructions,
+                        effectiveTime = testEffectiveTime,
+                        expiresTime = testExpiresTime
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Sync, contentDescription = syncNowLabel, tint = SleekBluePrimary, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = syncNowLabel,
-                            color = SleekBluePrimary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        OutlinedButton(
+                            onClick = onSyncBackgroundNow,
+                            shape = RoundedCornerShape(percent = 50),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .testTag("bg_sync_now_button")
+                        ) {
+                            Icon(Icons.Default.Sync, contentDescription = syncNowLabel, tint = SleekBluePrimary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = syncNowLabel,
+                                color = SleekBluePrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        FilledTonalButton(
+                            onClick = { onTestPushNotification(simulatedTestAlert) },
+                            shape = RoundedCornerShape(percent = 50),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = SleekRedContainer,
+                                contentColor = SevereRed
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .testTag("bg_test_push_button")
+                        ) {
+                            Icon(Icons.Default.NotificationsActive, contentDescription = testPushLabel, tint = SevereRed, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = testPushLabel,
+                                color = SevereRed,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            SettingsActionCard(
+                icon = Icons.Default.Warning,
+                title = stringResource(R.string.settings_ebs_title),
+                subtitle = stringResource(R.string.settings_ebs_subtitle),
+                actionLabel = stringResource(R.string.settings_ebs_btn),
+                accentColor = SevereRed,
+                onClick = {
+                    onTriggerTestAlert(
+                        SevereWeatherAlert(
+                            id = "ebs_modal_test_${System.currentTimeMillis()}",
+                            severity = AlertSeverity.EMERGENCY,
+                            title = testAlertTitle,
+                            summary = testAlertSummary,
+                            safetyInstructions = testAlertInstructions,
+                            effectiveTime = testEffectiveTime,
+                            expiresTime = testExpiresTime
+                        )
+                    )
+                }
+            )
         }
 
         item {
@@ -1043,6 +1108,7 @@ private fun SettingsActionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(16.dp), focusBorderColor = accentColor)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "$title, $subtitle, $actionLabel"

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Rising Sun Behind Cloud -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M62,32 A11,11 0 0,1 72.8,45.2 A10,10 0 0,0 59.5,39.8 A11,11 0 0,0 51.5,38.2 A11,11 0 0,1 62,32 Z" />
+    <!-- Sculptural Broadcast Cloud -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M35,58 C30.5,58 27,54.5 27,50.2 C27,46.4 29.7,43.2 33.4,42.5 C34.8,36.8 39.9,32.6 46,32.6 C51.4,32.6 56.1,35.9 58.1,40.7 C59.3,40.2 60.6,39.9 62,39.9 C67.2,39.9 71.5,43.9 72,49 C75.4,49.6 78,52.5 78,56 C78,57.1 77.1,58 76,58 Z" />
+    <!-- Concentric Doppler Radar Wave Arcs -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M45,62.5 A9,9 0 0,0 63,62.5" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M38.5,62.5 A15.5,15.5 0 0,0 69.5,62.5" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M32,62.5 A22,22 0 0,0 76,62.5" />
+</vector>

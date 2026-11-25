@@ -11,6 +11,8 @@ import com.example.data.local.entity.DailyForecastEntity
 import com.example.data.local.entity.HourlyForecastEntity
 import com.example.data.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
@@ -213,17 +215,23 @@ class WeatherRepository(
         longitude: Double,
         location: CityLocation? = null
     ): Pair<CurrentWeather, FullWeatherPackage> = withContext(Dispatchers.IO) {
-        val forecastDeferred = weatherService.getForecast(latitude, longitude)
-        val aqiDeferred = try {
-            airQualityService.getAirQuality(latitude, longitude)
-        } catch (_: Exception) {
-            null
+        val (forecastResponse, aqiResponse) = coroutineScope {
+            val forecastDeferred = async { weatherService.getForecast(latitude, longitude) }
+            val aqiDeferred = async {
+                try {
+                    airQualityService.getAirQuality(latitude, longitude)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            forecastDeferred.await() to aqiDeferred.await()
         }
 
-        val currentData = forecastDeferred.current ?: CurrentUnitsAndData()
-        val hourlyData = forecastDeferred.hourly ?: HourlyData()
-        val dailyData = forecastDeferred.daily ?: DailyData()
-        val aqiData = aqiDeferred?.current ?: AirQualityCurrent()
+        val currentData = forecastResponse.current ?: CurrentUnitsAndData()
+        val hourlyData = forecastResponse.hourly ?: HourlyData()
+        val dailyData = forecastResponse.daily ?: DailyData()
+        val aqiData = aqiResponse?.current ?: AirQualityCurrent()
+        val stationTimezoneId = forecastResponse.timezone
 
         val weatherCode = currentData.weatherCode
         val conditionText = appContext?.getString(getWeatherDescriptionRes(weatherCode))
@@ -234,6 +242,9 @@ class WeatherRepository(
 
         val sunrise = dailyData.sunrise.firstOrNull()?.substringAfter("T") ?: "06:00"
         val sunset = dailyData.sunset.firstOrNull()?.substringAfter("T") ?: "19:30"
+
+        // Locate the hourly slot matching the station's actual current local hour
+        val currentHourIndex = resolveCurrentHourIndex(hourlyData.time, currentData.time, stationTimezoneId)
 
         val currentWeather = CurrentWeather(
             tempC = currentData.temperature2m,
@@ -248,8 +259,12 @@ class WeatherRepository(
             windGustsKmh = currentData.windGusts10m,
             uvIndex = currentData.uvIndex,
             cloudCoverPercent = currentData.cloudCover.roundToInt(),
-            dewPointC = hourlyData.dewPoint2m.firstOrNull() ?: (currentData.temperature2m - 4.0),
-            visibilityKm = (hourlyData.visibility.firstOrNull() ?: 10000.0) / 1000.0,
+            dewPointC = hourlyData.dewPoint2m.getOrNull(currentHourIndex)
+                ?: hourlyData.dewPoint2m.firstOrNull()
+                ?: (currentData.temperature2m - 4.0),
+            visibilityKm = (hourlyData.visibility.getOrNull(currentHourIndex)
+                ?: hourlyData.visibility.firstOrNull()
+                ?: 10000.0) / 1000.0,
             aqi = aqiLevel,
             aqiStatus = aqiStatus,
             pm25 = aqiData.pm25,
@@ -258,12 +273,12 @@ class WeatherRepository(
             sunsetTime = sunset
         )
 
-        val diurnalPeriods = computeDiurnalPeriods(hourlyData, dailyData, currentData)
-        val hourlyPoints = computeHourlyPoints(hourlyData, currentData)
+        val diurnalPeriods = computeDiurnalPeriods(hourlyData, dailyData, currentData, stationTimezoneId)
+        val hourlyPoints = computeHourlyPoints(hourlyData, currentData, currentHourIndex)
         val dailyDays = computeDailyDays(dailyData, currentData)
         val alerts = evaluateSevereWeatherAlerts(currentWeather, dailyDays)
         val headlines = generateRealLocalHeadlines(currentWeather, diurnalPeriods, alerts)
-        val astronomical = calculateAstronomicalData(sunrise, sunset)
+        val astronomical = calculateAstronomicalData(sunrise, sunset, stationTimezoneId)
 
         val packageData = FullWeatherPackage(
             diurnalPeriods = diurnalPeriods,
@@ -287,6 +302,25 @@ class WeatherRepository(
         }
 
         Pair(currentWeather, packageData)
+    }
+
+    private fun resolveCurrentHourIndex(
+        hourlyTimes: List<String>,
+        currentIsoTime: String?,
+        timezoneId: String?
+    ): Int {
+        if (hourlyTimes.isEmpty()) return 0
+        if (!currentIsoTime.isNullOrBlank() && currentIsoTime.contains("T")) {
+            val hourPrefix = currentIsoTime.take(13) // e.g., "2026-11-25T14"
+            val exactIdx = hourlyTimes.indexOfFirst { it.startsWith(hourPrefix) }
+            if (exactIdx >= 0) return exactIdx
+        }
+        val tz = timezoneId?.takeIf { it.isNotBlank() }?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
+        val cal = Calendar.getInstance(tz)
+        val currentHour = cal.get(Calendar.HOUR_OF_DAY)
+        return hourlyTimes.take(24).indexOfFirst {
+            it.substringAfter("T").substringBefore(":").toIntOrNull() == currentHour
+        }.coerceAtLeast(0)
     }
 
     suspend fun fetchSevenDayForecast(
@@ -328,27 +362,35 @@ class WeatherRepository(
         }
     }
 
+    private fun matchesDiurnalHour(periodKey: String, hour: Int): Boolean = when (periodKey) {
+        "Morning" -> hour in 6..11
+        "Afternoon" -> hour in 12..17
+        "Evening" -> hour in 18..21
+        "Night" -> hour >= 22 || hour in 0..5
+        else -> false
+    }
+
     private fun computeDiurnalPeriodsFromHourlyPoints(
         hourlyPoints: List<HourlyPoint>,
         currentWeather: CurrentWeather
     ): List<DiurnalPeriod> {
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val periodConfigs = listOf(
-            Triple("Morning", "06:00 - 12:00", 6..11),
-            Triple("Afternoon", "12:00 - 18:00", 12..17),
-            Triple("Evening", "18:00 - 22:00", 18..21),
-            Triple("Night", "22:00 - 06:00", 22..24)
+            Pair("Morning", "06:00 - 12:00"),
+            Pair("Afternoon", "12:00 - 18:00"),
+            Pair("Evening", "18:00 - 22:00"),
+            Pair("Night", "22:00 - 06:00")
         )
-        return periodConfigs.map { cfg ->
-            val matched = hourlyPoints.filter { pt ->
+        return periodConfigs.map { (nameKey, timeRange) ->
+            val matched = hourlyPoints.take(24).filter { pt ->
                 val h = pt.timeLabel.substringBefore(":").toIntOrNull() ?: -1
-                h in cfg.third
+                matchesDiurnalHour(nameKey, h)
             }
             val avgTemp = if (matched.isNotEmpty()) matched.map { it.tempC }.average() else currentWeather.tempC
             val maxPop = matched.maxOfOrNull { it.popPercent } ?: 0
             val code = matched.firstOrNull()?.weatherCode ?: currentWeather.weatherCode
             val wind = if (matched.isNotEmpty()) matched.map { it.windSpeedKmh }.average() else currentWeather.windSpeedKmh
-            val (isCurrent, periodRes) = when (cfg.first) {
+            val (isCurrent, periodRes) = when (nameKey) {
                 "Morning" -> Pair(currentHour in 6..11, R.string.period_morning)
                 "Afternoon" -> Pair(currentHour in 12..17, R.string.period_afternoon)
                 "Evening" -> Pair(currentHour in 18..21, R.string.period_evening)
@@ -356,8 +398,8 @@ class WeatherRepository(
                 else -> Pair(false, R.string.period_morning)
             }
             DiurnalPeriod(
-                periodName = appContext?.getString(periodRes) ?: cfg.first,
-                timeRange = cfg.second,
+                periodName = appContext?.getString(periodRes) ?: nameKey,
+                timeRange = timeRange,
                 tempC = avgTemp,
                 feelsLikeC = avgTemp - (currentWeather.tempC - currentWeather.feelsLikeC),
                 conditionText = appContext?.getString(getWeatherDescriptionRes(code)) ?: getWeatherDescription(code),
@@ -373,29 +415,36 @@ class WeatherRepository(
     private fun computeDiurnalPeriods(
         hourly: HourlyData,
         daily: DailyData,
-        currentData: CurrentUnitsAndData
+        currentData: CurrentUnitsAndData,
+        timezoneId: String? = null
     ): List<DiurnalPeriod> {
-        val nowCal = Calendar.getInstance()
-        val currentHour = nowCal.get(Calendar.HOUR_OF_DAY)
+        val tz = timezoneId?.takeIf { it.isNotBlank() }?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
+        val currentHour = currentData.time
+            ?.substringAfter("T", "")
+            ?.substringBefore(":")
+            ?.toIntOrNull()
+            ?: Calendar.getInstance(tz).get(Calendar.HOUR_OF_DAY)
 
         val periods = mutableListOf<DiurnalPeriod>()
         val periodConfigs = listOf(
-            Triple("Morning", "06:00 - 12:00", 6..11),
-            Triple("Afternoon", "12:00 - 18:00", 12..17),
-            Triple("Evening", "18:00 - 22:00", 18..21),
-            Triple("Night", "22:00 - 06:00", 22..24)
+            Pair("Morning", "06:00 - 12:00"),
+            Pair("Afternoon", "12:00 - 18:00"),
+            Pair("Evening", "18:00 - 22:00"),
+            Pair("Night", "22:00 - 06:00")
         )
+        // Inspect the first 24 hours only so Night does not bleed across multiple future days
+        val first24Count = minOf(hourly.time.size, 24)
 
-        for (cfg in periodConfigs) {
-            val hourRange = cfg.third
+        for ((nameKey, timeRange) in periodConfigs) {
             val matchedTemps = mutableListOf<Double>()
             val matchedPops = mutableListOf<Int>()
             val matchedCodes = mutableListOf<Int>()
             val matchedWinds = mutableListOf<Double>()
 
-            hourly.time.forEachIndexed { index, timeStr ->
-                val hourInt = timeStr.substringAfter("T").substringBefore(":").toIntOrNull() ?: 0
-                if (hourInt in hourRange && matchedTemps.size < 6) {
+            for (index in 0 until first24Count) {
+                val timeStr = hourly.time[index]
+                val hourInt = timeStr.substringAfter("T").substringBefore(":").toIntOrNull() ?: -1
+                if (matchesDiurnalHour(nameKey, hourInt)) {
                     hourly.temperature2m.getOrNull(index)?.let { matchedTemps.add(it) }
                     hourly.precipitationProbability.getOrNull(index)?.let { matchedPops.add(it) }
                     hourly.weatherCode.getOrNull(index)?.let { matchedCodes.add(it) }
@@ -408,7 +457,7 @@ class WeatherRepository(
             val code = matchedCodes.firstOrNull() ?: currentData.weatherCode
             val wind = if (matchedWinds.isNotEmpty()) matchedWinds.average() else currentData.windSpeed10m
 
-            val (isCurrent, periodRes) = when (cfg.first) {
+            val (isCurrent, periodRes) = when (nameKey) {
                 "Morning" -> Pair(currentHour in 6..11, R.string.period_morning)
                 "Afternoon" -> Pair(currentHour in 12..17, R.string.period_afternoon)
                 "Evening" -> Pair(currentHour in 18..21, R.string.period_evening)
@@ -418,11 +467,11 @@ class WeatherRepository(
 
             periods.add(
                 DiurnalPeriod(
-                    periodName = cfg.first,
-                    timeRange = cfg.second,
+                    periodName = appContext?.getString(periodRes) ?: nameKey,
+                    timeRange = timeRange,
                     tempC = avgTemp,
                     feelsLikeC = avgTemp - (currentData.temperature2m - currentData.apparentTemperature),
-                    conditionText = getWeatherDescription(code),
+                    conditionText = appContext?.getString(getWeatherDescriptionRes(code)) ?: getWeatherDescription(code),
                     weatherCode = code,
                     popPercent = maxPop,
                     windSpeedKmh = wind,
@@ -437,11 +486,14 @@ class WeatherRepository(
 
     private fun computeHourlyPoints(
         hourly: HourlyData,
-        currentData: CurrentUnitsAndData
+        currentData: CurrentUnitsAndData,
+        startIndex: Int = 0
     ): List<HourlyPoint> {
         val points = mutableListOf<HourlyPoint>()
-        val count = minOf(hourly.time.size, 24)
-        for (i in 0 until count) {
+        if (hourly.time.isEmpty()) return points
+        val safeStart = startIndex.coerceIn(0, (hourly.time.size - 1).coerceAtLeast(0))
+        val endExclusive = minOf(safeStart + 24, hourly.time.size)
+        for (i in safeStart until endExclusive) {
             val iso = hourly.time.getOrNull(i) ?: ""
             val timeLabel = if (iso.contains("T")) iso.substringAfter("T").take(5) else "12:00"
             val temp = hourly.temperature2m.getOrNull(i) ?: currentData.temperature2m
@@ -458,7 +510,7 @@ class WeatherRepository(
                     tempC = temp,
                     feelsLikeC = feels,
                     weatherCode = code,
-                    conditionText = getWeatherDescription(code),
+                    conditionText = appContext?.getString(getWeatherDescriptionRes(code)) ?: getWeatherDescription(code),
                     popPercent = pop,
                     windSpeedKmh = wind,
                     humidityPercent = humidity
@@ -725,7 +777,11 @@ class WeatherRepository(
         return list
     }
 
-    fun calculateAstronomicalData(sunrise: String, sunset: String): AstronomicalData {
+    fun calculateAstronomicalData(
+        sunrise: String,
+        sunset: String,
+        timezoneId: String? = null
+    ): AstronomicalData {
         val now = System.currentTimeMillis()
         // Reference new moon: Jan 11, 2024 at 11:57 UTC = 1704974220000L
         val refNewMoonMs = 1704974220000L
@@ -748,8 +804,9 @@ class WeatherRepository(
 
         val daysUntilFull = ((14.765 - phaseDays + 29.53) % 29.53).roundToInt()
 
-        // Solar daylight progress
-        val cal = Calendar.getInstance()
+        // Solar daylight progress evaluated in the target station's local timezone
+        val stationTz = timezoneId?.takeIf { it.isNotBlank() }?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
+        val cal = Calendar.getInstance(stationTz)
         val currentMinutes = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
 
         val riseH = sunrise.substringBefore(":").toIntOrNull() ?: 6

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.R
 import com.example.data.model.VodStory
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -173,6 +174,7 @@ fun VideoOnDemandScreen(
                     modifier = Modifier
                         .heightIn(min = 38.dp)
                         .clip(RoundedCornerShape(20.dp))
+                        .tvFocusVisual(shape = RoundedCornerShape(20.dp), focusBorderColor = BroadcastCyan)
                         .semantics(mergeDescendants = true) {
                             role = Role.Tab
                             selected = isSelected
@@ -242,6 +244,7 @@ private fun VodStoryItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(18.dp), focusBorderColor = accent, focusedScale = 1.02f)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "${story.category}: ${story.title}, ${story.duration}, ${story.presenter}"

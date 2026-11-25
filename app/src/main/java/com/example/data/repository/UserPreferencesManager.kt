@@ -35,6 +35,14 @@ class UserPreferencesManager(context: Context) {
         private const val KEY_LAST_BG_SYNC_SUMMARY = "key_last_bg_sync_summary"
         private const val KEY_NOTIFIED_ALERT_PREFIX = "key_notified_alert_"
         private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
+        private const val KEY_REMINDED_SCHEDULE_IDS = "key_reminded_schedule_ids"
+    }
+
+    fun getRemindedScheduleIds(): Set<String> =
+        prefs.getStringSet(KEY_REMINDED_SCHEDULE_IDS, emptySet())?.toSet() ?: emptySet()
+
+    fun saveRemindedScheduleIds(ids: Set<String>) {
+        prefs.edit().putStringSet(KEY_REMINDED_SCHEDULE_IDS, ids.toSet()).apply()
     }
 
     fun hasCompletedOnboarding(): Boolean = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)

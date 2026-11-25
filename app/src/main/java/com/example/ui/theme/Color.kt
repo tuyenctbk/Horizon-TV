@@ -65,3 +65,14 @@ val TextMuted = Color(0xFF94A3B8)
 
 val FocusCyanGlow = SleekBluePrimary
 
+// ==========================================
+// High-Contrast Dark Broadcast Studio Tokens
+// (WCAG AAA legible on deep navy #030712..#0F1D35 surfaces)
+// ==========================================
+val BroadcastCyan = Color(0xFF38BDF8)
+val BroadcastCyanBright = Color(0xFF7DD3FC)
+val BroadcastAmber = Color(0xFFFBBF24)
+val BroadcastEmerald = Color(0xFF34D399)
+val BroadcastCoral = Color(0xFFF87171)
+val BroadcastSurfaceDeep = Color(0xFF0A1428)
+

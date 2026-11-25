@@ -1,10 +1,17 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
@@ -30,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.CityLocation
 import com.example.data.model.CurrentWeather
+import com.example.data.model.SevereWeatherAlert
 import com.example.data.model.UnitSystem
 import com.example.data.repository.FullWeatherPackage
 import com.example.data.repository.WeatherRepository
@@ -52,6 +60,7 @@ fun PersistentLBarLayout(
     unitSystem: UnitSystem,
     isLBarVisible: Boolean = true,
     onToggleLBar: () -> Unit,
+    onAlertClick: ((SevereWeatherAlert) -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     var liveClockString by remember { mutableStateOf("") }
@@ -75,8 +84,13 @@ fun PersistentLBarLayout(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            // LEFT EDGE TELEMETRY BAR
-            if (isLBarVisible && currentWeather != null && weatherPackage != null) {
+            // LEFT EDGE TELEMETRY BAR (smoothly animated + scrollable for 540dp TV viewports)
+            AnimatedVisibility(
+                visible = isLBarVisible && currentWeather != null && weatherPackage != null,
+                enter = expandHorizontally() + fadeIn(),
+                exit = shrinkHorizontally() + fadeOut()
+            ) {
+                if (currentWeather == null || weatherPackage == null) return@AnimatedVisibility
                 val collapseLabel = stringResource(R.string.lbar_collapse)
                 Column(
                     modifier = Modifier
@@ -84,6 +98,7 @@ fun PersistentLBarLayout(
                         .fillMaxHeight()
                         .background(SleekSurface)
                         .border(1.dp, SleekBorder)
+                        .verticalScroll(rememberScrollState())
                         .padding(12.dp)
                         .testTag("persistent_lbar_left_panel")
                 ) {
@@ -123,6 +138,7 @@ fun PersistentLBarLayout(
                             shape = RoundedCornerShape(percent = 50),
                             color = SleekSurfaceSecondary,
                             modifier = Modifier
+                                .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
                                 .clickable(role = Role.Button) { onToggleLBar() }
                                 .semantics {
                                     role = Role.Button
@@ -261,14 +277,20 @@ fun PersistentLBarLayout(
                                 Text(text = pRain, color = SleekBluePrimary, fontSize = 8.sp)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                LottieWeatherAnimation(weatherCode = p.weatherCode, size = 16.dp)
+                                LottieWeatherAnimation(
+                                    weatherCode = p.weatherCode,
+                                    isDay = isDiurnalPeriodDaytime(p),
+                                    size = 16.dp
+                                )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(text = pTemp, color = SleekTextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
-            } else if (!isLBarVisible && currentWeather != null) {
+            }
+
+            if (!isLBarVisible && currentWeather != null) {
                 val expandLabel = stringResource(R.string.lbar_expand)
                 // Collapsed docking tab
                 Surface(
@@ -276,9 +298,10 @@ fun PersistentLBarLayout(
                     color = SleekSurface,
                     border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
                     modifier = Modifier
-                        .clickable(role = Role.Button) { onToggleLBar() }
                         .align(Alignment.CenterVertically)
                         .padding(vertical = 12.dp)
+                        .tvFocusVisual(shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp), focusBorderColor = SleekBluePrimary)
+                        .clickable(role = Role.Button) { onToggleLBar() }
                         .semantics(mergeDescendants = true) {
                             role = Role.Button
                             contentDescription = expandLabel
@@ -317,6 +340,7 @@ fun PersistentLBarLayout(
                 showSidebarToggle = true,
                 isSidebarExpanded = isLBarVisible,
                 onToggleSidebar = onToggleLBar,
+                onAlertClick = onAlertClick,
                 modifier = Modifier.testTag("persistent_lbar_bottom_ticker")
             )
         }

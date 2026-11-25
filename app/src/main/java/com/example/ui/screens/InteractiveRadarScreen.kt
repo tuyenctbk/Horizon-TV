@@ -39,6 +39,7 @@ import com.example.data.model.LiveRadarPackage
 import com.example.data.model.RadarTimelineFrame
 import com.example.data.model.UnitSystem
 import com.example.ui.components.DopplerRadarMapView
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -314,6 +315,7 @@ fun InteractiveRadarScreen(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
+                    .tvFocusVisual(shape = CircleShape, focusBorderColor = BroadcastCyan)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
                         contentDescription = playPauseDesc
@@ -369,6 +371,7 @@ fun InteractiveRadarScreen(
                         ),
                         modifier = Modifier
                             .clip(RoundedCornerShape(percent = 50))
+                            .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
                             .semantics(mergeDescendants = true) {
                                 role = Role.Tab
                                 selected = isSelected
@@ -515,6 +518,7 @@ private fun MapControlFab(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
+            .tvFocusVisual(shape = CircleShape, focusBorderColor = BroadcastCyan)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 this.contentDescription = if (badgeText != null) "$contentDescription ($badgeText)" else contentDescription
@@ -563,6 +567,7 @@ private fun RadarLayerButton(
         color = bgColor,
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
+            .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
             .semantics(mergeDescendants = true) {
                 role = Role.Tab
                 selected = isSelected

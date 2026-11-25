@@ -67,6 +67,36 @@ class AiMeteorologistViewModel(
         _uiState.update { it.copy(quota = quotaManager.getSnapshot()) }
     }
 
+    /**
+     * Synchronizes displayed briefing with the currently selected station & unit system
+     * so stale briefings from a previously viewed city are never shown.
+     */
+    fun syncStationContext(location: CityLocation, unitSystem: UnitSystem) {
+        val currentState = _uiState.value.briefingState
+        val cached = aiRepository.getCachedBriefing(location, unitSystem)
+        if (cached != null) {
+            if (currentState !is AiBriefingUiState.Success ||
+                !currentState.briefing.locationName.equals(location.name, ignoreCase = true)
+            ) {
+                _uiState.update {
+                    it.copy(
+                        briefingState = AiBriefingUiState.Success(cached),
+                        quota = quotaManager.getSnapshot()
+                    )
+                }
+            }
+        } else if (currentState is AiBriefingUiState.Success &&
+            !currentState.briefing.locationName.equals(location.name, ignoreCase = true)
+        ) {
+            _uiState.update {
+                it.copy(
+                    briefingState = AiBriefingUiState.Idle,
+                    quota = quotaManager.getSnapshot()
+                )
+            }
+        }
+    }
+
     fun formatResetCountdown(millis: Long): String = quotaManager.formatResetCountdown(millis)
 
     fun toggleEcoLiteMode() {

@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Dark Broadcast Navy Background -->
+    <!-- Deep Broadcast Sapphire Backdrop matching Horizon TV Banner -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
-                android:startColor="#050C1B"
-                android:centerColor="#040915"
-                android:endColor="#02040A"
+                android:startColor="#040E22"
+                android:centerColor="#061734"
+                android:endColor="#020816"
                 android:type="linear" />
         </shape>
     </item>
 
-    <!-- TV Broadcast Banner in Center -->
+    <!-- Horizon TV Broadcast Banner in Center -->
     <item
         android:drawable="@drawable/tv_broadcast_banner"
         android:gravity="center"
-        android:width="280dp"
-        android:height="158dp" />
+        android:width="320dp"
+        android:height="180dp" />
 </layer-list>

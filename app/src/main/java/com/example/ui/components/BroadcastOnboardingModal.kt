@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -384,10 +385,16 @@ fun BroadcastOnboardingModal(
                                     slide.index + 1,
                                     slides.size
                                 ) + ": " + slide.title
+                                val dotWidth by animateDpAsState(
+                                    targetValue = if (isCurrent) 24.dp else 8.dp,
+                                    animationSpec = tween(220),
+                                    label = "onboardingDotWidth"
+                                )
                                 Box(
                                     modifier = Modifier
                                         .minimumInteractiveComponentSize()
                                         .clip(CircleShape)
+                                        .tvFocusVisual(shape = CircleShape, focusBorderColor = activeSlide.accentColor)
                                         .semantics {
                                             role = Role.Tab
                                             selected = isCurrent
@@ -400,7 +407,7 @@ fun BroadcastOnboardingModal(
                                     Box(
                                         modifier = Modifier
                                             .height(8.dp)
-                                            .width(if (isCurrent) 24.dp else 8.dp)
+                                            .width(dotWidth)
                                             .clip(RoundedCornerShape(percent = 50))
                                             .background(
                                                 if (isCurrent) activeSlide.accentColor

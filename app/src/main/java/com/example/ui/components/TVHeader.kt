@@ -1,9 +1,16 @@
 package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,7 +29,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -72,6 +81,24 @@ fun TVHeader(
         }
     }
 
+    val navScrollState = rememberScrollState()
+    LaunchedEffect(currentScreen) {
+        val targetFraction = currentScreen.ordinal.toFloat() / (TVScreen.entries.size - 1).coerceAtLeast(1)
+        val targetPx = (navScrollState.maxValue * targetFraction).toInt().coerceIn(0, navScrollState.maxValue)
+        navScrollState.animateScrollTo(targetPx)
+    }
+
+    val headerPulse = rememberInfiniteTransition(label = "headerLivePulse")
+    val liveDotAlpha by headerPulse.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "headerLiveDotAlpha"
+    )
+
     val activeAlertLabel = stringResource(R.string.header_active_alert)
     val unitTitleLabel = stringResource(R.string.settings_units_title)
     val unitActiveLabel = if (unitSystem == UnitSystem.METRIC) {
@@ -105,20 +132,15 @@ fun TVHeader(
                                 .weight(1f)
                                 .semantics(mergeDescendants = true) { heading() }
                         ) {
-                            Box(
+                            Image(
+                                painter = painterResource(id = R.drawable.img_app_icon_clean),
+                                contentDescription = stringResource(R.string.brand_title),
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SleekBlueContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.CloudQueue,
-                                    contentDescription = stringResource(R.string.brand_title),
-                                    tint = SleekOnBlueContainer,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .border(1.dp, BroadcastCyan.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
@@ -139,13 +161,24 @@ fun TVHeader(
                                     shape = RoundedCornerShape(4.dp),
                                     color = SleekGreenContainer
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.badge_live_24_7),
-                                        color = SleekGreenText,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                                    )
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(5.dp)
+                                                .clip(CircleShape)
+                                                .background(SleekGreenText.copy(alpha = liveDotAlpha))
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.badge_live_24_7),
+                                            color = SleekGreenText,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -170,7 +203,11 @@ fun TVHeader(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .weight(1f)
-                                .semantics(mergeDescendants = true) { }
+                                .clip(RoundedCornerShape(8.dp))
+                                .tvFocusVisual(shape = RoundedCornerShape(8.dp), focusBorderColor = SleekBluePrimary)
+                                .clickable(role = Role.Button) { onNavigate(TVScreen.SEARCH) }
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .semantics(mergeDescendants = true) { role = Role.Button }
                         ) {
                             Icon(
                                 Icons.Default.LocationOn,
@@ -250,20 +287,15 @@ fun TVHeader(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.semantics(mergeDescendants = true) { heading() }
                     ) {
-                        Box(
+                        Image(
+                            painter = painterResource(id = R.drawable.img_app_icon_clean),
+                            contentDescription = stringResource(R.string.brand_title),
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(SleekBlueContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.CloudQueue,
-                                contentDescription = stringResource(R.string.brand_title),
-                                tint = SleekOnBlueContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .border(1.dp, BroadcastCyan.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                        )
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -285,13 +317,24 @@ fun TVHeader(
                                     shape = RoundedCornerShape(4.dp),
                                     color = SleekGreenContainer
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.badge_live_24_7),
-                                        color = SleekGreenText,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(SleekGreenText.copy(alpha = liveDotAlpha))
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.badge_live_24_7),
+                                            color = SleekGreenText,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                             Text(
@@ -309,10 +352,12 @@ fun TVHeader(
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
                                 color = SleekRedContainer,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, SleekRedText.copy(alpha = 0.3f)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, SleekRedText.copy(alpha = 0.35f)),
                                 modifier = Modifier
-                                    .clickable(role = Role.Button) { onOpenAlerts() }
                                     .padding(end = 12.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .tvFocusVisual(shape = RoundedCornerShape(6.dp), focusBorderColor = SevereRed)
+                                    .clickable(role = Role.Button) { onOpenAlerts() }
                                     .semantics(mergeDescendants = true) {
                                         role = Role.Button
                                         liveRegion = LiveRegionMode.Assertive
@@ -340,32 +385,42 @@ fun TVHeader(
                             }
                         }
 
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = stringResource(R.string.header_current_location),
-                            tint = SleekBluePrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${currentLocation.name.uppercase()}${if (currentLocation.region.isNotBlank()) ", ${currentLocation.region.uppercase()}" else ""}",
-                            color = SleekTextPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (currentLocation.isGpsDetected) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = SleekGreenContainer
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.badge_gps),
-                                    color = SleekGreenText,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(percent = 50))
+                                .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
+                                .clickable(role = Role.Button) { onNavigate(TVScreen.SEARCH) }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .semantics(mergeDescendants = true) { role = Role.Button }
+                        ) {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = stringResource(R.string.header_current_location),
+                                tint = SleekBluePrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${currentLocation.name.uppercase()}${if (currentLocation.region.isNotBlank()) ", ${currentLocation.region.uppercase()}" else ""}",
+                                color = SleekTextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (currentLocation.isGpsDetected) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = SleekGreenContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.badge_gps),
+                                        color = SleekGreenText,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -396,7 +451,7 @@ fun TVHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+                .horizontalScroll(navScrollState),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

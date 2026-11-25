@@ -1,6 +1,9 @@
 package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
@@ -58,6 +61,11 @@ fun RechartsFiveDayForecastView(
     // Limit to 5 days
     val fiveDays = remember(dailyForecast) { dailyForecast.take(5) }
     var selectedDayIndex by remember { mutableStateOf(0) }
+    val animatedCursorIndex by animateFloatAsState(
+        targetValue = selectedDayIndex.coerceIn(0, (fiveDays.size - 1).coerceAtLeast(0)).toFloat(),
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "rechartsCursorIndex"
+    )
     var displayMode by remember { mutableStateOf(RechartsDisplayMode.COMBINED) }
 
     val tempUnit = if (unitSystem == UnitSystem.METRIC) "°C" else "°F"
@@ -176,6 +184,7 @@ fun RechartsFiveDayForecastView(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(14.dp))
+                        .tvFocusVisual(shape = RoundedCornerShape(14.dp), focusBorderColor = SleekBluePrimary)
                         .semantics(mergeDescendants = true) {
                             role = Role.Tab
                             selected = isSelected
@@ -419,7 +428,7 @@ fun RechartsFiveDayForecastView(
                     // Draw Min Temp stroke curve
                     drawPath(
                         path = minPath,
-                        color = HorizonCyan,
+                        color = BroadcastCyan,
                         style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                     )
 
@@ -432,7 +441,7 @@ fun RechartsFiveDayForecastView(
                             center = pt
                         )
                         drawCircle(
-                            color = SolarGold,
+                            color = BroadcastAmber,
                             radius = if (isCurr) 4.5.dp.toPx() else 3.dp.toPx(),
                             center = pt
                         )
@@ -446,18 +455,18 @@ fun RechartsFiveDayForecastView(
                             center = pt
                         )
                         drawCircle(
-                            color = HorizonCyan,
+                            color = BroadcastCyan,
                             radius = if (isCurr) 3.5.dp.toPx() else 2.5.dp.toPx(),
                             center = pt
                         )
                     }
                 }
 
-                // 5. Active Cursor Line for Selected Day
+                // 5. Active Cursor Line for Selected Day (smoothly animated)
                 if (selectedDayIndex in fiveDays.indices) {
-                    val cursorX = stepX * selectedDayIndex + stepX / 2f
+                    val cursorX = stepX * animatedCursorIndex + stepX / 2f
                     drawLine(
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = BroadcastCyanBright.copy(alpha = 0.65f),
                         start = Offset(cursorX, 0f),
                         end = Offset(cursorX, h),
                         strokeWidth = 1.5.dp.toPx(),
@@ -518,14 +527,14 @@ fun RechartsFiveDayForecastView(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(stringResource(R.string.recharts_tooltip_max), color = Color(0xFFD1D5DB), fontSize = 10.sp)
-                                Text(maxT, color = SolarGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(maxT, color = BroadcastAmber, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(stringResource(R.string.recharts_tooltip_min), color = Color(0xFFD1D5DB), fontSize = 10.sp)
-                                Text(minT, color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(minT, color = BroadcastCyanBright, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -539,7 +548,7 @@ fun RechartsFiveDayForecastView(
                                     String.format(java.util.Locale.US, "%.2f", activeDay.rainMm * 0.0393701)
                                 }
                                 val rainDisplay = "$rainFormatted $rainUnit"
-                                Text(stringResource(R.string.recharts_tooltip_pop_format, activeDay.popPercent, rainDisplay), color = HorizonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.recharts_tooltip_pop_format, activeDay.popPercent, rainDisplay), color = BroadcastCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -613,6 +622,7 @@ private fun RechartsModeTab(
         color = if (isSelected) SleekBluePrimary else Color.Transparent,
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
+            .tvFocusVisual(shape = RoundedCornerShape(percent = 50), focusBorderColor = SleekBluePrimary)
             .semantics(mergeDescendants = true) {
                 role = Role.Tab
                 selected = isSelected

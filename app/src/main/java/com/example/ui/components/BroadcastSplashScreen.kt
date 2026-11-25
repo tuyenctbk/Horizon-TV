@@ -111,10 +111,10 @@ fun BroadcastSplashScreen(
             // Animated Radar Dish Crest
             Box(
                 modifier = Modifier
-                    .size(140.dp)
+                    .size(144.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF050D1F))
-                    .border(2.dp, HorizonCyan.copy(alpha = 0.4f), CircleShape),
+                    .border(2.dp, BroadcastCyan.copy(alpha = 0.55f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
@@ -129,7 +129,7 @@ fun BroadcastSplashScreen(
                     // Radar range rings
                     listOf(0.33f, 0.66f, 1f).forEach { frac ->
                         drawCircle(
-                            color = HorizonCyan.copy(alpha = 0.25f),
+                            color = BroadcastCyan.copy(alpha = 0.30f),
                             radius = maxR * frac,
                             center = Offset(cx, cy),
                             style = Stroke(width = 1.2f)
@@ -138,16 +138,30 @@ fun BroadcastSplashScreen(
 
                     // Crosshairs
                     drawLine(
-                        color = HorizonCyan.copy(alpha = 0.2f),
+                        color = BroadcastCyan.copy(alpha = 0.22f),
                         start = Offset(cx, cy - maxR),
                         end = Offset(cx, cy + maxR),
                         strokeWidth = 1f
                     )
                     drawLine(
-                        color = HorizonCyan.copy(alpha = 0.2f),
+                        color = BroadcastCyan.copy(alpha = 0.22f),
                         start = Offset(cx - maxR, cy),
                         end = Offset(cx + maxR, cy),
                         strokeWidth = 1f
+                    )
+
+                    // Luminous trailing radar sweep wedge
+                    drawArc(
+                        brush = Brush.radialGradient(
+                            colors = listOf(BroadcastCyan.copy(alpha = 0.34f), Color.Transparent),
+                            center = Offset(cx, cy),
+                            radius = maxR.coerceAtLeast(1f)
+                        ),
+                        startAngle = sweepAngle - 42f,
+                        sweepAngle = 42f,
+                        useCenter = true,
+                        topLeft = Offset(cx - maxR, cy - maxR),
+                        size = androidx.compose.ui.geometry.Size(maxR * 2f, maxR * 2f)
                     )
 
                     // Sweeping beam
@@ -157,7 +171,7 @@ fun BroadcastSplashScreen(
 
                     drawLine(
                         brush = Brush.linearGradient(
-                            colors = listOf(HorizonCyan, Color.Transparent),
+                            colors = listOf(BroadcastCyan, Color.Transparent),
                             start = Offset(cx, cy),
                             end = Offset(endX, endY)
                         ),
@@ -167,10 +181,10 @@ fun BroadcastSplashScreen(
                         cap = StrokeCap.Round
                     )
 
-                    // Echo dots
-                    drawCircle(color = RadarGreen.copy(alpha = 0.7f), radius = 6f, center = Offset(cx + 25f, cy - 20f))
-                    drawCircle(color = SolarGold.copy(alpha = 0.8f), radius = 4f, center = Offset(cx + 28f, cy - 18f))
-                    drawCircle(color = HorizonCyan, radius = 5f, center = Offset(cx, cy))
+                    // Pulsing reflectivity echo dots & center beacon
+                    drawCircle(color = BroadcastEmerald.copy(alpha = 0.65f * pulseAlpha), radius = 8f, center = Offset(cx + 25f, cy - 20f))
+                    drawCircle(color = BroadcastAmber.copy(alpha = 0.85f), radius = 4.5f, center = Offset(cx + 28f, cy - 18f))
+                    drawCircle(color = BroadcastCyan, radius = 5f, center = Offset(cx, cy))
                 }
             }
 
@@ -193,11 +207,11 @@ fun BroadcastSplashScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                     shape = RoundedCornerShape(4.dp),
-                    color = Color(0xFF1E3A8A)
+                    color = Color(0xFF0E2954)
                 ) {
                     Text(
                         text = stringResource(R.string.splash_channel_badge),
-                        color = HorizonCyan,
+                        color = BroadcastCyanBright,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -218,7 +232,7 @@ fun BroadcastSplashScreen(
 
             Text(
                 text = stringResource(R.string.splash_network_subtitle),
-                color = HorizonCyan,
+                color = BroadcastCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
@@ -286,7 +300,7 @@ fun BroadcastSplashScreen(
                         }
                 ) {
                     LinearProgressIndicator(
-                        color = HorizonCyan,
+                        color = BroadcastCyan,
                         trackColor = Color(0xFF1E293B),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -297,7 +311,7 @@ fun BroadcastSplashScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = syncSteps[syncStep],
-                        color = HorizonCyan.copy(alpha = pulseAlpha),
+                        color = BroadcastCyanBright.copy(alpha = pulseAlpha),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,

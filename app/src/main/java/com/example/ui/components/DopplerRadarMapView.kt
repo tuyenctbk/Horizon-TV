@@ -337,10 +337,8 @@ fun DopplerRadarMapView(
             }
 
             // 2. LIVE RAINVIEWER DOPPLER RADAR / SATELLITE IR TILE OVERLAY
-            val showRadarTiles = (selectedLayer == 0 || selectedLayer == 1 || selectedLayer == 3) &&
-                !radarHost.isNullOrBlank() && activeFrame != null && activeFrame.tilePath.isNotBlank()
-
-            if (showRadarTiles && activeFrame != null && radarHost != null) {
+            val showRadarLayer = selectedLayer == 0 || selectedLayer == 1 || selectedLayer == 3
+            if (showRadarLayer && !radarHost.isNullOrBlank() && activeFrame != null && activeFrame.tilePath.isNotBlank()) {
                 // RainViewer free public radar tiles support up to zoom 7 (higher zooms upscale seamlessly via Mercator tile math)
                 val rvZoom = tileZoom.coerceAtMost(7)
                 val rvScale = 2.0.pow((clampedZoom - rvZoom).toDouble()).toFloat()

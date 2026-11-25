@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.CityLocation
+import com.example.ui.components.tvFocusVisual
 import com.example.ui.theme.*
 
 @Composable
@@ -366,6 +367,8 @@ private fun CityResultCard(
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .tvFocusVisual(shape = RoundedCornerShape(16.dp), focusBorderColor = BroadcastCyan, focusedScale = 1.02f)
             .semantics {
                 role = Role.Button
                 selected = isCurrent
