@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 
 @Composable
 fun FilmGrainVignette(
@@ -15,11 +16,15 @@ fun FilmGrainVignette(
 ) {
     if (!isEnabled) return
 
-    Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .clearAndSetSemantics { }
+    ) {
         val w = size.width
         val h = size.height
 
-        // Subtle CRT horizontal scanlines (very refined for sleek aesthetic)
+        // Subtle CRT horizontal scanlines (decorative visual overlay hidden from screen readers)
         var y = 0f
         val lineSpacing = 8f
         while (y < h) {

@@ -9,6 +9,8 @@ import com.example.data.model.*
 import com.example.data.repository.FullWeatherPackage
 import com.example.data.repository.UserPreferencesManager
 import com.example.data.repository.WeatherRepository
+import com.example.data.worker.SevereWeatherAlertNotificationHelper
+import com.example.data.worker.WeatherAlertWorkScheduler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,10 +25,10 @@ data class WeatherUiState(
     @StringRes val errorResId: Int? = null,
     val errorDetail: String? = null,
     val currentLocation: CityLocation = CityLocation(
-        name = "New York",
-        region = "New York",
-        country = "United States",
-        countryCode = "US",
+        name = "",
+        region = "",
+        country = "",
+        countryCode = "",
         latitude = 40.7128,
         longitude = -74.0060,
         isGpsDetected = false
@@ -45,33 +47,50 @@ data class WeatherUiState(
     val activeAlertModal: SevereWeatherAlert? = null,
     val activeVodStory: VodStory? = null,
     val vodStories: List<VodStory> = emptyList(),
+    val broadcastSchedule: List<BroadcastScheduleSlot> = emptyList(),
+    val remindedScheduleIds: Set<String> = emptySet(),
+    val isOfflineCacheMode: Boolean = false,
+    val lastSyncedAtMs: Long? = null,
+    val cachedStationCount: Int = 0,
     val isRadarPlaying: Boolean = true,
-    val radarFrameIndex: Int = 3, // -30m to +30m (index 0 to 6, 3 = Now)
-    val radarSelectedLayer: Int = 0, // 0: Precipitation, 1: Traffic, 2: IR Satellite, 3: Wind Streamlines
+    val radarFrameIndex: Int = 0,
+    val radarSelectedLayer: Int = 0, // 0: Precipitation, 1: Satellite IR, 2: Wind Streamlines, 3: Streets & Radar
+    val radarPackage: LiveRadarPackage? = null,
+    val isLoadingRadar: Boolean = false,
+    val radarOpacity: Float = 0.78f,
     val searchQuery: String = "",
     val searchResults: List<CityLocation> = emptyList(),
     val isSearching: Boolean = false,
     val dismissedAlertIds: Set<String> = emptySet(),
-    val activeSuggestion: SuggestionType? = null
+    val activeSuggestion: SuggestionType? = null,
+    val isBackgroundAlertsEnabled: Boolean = true,
+    val backgroundSyncIntervalMinutes: Int = 30,
+    val lastBackgroundSyncSummary: String = "",
+    val isOnboardingVisible: Boolean = false
 )
 
 class WeatherViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val repository: WeatherRepository = WeatherRepository()
+    private val repository: WeatherRepository = WeatherRepository(application)
     private val preferencesManager = UserPreferencesManager(application)
     private var searchJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         WeatherUiState(
+            currentLocation = preferencesManager.getLastSelectedLocation() ?: repository.defaultLocation,
             unitSystem = preferencesManager.getUnitSystem(),
             isCrtGrainEnabled = preferencesManager.isCrtGrainEnabled(),
             isVirtualRemoteVisible = preferencesManager.isVirtualRemoteVisible(),
             isLiveAudioPlaying = preferencesManager.isLiveAudioPlaying(),
             isLBarVisible = preferencesManager.isLBarVisible(),
             favoriteCities = preferencesManager.getFavoriteCities() ?: repository.getDefaultFavoriteCities(),
-            vodStories = repository.getMeteorologicalVodDispatches()
+            vodStories = emptyList(),
+            isBackgroundAlertsEnabled = preferencesManager.isBackgroundAlertsEnabled(),
+            backgroundSyncIntervalMinutes = preferencesManager.getBackgroundSyncIntervalMinutes(),
+            lastBackgroundSyncSummary = preferencesManager.getLastBackgroundSyncSummary(),
+            isOnboardingVisible = !preferencesManager.hasCompletedOnboarding()
         )
     )
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
@@ -83,11 +102,41 @@ class WeatherViewModel(
     init {
         // Track app launch for non-intrusive engagement rules
         preferencesManager.incrementLaunchCount()
+        // Initialize high-priority severe weather notification channel & WorkManager schedule
+        SevereWeatherAlertNotificationHelper.ensureNotificationChannel(application)
+        WeatherAlertWorkScheduler.syncPeriodicSchedule(application, replaceExisting = false)
+        // Observe local Room cached station count reactively
+        viewModelScope.launch {
+            repository.observeCachedStationCount().collect { count ->
+                _uiState.update { it.copy(cachedStationCount = count) }
+            }
+        }
         // Initial location detection and load
         detectAndLoadInitialLocation()
+        refreshRadarMetadata()
         startEmergencyPolling()
         startRadarLoop()
         scheduleDelayedEngagementCheck()
+    }
+
+    fun refreshRadarMetadata() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingRadar = true) }
+            val radarPkg = repository.fetchLiveRadarMetadata()
+            _uiState.update { state ->
+                val defaultIdx = if (radarPkg != null && radarPkg.precipitationFrames.isNotEmpty()) {
+                    // Start at the latest observed past frame ("NOW")
+                    radarPkg.precipitationFrames.indexOfLast { !it.isNowcast }.coerceAtLeast(0)
+                } else {
+                    0
+                }
+                state.copy(
+                    radarPackage = radarPkg ?: state.radarPackage,
+                    isLoadingRadar = false,
+                    radarFrameIndex = defaultIdx
+                )
+            }
+        }
     }
 
     private fun scheduleDelayedEngagementCheck() {
@@ -115,33 +164,160 @@ class WeatherViewModel(
     fun loadWeatherForLocation(location: CityLocation) {
         preferencesManager.saveLastSelectedLocation(location)
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, errorResId = null, errorDetail = null, currentLocation = location) }
+            // Hydrate immediately from Room cache for this location if available so cold starts are instant
+            val preCached = repository.loadCachedWeatherSnapshot(
+                location = location,
+                fallbackToLatestAnyLocation = false
+            )
+            if (preCached != null) {
+                val unit = _uiState.value.unitSystem
+                val cachedVods = repository.buildLiveVodDispatches(
+                    location = preCached.location,
+                    current = preCached.currentWeather,
+                    pkg = preCached.weatherPackage,
+                    unitSystem = unit
+                )
+                val cachedSchedule = repository.buildLiveBroadcastSchedule(
+                    location = preCached.location,
+                    current = preCached.currentWeather,
+                    pkg = preCached.weatherPackage,
+                    vodStories = cachedVods,
+                    unitSystem = unit
+                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = true,
+                        errorMessage = null,
+                        errorResId = null,
+                        errorDetail = null,
+                        currentLocation = location,
+                        currentWeather = preCached.currentWeather,
+                        weatherPackage = preCached.weatherPackage,
+                        vodStories = cachedVods,
+                        broadcastSchedule = cachedSchedule,
+                        lastSyncedAtMs = preCached.cachedAtEpochMs
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoading = true,
+                        errorMessage = null,
+                        errorResId = null,
+                        errorDetail = null,
+                        currentLocation = location
+                    )
+                }
+            }
+
             try {
-                val (current, fullPkg) = repository.fetchRealWeatherData(location.latitude, location.longitude)
-                val activeAlert = fullPkg.alerts.firstOrNull()
+                val (current, fullPkg) = repository.fetchRealWeatherData(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    location = location
+                )
+                val unit = _uiState.value.unitSystem
+                val activeAlert = fullPkg.alerts.firstOrNull { it.id !in _uiState.value.dismissedAlertIds }
+                val liveVods = repository.buildLiveVodDispatches(
+                    location = location,
+                    current = current,
+                    pkg = fullPkg,
+                    unitSystem = unit
+                )
+                val liveSchedule = repository.buildLiveBroadcastSchedule(
+                    location = location,
+                    current = current,
+                    pkg = fullPkg,
+                    vodStories = liveVods,
+                    unitSystem = unit
+                )
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        currentLocation = location,
                         currentWeather = current,
                         weatherPackage = fullPkg,
-                        activeAlertModal = activeAlert // Show prominent emergency modal if alert active
+                        vodStories = liveVods,
+                        broadcastSchedule = liveSchedule,
+                        activeAlertModal = activeAlert,
+                        isOfflineCacheMode = false,
+                        lastSyncedAtMs = System.currentTimeMillis(),
+                        errorMessage = null,
+                        errorResId = null,
+                        errorDetail = null
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = null,
-                        errorResId = R.string.error_sync_failed,
-                        errorDetail = e.localizedMessage
+                // Network outage: restore last known snapshot from local Room database
+                val fallbackSnapshot = preCached ?: repository.loadCachedWeatherSnapshot(
+                    location = location,
+                    fallbackToLatestAnyLocation = true
+                )
+                if (fallbackSnapshot != null) {
+                    val unit = _uiState.value.unitSystem
+                    val cachedVods = repository.buildLiveVodDispatches(
+                        location = fallbackSnapshot.location,
+                        current = fallbackSnapshot.currentWeather,
+                        pkg = fallbackSnapshot.weatherPackage,
+                        unitSystem = unit
                     )
+                    val cachedSchedule = repository.buildLiveBroadcastSchedule(
+                        location = fallbackSnapshot.location,
+                        current = fallbackSnapshot.currentWeather,
+                        pkg = fallbackSnapshot.weatherPackage,
+                        vodStories = cachedVods,
+                        unitSystem = unit
+                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentLocation = fallbackSnapshot.location,
+                            currentWeather = fallbackSnapshot.currentWeather,
+                            weatherPackage = fallbackSnapshot.weatherPackage,
+                            vodStories = cachedVods,
+                            broadcastSchedule = cachedSchedule,
+                            isOfflineCacheMode = true,
+                            lastSyncedAtMs = fallbackSnapshot.cachedAtEpochMs,
+                            errorMessage = null,
+                            errorResId = null,
+                            errorDetail = null
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isOfflineCacheMode = true,
+                            errorMessage = null,
+                            errorResId = R.string.error_sync_failed,
+                            errorDetail = e.localizedMessage
+                        )
+                    }
                 }
             }
         }
     }
 
+    fun toggleScheduleReminder(slotId: String) {
+        _uiState.update { state ->
+            val updated = if (slotId in state.remindedScheduleIds) {
+                state.remindedScheduleIds - slotId
+            } else {
+                state.remindedScheduleIds + slotId
+            }
+            state.copy(remindedScheduleIds = updated)
+        }
+    }
+
+    fun clearLocalWeatherCache() {
+        viewModelScope.launch {
+            repository.clearWeatherCache()
+        }
+    }
+
     private fun checkAndShowEngagementSuggestion() {
         if (hasShownSuggestionInSession) return
+        if (_uiState.value.isOnboardingVisible) return
         if (_uiState.value.activeSuggestion != null) return
         if (_uiState.value.activeAlertModal != null) return
         if (_uiState.value.activeVodStory != null) return
@@ -155,6 +331,15 @@ class WeatherViewModel(
             preferencesManager.recordSharePromptShown()
             _uiState.update { it.copy(activeSuggestion = SuggestionType.SHARE) }
         }
+    }
+
+    fun completeOnboarding() {
+        preferencesManager.setOnboardingCompleted(true)
+        _uiState.update { it.copy(isOnboardingVisible = false) }
+    }
+
+    fun openOnboardingTour() {
+        _uiState.update { it.copy(isOnboardingVisible = true) }
     }
 
     fun dismissSuggestion(permanently: Boolean = false) {
@@ -199,7 +384,25 @@ class WeatherViewModel(
 
     fun setUnitSystem(unit: UnitSystem) {
         preferencesManager.setUnitSystem(unit)
-        _uiState.update { it.copy(unitSystem = unit) }
+        _uiState.update { state ->
+            val current = state.currentWeather
+            val pkg = state.weatherPackage
+            val updatedVods = if (current != null && pkg != null) {
+                repository.buildLiveVodDispatches(state.currentLocation, current, pkg, unit)
+            } else {
+                state.vodStories
+            }
+            val updatedSchedule = if (current != null && pkg != null) {
+                repository.buildLiveBroadcastSchedule(state.currentLocation, current, pkg, updatedVods, unit)
+            } else {
+                state.broadcastSchedule
+            }
+            state.copy(
+                unitSystem = unit,
+                vodStories = updatedVods,
+                broadcastSchedule = updatedSchedule
+            )
+        }
     }
 
     fun toggleUnitSystem() {
@@ -243,6 +446,47 @@ class WeatherViewModel(
         _uiState.update { it.copy(activeAlertModal = alert) }
     }
 
+    fun toggleBackgroundAlerts() {
+        val next = !_uiState.value.isBackgroundAlertsEnabled
+        preferencesManager.setBackgroundAlertsEnabled(next)
+        _uiState.update { it.copy(isBackgroundAlertsEnabled = next) }
+        WeatherAlertWorkScheduler.syncPeriodicSchedule(getApplication(), replaceExisting = true)
+    }
+
+    fun setBackgroundSyncInterval(minutes: Int) {
+        val clamped = minutes.coerceAtLeast(15)
+        preferencesManager.setBackgroundSyncIntervalMinutes(clamped)
+        _uiState.update { it.copy(backgroundSyncIntervalMinutes = clamped) }
+        WeatherAlertWorkScheduler.syncPeriodicSchedule(getApplication(), replaceExisting = true)
+    }
+
+    fun triggerImmediateBackgroundWeatherCheck() {
+        WeatherAlertWorkScheduler.triggerImmediateBackgroundCheck(getApplication(), forceNotify = true)
+        viewModelScope.launch {
+            delay(1500)
+            refreshBackgroundSyncStatus()
+        }
+    }
+
+    fun triggerTestSeverePushNotification(alert: SevereWeatherAlert) {
+        SevereWeatherAlertNotificationHelper.postSevereWeatherNotification(
+            context = getApplication(),
+            locationName = _uiState.value.currentLocation.name,
+            alert = alert
+        )
+        openAlertModal(alert)
+    }
+
+    fun refreshBackgroundSyncStatus() {
+        _uiState.update {
+            it.copy(
+                isBackgroundAlertsEnabled = preferencesManager.isBackgroundAlertsEnabled(),
+                backgroundSyncIntervalMinutes = preferencesManager.getBackgroundSyncIntervalMinutes(),
+                lastBackgroundSyncSummary = preferencesManager.getLastBackgroundSyncSummary()
+            )
+        }
+    }
+
     fun dismissAlert(alertId: String) {
         _uiState.update {
             it.copy(
@@ -271,11 +515,37 @@ class WeatherViewModel(
     }
 
     fun setRadarFrameIndex(index: Int) {
-        _uiState.update { it.copy(radarFrameIndex = index.coerceIn(0, 6)) }
+        val count = activeRadarFrameCount(_uiState.value)
+        _uiState.update { it.copy(radarFrameIndex = index.coerceIn(0, (count - 1).coerceAtLeast(0))) }
     }
 
     fun setRadarLayer(layerIndex: Int) {
-        _uiState.update { it.copy(radarSelectedLayer = layerIndex.coerceIn(0, 3)) }
+        val clampedLayer = layerIndex.coerceIn(0, 3)
+        _uiState.update { state ->
+            val updatedState = state.copy(radarSelectedLayer = clampedLayer)
+            val count = activeRadarFrameCount(updatedState)
+            val safeIdx = if (count > 0) state.radarFrameIndex.coerceIn(0, count - 1) else 0
+            updatedState.copy(radarFrameIndex = safeIdx)
+        }
+    }
+
+    fun cycleRadarOpacity() {
+        _uiState.update { state ->
+            val nextOpacity = when {
+                state.radarOpacity < 0.65f -> 0.78f
+                state.radarOpacity < 0.88f -> 0.94f
+                else -> 0.52f
+            }
+            state.copy(radarOpacity = nextOpacity)
+        }
+    }
+
+    private fun activeRadarFrameCount(state: WeatherUiState): Int {
+        val pkg = state.radarPackage ?: return 7
+        return when (state.radarSelectedLayer) {
+            1 -> pkg.satelliteFrames.size.coerceAtLeast(1)
+            else -> pkg.precipitationFrames.size.coerceAtLeast(1)
+        }
     }
 
     fun addCurrentToFavorites() {
@@ -346,14 +616,25 @@ class WeatherViewModel(
                 delay(45_000) // 45 seconds polling loop
                 val loc = _uiState.value.currentLocation
                 try {
-                    val (current, fullPkg) = repository.fetchRealWeatherData(loc.latitude, loc.longitude)
+                    val (current, fullPkg) = repository.fetchRealWeatherData(loc.latitude, loc.longitude, location = loc)
+                    val unit = _uiState.value.unitSystem
+                    val liveVods = repository.buildLiveVodDispatches(loc, current, fullPkg, unit)
+                    val liveSchedule = repository.buildLiveBroadcastSchedule(loc, current, fullPkg, liveVods, unit)
                     _uiState.update {
                         it.copy(
                             currentWeather = current,
-                            weatherPackage = fullPkg
+                            weatherPackage = fullPkg,
+                            vodStories = liveVods,
+                            broadcastSchedule = liveSchedule,
+                            isOfflineCacheMode = false,
+                            lastSyncedAtMs = System.currentTimeMillis()
                         )
                     }
-                } catch (_: Exception) {}
+                } catch (_: Exception) {
+                    if (_uiState.value.currentWeather != null) {
+                        _uiState.update { it.copy(isOfflineCacheMode = true) }
+                    }
+                }
             }
         }
     }
@@ -362,10 +643,12 @@ class WeatherViewModel(
         radarTimerJob?.cancel()
         radarTimerJob = viewModelScope.launch {
             while (true) {
-                delay(1200)
-                if (_uiState.value.isRadarPlaying) {
+                delay(1100)
+                val state = _uiState.value
+                if (state.isRadarPlaying && state.currentScreen == TVScreen.RADAR) {
+                    val count = activeRadarFrameCount(state).coerceAtLeast(1)
                     _uiState.update {
-                        it.copy(radarFrameIndex = (it.radarFrameIndex + 1) % 7)
+                        it.copy(radarFrameIndex = (it.radarFrameIndex + 1) % count)
                     }
                 }
             }

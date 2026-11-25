@@ -14,6 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +49,7 @@ fun WeatherAlertModal(
                 .background(SleekSurface, RoundedCornerShape(20.dp))
                 .border(1.5.dp, severityColor, RoundedCornerShape(20.dp))
                 .padding(24.dp)
+                .semantics { liveRegion = LiveRegionMode.Assertive }
                 .testTag("weather_alert_modal")
         ) {
             // Emergency Header Banner
@@ -85,7 +90,8 @@ fun WeatherAlertModal(
                         text = alert.title,
                         color = SleekTextPrimary,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
                     )
                 }
             }
@@ -171,7 +177,7 @@ fun WeatherAlertModal(
                 shape = RoundedCornerShape(percent = 50),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
+                    .heightIn(min = 48.dp)
                     .testTag("dismiss_alert_button")
             ) {
                 Text(

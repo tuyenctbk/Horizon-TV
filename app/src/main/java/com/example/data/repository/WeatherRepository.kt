@@ -1,10 +1,18 @@
 package com.example.data.repository
 
+import android.content.Context
 import androidx.annotation.StringRes
 import com.example.R
 import com.example.data.api.ApiClient
+import com.example.data.local.HorizonWeatherDatabase
+import com.example.data.local.dao.WeatherCacheDao
+import com.example.data.local.entity.CurrentWeatherEntity
+import com.example.data.local.entity.DailyForecastEntity
+import com.example.data.local.entity.HourlyForecastEntity
 import com.example.data.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
@@ -12,23 +20,149 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
 
-class WeatherRepository {
+data class CachedWeatherSnapshot(
+    val location: CityLocation,
+    val currentWeather: CurrentWeather,
+    val weatherPackage: FullWeatherPackage,
+    val cachedAtEpochMs: Long
+)
+
+class WeatherRepository(
+    private val appContext: Context? = null,
+    private val injectedCacheDao: WeatherCacheDao? = null
+) {
 
     private val weatherService = ApiClient.weatherService
     private val airQualityService = ApiClient.airQualityService
     private val geocodingService = ApiClient.geocodingService
     private val ipLocationService = ApiClient.ipLocationService
+    private val rainViewerService = ApiClient.rainViewerService
 
-    // Default Fallback Location (New York, NY)
-    val defaultLocation = CityLocation(
-        name = "New York",
-        region = "New York",
-        country = "United States",
-        countryCode = "US",
-        latitude = 40.7128,
-        longitude = -74.0060,
-        isGpsDetected = false
-    )
+    private val weatherCacheDao: WeatherCacheDao? by lazy {
+        injectedCacheDao ?: appContext?.let {
+            HorizonWeatherDatabase.getInstance(it).weatherCacheDao()
+        }
+    }
+
+    fun observeCachedCurrentWeather(latitude: Double, longitude: Double): Flow<CurrentWeatherEntity?> {
+        val dao = weatherCacheDao ?: return flowOf(null)
+        return dao.observeCurrentWeather(CurrentWeatherEntity.createKey(latitude, longitude))
+    }
+
+    fun observeCachedSevenDayForecast(latitude: Double, longitude: Double): Flow<List<DailyForecastEntity>> {
+        val dao = weatherCacheDao ?: return flowOf(emptyList())
+        return dao.observeDailyForecast(CurrentWeatherEntity.createKey(latitude, longitude))
+    }
+
+    fun observeCachedStationCount(): Flow<Int> {
+        val dao = weatherCacheDao ?: return flowOf(0)
+        return dao.observeCachedStationCount()
+    }
+
+    suspend fun clearWeatherCache() = withContext(Dispatchers.IO) {
+        weatherCacheDao?.clearAllCache()
+    }
+
+    suspend fun loadCachedWeatherSnapshot(
+        location: CityLocation,
+        fallbackToLatestAnyLocation: Boolean = true
+    ): CachedWeatherSnapshot? = withContext(Dispatchers.IO) {
+        val dao = weatherCacheDao ?: return@withContext null
+        val requestedKey = CurrentWeatherEntity.createKey(location.latitude, location.longitude)
+        val currentEntity = (dao.getCurrentWeatherOnce(requestedKey)
+            ?: if (fallbackToLatestAnyLocation) dao.getLatestCurrentWeatherOnce() else null)
+            ?: return@withContext null
+
+        val key = currentEntity.locationKey
+        val currentWeather = currentEntity.toCurrentWeather()
+        val dailyDays = dao.getDailyForecastOnce(key).map { it.toDailyForecastDay() }
+        val hourlyPoints = dao.getHourlyForecastOnce(key).map { it.toHourlyPoint() }
+
+        val diurnalPeriods = computeDiurnalPeriodsFromHourlyPoints(hourlyPoints, currentWeather)
+        val alerts = evaluateSevereWeatherAlerts(currentWeather, dailyDays)
+        val headlines = generateRealLocalHeadlines(currentWeather, diurnalPeriods, alerts)
+        val astronomical = calculateAstronomicalData(currentWeather.sunriseTime, currentWeather.sunsetTime)
+
+        val resolvedLocation = if (key == requestedKey) location else currentEntity.toCityLocation()
+
+        CachedWeatherSnapshot(
+            location = resolvedLocation,
+            currentWeather = currentWeather,
+            weatherPackage = FullWeatherPackage(
+                diurnalPeriods = diurnalPeriods,
+                hourlyPoints = hourlyPoints,
+                dailyDays = dailyDays,
+                alerts = alerts,
+                headlines = headlines,
+                astronomical = astronomical
+            ),
+            cachedAtEpochMs = currentEntity.cachedAtEpochMs
+        )
+    }
+
+    suspend fun saveWeatherSnapshotToCache(
+        location: CityLocation,
+        currentWeather: CurrentWeather,
+        packageData: FullWeatherPackage,
+        cachedAtEpochMs: Long = System.currentTimeMillis()
+    ) = withContext(Dispatchers.IO) {
+        val dao = weatherCacheDao ?: return@withContext
+        val key = CurrentWeatherEntity.createKey(location.latitude, location.longitude)
+        val currentEntity = CurrentWeatherEntity.from(location, currentWeather, cachedAtEpochMs)
+        val dailyEntities = packageData.dailyDays.mapIndexed { idx, day ->
+            DailyForecastEntity.from(key, idx, day, cachedAtEpochMs)
+        }
+        val hourlyEntities = packageData.hourlyPoints.mapIndexed { idx, pt ->
+            HourlyForecastEntity.from(key, idx, pt, cachedAtEpochMs)
+        }
+        dao.saveFullWeatherSnapshot(
+            current = currentEntity,
+            daily = dailyEntities,
+            hourly = hourlyEntities
+        )
+    }
+
+    suspend fun fetchLiveRadarMetadata(): LiveRadarPackage? = withContext(Dispatchers.IO) {
+        try {
+            val response = rainViewerService.getWeatherMaps()
+            val host = response.host.ifBlank { "https://tilecache.rainviewer.com" }.trimEnd('/')
+            val pastFrames = response.radar?.past.orEmpty()
+                .filter { it.path.isNotBlank() }
+                .takeLast(6)
+                .map { RadarTimelineFrame(timestampSec = it.time, tilePath = it.path, isNowcast = false) }
+            val nowcastFrames = response.radar?.nowcast.orEmpty()
+                .filter { it.path.isNotBlank() }
+                .take(3)
+                .map { RadarTimelineFrame(timestampSec = it.time, tilePath = it.path, isNowcast = true) }
+            val satFrames = response.satellite?.infrared.orEmpty()
+                .filter { it.path.isNotBlank() }
+                .takeLast(6)
+                .map { RadarTimelineFrame(timestampSec = it.time, tilePath = it.path, isNowcast = false, isSatellite = true) }
+
+            val combinedPrecip = pastFrames + nowcastFrames
+            if (combinedPrecip.isEmpty() && satFrames.isEmpty()) return@withContext null
+
+            LiveRadarPackage(
+                host = host,
+                precipitationFrames = combinedPrecip,
+                satelliteFrames = satFrames
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    // Default Fallback Location (resolved from string resources)
+    val defaultLocation: CityLocation
+        get() = CityLocation(
+            name = appContext?.getString(R.string.default_city_name) ?: "",
+            region = appContext?.getString(R.string.default_city_region) ?: "",
+            country = appContext?.getString(R.string.default_city_country) ?: "",
+            countryCode = appContext?.getString(R.string.default_city_country_code) ?: "",
+            latitude = 40.7128,
+            longitude = -74.0060,
+            isGpsDetected = false
+        )
 
     // Default bookmarked cities (empty initially to allow user customization)
     fun getDefaultFavoriteCities(): List<CityLocation> = emptyList()
@@ -76,7 +210,8 @@ class WeatherRepository {
 
     suspend fun fetchRealWeatherData(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        location: CityLocation? = null
     ): Pair<CurrentWeather, FullWeatherPackage> = withContext(Dispatchers.IO) {
         val forecastDeferred = weatherService.getForecast(latitude, longitude)
         val aqiDeferred = try {
@@ -91,9 +226,11 @@ class WeatherRepository {
         val aqiData = aqiDeferred?.current ?: AirQualityCurrent()
 
         val weatherCode = currentData.weatherCode
-        val conditionText = getWeatherDescription(weatherCode)
+        val conditionText = appContext?.getString(getWeatherDescriptionRes(weatherCode))
+            ?: getWeatherDescription(weatherCode)
         val aqiLevel = aqiData.usAqi
-        val aqiStatus = getAqiStatus(aqiLevel)
+        val aqiStatus = appContext?.getString(getAqiStatusRes(aqiLevel))
+            ?: getAqiStatus(aqiLevel)
 
         val sunrise = dailyData.sunrise.firstOrNull()?.substringAfter("T") ?: "06:00"
         val sunset = dailyData.sunset.firstOrNull()?.substringAfter("T") ?: "19:30"
@@ -137,7 +274,100 @@ class WeatherRepository {
             astronomical = astronomical
         )
 
+        val cacheLocation = location ?: CityLocation(
+            name = defaultLocation.name,
+            region = defaultLocation.region,
+            country = defaultLocation.country,
+            countryCode = defaultLocation.countryCode,
+            latitude = latitude,
+            longitude = longitude
+        )
+        runCatching {
+            saveWeatherSnapshotToCache(cacheLocation, currentWeather, packageData)
+        }
+
         Pair(currentWeather, packageData)
+    }
+
+    suspend fun fetchSevenDayForecast(
+        latitude: Double,
+        longitude: Double
+    ): List<DailyForecastDay> = fetchSevenDayForecastWithCache(latitude, longitude).first
+
+    suspend fun fetchSevenDayForecastWithCache(
+        latitude: Double,
+        longitude: Double
+    ): Pair<List<DailyForecastDay>, Boolean> = withContext(Dispatchers.IO) {
+        val locationKey = CurrentWeatherEntity.createKey(latitude, longitude)
+        try {
+            val response = weatherService.getSevenDayForecast(latitude = latitude, longitude = longitude)
+            val dailyData = response.daily ?: DailyData()
+            val days = computeDailyDays(dailyData, CurrentUnitsAndData(), maxDays = 7)
+            if (days.isNotEmpty()) {
+                val nowMs = System.currentTimeMillis()
+                runCatching {
+                    weatherCacheDao?.replaceDailyForecast(
+                        locationKey = locationKey,
+                        daily = days.mapIndexed { idx, d ->
+                            DailyForecastEntity.from(locationKey, idx, d, nowMs)
+                        }
+                    )
+                }
+            }
+            Pair(days, false)
+        } catch (e: Exception) {
+            val cached = weatherCacheDao?.getDailyForecastOnce(locationKey)
+                ?.take(7)
+                ?.map { it.toDailyForecastDay() }
+                .orEmpty()
+            if (cached.isNotEmpty()) {
+                Pair(cached, true)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    private fun computeDiurnalPeriodsFromHourlyPoints(
+        hourlyPoints: List<HourlyPoint>,
+        currentWeather: CurrentWeather
+    ): List<DiurnalPeriod> {
+        val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val periodConfigs = listOf(
+            Triple("Morning", "06:00 - 12:00", 6..11),
+            Triple("Afternoon", "12:00 - 18:00", 12..17),
+            Triple("Evening", "18:00 - 22:00", 18..21),
+            Triple("Night", "22:00 - 06:00", 22..24)
+        )
+        return periodConfigs.map { cfg ->
+            val matched = hourlyPoints.filter { pt ->
+                val h = pt.timeLabel.substringBefore(":").toIntOrNull() ?: -1
+                h in cfg.third
+            }
+            val avgTemp = if (matched.isNotEmpty()) matched.map { it.tempC }.average() else currentWeather.tempC
+            val maxPop = matched.maxOfOrNull { it.popPercent } ?: 0
+            val code = matched.firstOrNull()?.weatherCode ?: currentWeather.weatherCode
+            val wind = if (matched.isNotEmpty()) matched.map { it.windSpeedKmh }.average() else currentWeather.windSpeedKmh
+            val (isCurrent, periodRes) = when (cfg.first) {
+                "Morning" -> Pair(currentHour in 6..11, R.string.period_morning)
+                "Afternoon" -> Pair(currentHour in 12..17, R.string.period_afternoon)
+                "Evening" -> Pair(currentHour in 18..21, R.string.period_evening)
+                "Night" -> Pair(currentHour >= 22 || currentHour < 6, R.string.period_night)
+                else -> Pair(false, R.string.period_morning)
+            }
+            DiurnalPeriod(
+                periodName = appContext?.getString(periodRes) ?: cfg.first,
+                timeRange = cfg.second,
+                tempC = avgTemp,
+                feelsLikeC = avgTemp - (currentWeather.tempC - currentWeather.feelsLikeC),
+                conditionText = appContext?.getString(getWeatherDescriptionRes(code)) ?: getWeatherDescription(code),
+                weatherCode = code,
+                popPercent = maxPop,
+                windSpeedKmh = wind,
+                isCurrent = isCurrent,
+                periodNameRes = periodRes
+            )
+        }
     }
 
     private fun computeDiurnalPeriods(
@@ -240,34 +470,48 @@ class WeatherRepository {
 
     private fun computeDailyDays(
         daily: DailyData,
-        currentData: CurrentUnitsAndData
+        currentData: CurrentUnitsAndData,
+        maxDays: Int = 14
     ): List<DailyForecastDay> {
         val days = mutableListOf<DailyForecastDay>()
-        val count = minOf(daily.time.size, 14)
+        val count = minOf(daily.time.size, maxDays)
+        val activeLocale = Locale.getDefault()
         val sdfParse = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val sdfDayOfWeek = SimpleDateFormat("EEEE", Locale.US)
-        val sdfShort = SimpleDateFormat("EEE, MMM d", Locale.US)
+        val sdfDayOfWeek = SimpleDateFormat("EEEE", activeLocale)
+        val sdfShort = SimpleDateFormat("EEE, MMM d", activeLocale)
+        val todayStr = appContext?.getString(R.string.seven_day_today) ?: "Today"
+        val tomorrowStr = appContext?.getString(R.string.seven_day_tomorrow) ?: "Tomorrow"
 
         for (i in 0 until count) {
             val dateStr = daily.time.getOrNull(i) ?: ""
-            var dayOfWeek = "Day $i"
+            var dayOfWeek = dateStr
             var label = dateStr
 
             try {
                 val parsed = sdfParse.parse(dateStr)
                 if (parsed != null) {
-                    dayOfWeek = if (i == 0) "Today" else if (i == 1) "Tomorrow" else sdfDayOfWeek.format(parsed)
+                    dayOfWeek = when (i) {
+                        0 -> todayStr
+                        1 -> tomorrowStr
+                        else -> sdfDayOfWeek.format(parsed)
+                    }
                     label = sdfShort.format(parsed)
                 }
             } catch (_: Exception) {}
 
             val maxT = daily.temperature2mMax.getOrNull(i) ?: currentData.temperature2m
             val minT = daily.temperature2mMin.getOrNull(i) ?: (currentData.temperature2m - 5.0)
+            val appMax = daily.apparentTemperatureMax.getOrNull(i) ?: maxT
+            val appMin = daily.apparentTemperatureMin.getOrNull(i) ?: minT
             val code = daily.weatherCode.getOrNull(i) ?: currentData.weatherCode
             val rain = daily.precipitationSum.getOrNull(i) ?: 0.0
             val pop = daily.precipitationProbabilityMax.getOrNull(i) ?: 0
             val uv = daily.uvIndexMax.getOrNull(i) ?: currentData.uvIndex
             val wind = daily.windSpeed10mMax.getOrNull(i) ?: currentData.windSpeed10m
+            val gusts = daily.windGusts10mMax.getOrNull(i) ?: wind
+            val sunrise = daily.sunrise.getOrNull(i)?.substringAfter("T")?.take(5) ?: ""
+            val sunset = daily.sunset.getOrNull(i)?.substringAfter("T")?.take(5) ?: ""
+            val localizedCondition = appContext?.getString(getWeatherDescriptionRes(code)) ?: getWeatherDescription(code)
 
             days.add(
                 DailyForecastDay(
@@ -276,11 +520,16 @@ class WeatherRepository {
                     maxTempC = maxT,
                     minTempC = minT,
                     weatherCode = code,
-                    conditionText = getWeatherDescription(code),
+                    conditionText = localizedCondition,
                     rainMm = rain,
                     popPercent = pop,
                     maxUvIndex = uv,
-                    maxWindKmh = wind
+                    maxWindKmh = wind,
+                    apparentMaxTempC = appMax,
+                    apparentMinTempC = appMin,
+                    sunriseTime = sunrise,
+                    sunsetTime = sunset,
+                    maxWindGustsKmh = gusts
                 )
             )
         }
@@ -295,45 +544,55 @@ class WeatherRepository {
 
         // 1. High Wind Warning
         if (current.windGustsKmh >= 65.0 || current.windSpeedKmh >= 50.0) {
+            val windKmh = current.windSpeedKmh.roundToInt()
+            val gustKmh = current.windGustsKmh.roundToInt()
             alerts.add(
                 SevereWeatherAlert(
                     id = "alert_wind",
                     severity = AlertSeverity.WARNING,
-                    title = "HIGH WIND WARNING",
-                    summary = "Sustained winds at ${current.windSpeedKmh.roundToInt()} km/h with dangerous peak gusts up to ${current.windGustsKmh.roundToInt()} km/h.",
-                    safetyInstructions = "Secure loose outdoor furniture, avoid travel in high-profile vehicles, and watch for downed tree limbs and power lines.",
-                    effectiveTime = "Active now",
-                    expiresTime = "Expires in 6 hours"
+                    title = appContext?.getString(R.string.alert_wind_title) ?: "HIGH WIND WARNING",
+                    summary = appContext?.getString(R.string.alert_wind_summary, windKmh, gustKmh)
+                        ?: "Sustained winds at $windKmh km/h with dangerous peak gusts up to $gustKmh km/h.",
+                    safetyInstructions = appContext?.getString(R.string.alert_wind_instructions)
+                        ?: "Secure loose outdoor furniture, avoid travel in high-profile vehicles, and watch for downed tree limbs and power lines.",
+                    effectiveTime = appContext?.getString(R.string.alert_effective_now) ?: "Active now",
+                    expiresTime = appContext?.getString(R.string.alert_wind_expires) ?: "Expires in 6 hours"
                 )
             )
         }
 
         // 2. Extreme Heat Advisory
         if (current.tempC >= 35.0 || current.feelsLikeC >= 38.0) {
+            val feelsC = current.feelsLikeC.roundToInt()
             alerts.add(
                 SevereWeatherAlert(
                     id = "alert_heat",
                     severity = AlertSeverity.ADVISORY,
-                    title = "EXCESSIVE HEAT ADVISORY",
-                    summary = "Dangerous heat index reaching ${current.feelsLikeC.roundToInt()}°C under strong insolation.",
-                    safetyInstructions = "Drink plenty of fluids, remain in air-conditioned rooms, avoid prolonged sun exposure, and check up on vulnerable relatives.",
-                    effectiveTime = "Until 20:00 local time",
-                    expiresTime = "Tonight"
+                    title = appContext?.getString(R.string.alert_heat_title) ?: "EXCESSIVE HEAT ADVISORY",
+                    summary = appContext?.getString(R.string.alert_heat_summary, feelsC)
+                        ?: "Dangerous heat index reaching ${feelsC}°C under strong insolation.",
+                    safetyInstructions = appContext?.getString(R.string.alert_heat_instructions)
+                        ?: "Drink plenty of fluids, remain in air-conditioned rooms, avoid prolonged sun exposure, and check up on vulnerable relatives.",
+                    effectiveTime = appContext?.getString(R.string.alert_heat_effective) ?: "Until 20:00 local time",
+                    expiresTime = appContext?.getString(R.string.alert_heat_expires) ?: "Tonight"
                 )
             )
         }
 
         // 3. Hard Freeze Warning
         if (current.tempC <= -5.0) {
+            val tempC = current.tempC.roundToInt()
             alerts.add(
                 SevereWeatherAlert(
                     id = "alert_freeze",
                     severity = AlertSeverity.WARNING,
-                    title = "HARD FREEZE WARNING",
-                    summary = "Sub-freezing temperatures at ${current.tempC.roundToInt()}°C posing frostbite risk and pipe hazards.",
-                    safetyInstructions = "Protect exposed plumbing, bring sensitive plants indoors, and ensure pets have adequate warm shelter.",
-                    effectiveTime = "Active now",
-                    expiresTime = "Tomorrow 09:00"
+                    title = appContext?.getString(R.string.alert_freeze_title) ?: "HARD FREEZE WARNING",
+                    summary = appContext?.getString(R.string.alert_freeze_summary, tempC)
+                        ?: "Sub-freezing temperatures at ${tempC}°C posing frostbite risk and pipe hazards.",
+                    safetyInstructions = appContext?.getString(R.string.alert_freeze_instructions)
+                        ?: "Protect exposed plumbing, bring sensitive plants indoors, and ensure pets have adequate warm shelter.",
+                    effectiveTime = appContext?.getString(R.string.alert_effective_now) ?: "Active now",
+                    expiresTime = appContext?.getString(R.string.alert_freeze_expires) ?: "Tomorrow 09:00"
                 )
             )
         }
@@ -345,11 +604,13 @@ class WeatherRepository {
                 SevereWeatherAlert(
                     id = "alert_storm",
                     severity = AlertSeverity.EMERGENCY,
-                    title = "SEVERE THUNDERSTORM / FLOOD ADVISORY",
-                    summary = "Active convective activity bringing rapid rainfall accumulation and cloud-to-ground lightning.",
-                    safetyInstructions = "Seek sturdy indoor shelter immediately. Avoid low-lying flooded roadways: Turn around, don't drown.",
-                    effectiveTime = "Immediate broadcast",
-                    expiresTime = "Until convective cell passes"
+                    title = appContext?.getString(R.string.alert_storm_title) ?: "SEVERE THUNDERSTORM / FLOOD ADVISORY",
+                    summary = appContext?.getString(R.string.alert_storm_summary)
+                        ?: "Active convective activity bringing rapid rainfall accumulation and cloud-to-ground lightning.",
+                    safetyInstructions = appContext?.getString(R.string.alert_storm_instructions)
+                        ?: "Seek sturdy indoor shelter immediately. Avoid low-lying flooded roadways: Turn around, don't drown.",
+                    effectiveTime = appContext?.getString(R.string.alert_storm_effective) ?: "Immediate broadcast",
+                    expiresTime = appContext?.getString(R.string.alert_storm_expires) ?: "Until convective cell passes"
                 )
             )
         }
@@ -360,11 +621,13 @@ class WeatherRepository {
                 SevereWeatherAlert(
                     id = "alert_aqi",
                     severity = AlertSeverity.WATCH,
-                    title = "AIR QUALITY ALERT (${current.aqi} AQI)",
-                    summary = "Particulate pollution levels exceed safe thresholds across the metro area.",
-                    safetyInstructions = "People with respiratory or heart conditions, older adults, and children should avoid prolonged outdoor exertion.",
-                    effectiveTime = "Today",
-                    expiresTime = "Until air dispersion improves"
+                    title = appContext?.getString(R.string.alert_aqi_title, current.aqi) ?: "AIR QUALITY ALERT (${current.aqi} AQI)",
+                    summary = appContext?.getString(R.string.alert_aqi_summary)
+                        ?: "Particulate pollution levels exceed safe thresholds across the metro area.",
+                    safetyInstructions = appContext?.getString(R.string.alert_aqi_instructions)
+                        ?: "People with respiratory or heart conditions, older adults, and children should avoid prolonged outdoor exertion.",
+                    effectiveTime = appContext?.getString(R.string.alert_aqi_effective) ?: "Today",
+                    expiresTime = appContext?.getString(R.string.alert_aqi_expires) ?: "Until air dispersion improves"
                 )
             )
         }
@@ -381,7 +644,9 @@ class WeatherRepository {
 
         if (alerts.isNotEmpty()) {
             alerts.forEach {
-                list.add("EMERGENCY BROADCAST: ${it.title} - ${it.summary}")
+                val emergencyLine = appContext?.getString(R.string.headline_emergency_fmt, it.title, it.summary)
+                    ?: "EMERGENCY BROADCAST: ${it.title} - ${it.summary}"
+                list.add(emergencyLine)
             }
         }
 
@@ -394,16 +659,67 @@ class WeatherRepository {
         val gustKmh = current.windGustsKmh.roundToInt()
         val gustMph = (current.windGustsKmh * 0.621371).roundToInt()
 
-        list.add("CURRENT OBSERVATION: ${current.conditionText.uppercase()}, $tempC°C / $tempF°F (Feels like $feelsC°C / $feelsF°F) with ${current.humidityPercent}% humidity.")
-        list.add("WIND TELEMETRY: Winds traveling from ${getWindCompass(current.windDirectionDeg)} at $windKmh km/h ($windMph mph), peak gusts at $gustKmh km/h ($gustMph mph).")
-        list.add("AIR QUALITY INDEX: US AQI reads ${current.aqi} (${current.aqiStatus}) with PM2.5 at ${String.format(Locale.US, "%.1f", current.pm25)} µg/m³.")
-        list.add("SOLAR TIMING: First light sunrise logged at ${current.sunriseTime} | Sunset dusk horizon scheduled at ${current.sunsetTime}.")
+        val conditionLocalized = (appContext?.getString(getWeatherDescriptionRes(current.weatherCode)) ?: current.conditionText)
+            .uppercase(Locale.getDefault())
+        val aqiStatusLocalized = appContext?.getString(getAqiStatusRes(current.aqi)) ?: current.aqiStatus
+        val pm25Formatted = String.format(Locale.getDefault(), "%.1f", current.pm25)
+        val compass = getWindCompass(current.windDirectionDeg)
+
+        list.add(
+            appContext?.getString(
+                R.string.headline_current_obs_fmt,
+                conditionLocalized,
+                tempC,
+                tempF,
+                feelsC,
+                feelsF,
+                current.humidityPercent
+            ) ?: "CURRENT OBSERVATION: $conditionLocalized, $tempC°C / $tempF°F (Feels like $feelsC°C / $feelsF°F) with ${current.humidityPercent}% humidity."
+        )
+        list.add(
+            appContext?.getString(
+                R.string.headline_wind_fmt,
+                compass,
+                windKmh,
+                windMph,
+                gustKmh,
+                gustMph
+            ) ?: "WIND TELEMETRY: Winds traveling from $compass at $windKmh km/h ($windMph mph), peak gusts at $gustKmh km/h ($gustMph mph)."
+        )
+        list.add(
+            appContext?.getString(
+                R.string.headline_aqi_fmt,
+                current.aqi,
+                aqiStatusLocalized,
+                pm25Formatted
+            ) ?: "AIR QUALITY INDEX: US AQI reads ${current.aqi} ($aqiStatusLocalized) with PM2.5 at $pm25Formatted µg/m³."
+        )
+        list.add(
+            appContext?.getString(
+                R.string.headline_solar_fmt,
+                current.sunriseTime,
+                current.sunsetTime
+            ) ?: "SOLAR TIMING: First light sunrise logged at ${current.sunriseTime} | Sunset dusk horizon scheduled at ${current.sunsetTime}."
+        )
 
         val nextPeriod = periods.firstOrNull { !it.isCurrent } ?: periods.firstOrNull()
         if (nextPeriod != null) {
             val pC = nextPeriod.tempC.roundToInt()
             val pF = (nextPeriod.tempC * 9 / 5 + 32).roundToInt()
-            list.add("OUTLOOK FOR ${nextPeriod.periodName.uppercase()}: Expecting ${nextPeriod.conditionText} near $pC°C / $pF°F with ${nextPeriod.popPercent}% probability of precipitation.")
+            val periodNameLocalized = (appContext?.getString(nextPeriod.periodNameRes) ?: nextPeriod.periodName)
+                .uppercase(Locale.getDefault())
+            val periodCondLocalized = appContext?.getString(getWeatherDescriptionRes(nextPeriod.weatherCode))
+                ?: nextPeriod.conditionText
+            list.add(
+                appContext?.getString(
+                    R.string.headline_outlook_fmt,
+                    periodNameLocalized,
+                    periodCondLocalized,
+                    pC,
+                    pF,
+                    nextPeriod.popPercent
+                ) ?: "OUTLOOK FOR $periodNameLocalized: Expecting $periodCondLocalized near $pC°C / $pF°F with ${nextPeriod.popPercent}% probability of precipitation."
+            )
         }
 
         return list
@@ -453,7 +769,7 @@ class WeatherRepository {
         }
 
         return AstronomicalData(
-            moonPhaseName = phaseName,
+            moonPhaseName = appContext?.getString(phaseRes) ?: phaseName,
             moonIlluminationPercent = illumination,
             daysUntilFullMoon = daysUntilFull,
             sunriseTime = sunrise,
@@ -463,51 +779,160 @@ class WeatherRepository {
         )
     }
 
-    fun getMeteorologicalVodDispatches(): List<VodStory> = listOf(
-        VodStory(
-            id = "vod_1",
-            category = "Severe Weather",
-            title = "Inside the Eye of a Category 5 Atlantic Super-Storm",
-            presenter = "Severe Weather Operations Center",
-            duration = "14:20",
-            timestamp = "Field Report 16:30",
-            description = "High-definition Doppler dissection of atmospheric barometric collapses and eyewall mesovortices.",
-            videoUrl = "",
-            accentColorHex = 0xFFDC2626
-        ),
-        VodStory(
-            id = "vod_2",
-            category = "Earth Science",
-            title = "Jet Stream Fractures & Arctic Polar Vortex Dynamics",
-            presenter = "Atmospheric Dynamics Division",
-            duration = "09:45",
-            timestamp = "Synoptic Briefing",
-            description = "How Rossby wave undulations trigger unprecedented temperature swings across northern temperate latitudes.",
-            videoUrl = "",
-            accentColorHex = 0xFF0284C7
-        ),
-        VodStory(
-            id = "vod_3",
-            category = "Forecasts",
-            title = "Continental 30-Day Precipitation & Drought Outlook",
-            presenter = "Continental Climatology Center",
-            duration = "08:12",
-            timestamp = "Long-Range Model",
-            description = "Global climate indices and sea-surface anomalies signaling major multi-week rain systems.",
-            videoUrl = "",
-            accentColorHex = 0xFF10B981
-        ),
-        VodStory(
-            id = "vod_4",
-            category = "Climate & Nature",
-            title = "Noctilucent Mesospheric Clouds: Night Shimmers Explored",
-            presenter = "Mesospheric Research Laboratory",
-            duration = "11:55",
-            timestamp = "Upper Atmosphere Study",
-            description = "Spectacular ice crystal formations dancing on the threshold of space 80 kilometers above Earth.",
-            videoUrl = "",
-            accentColorHex = 0xFF8B5CF6
+    /**
+     * Synthesizes live, location-specific meteorological VOD dispatches directly from real
+     * Open-Meteo telemetry (`current` and `pkg`), with zero static sample data.
+     */
+    fun buildLiveVodDispatches(
+        location: CityLocation,
+        current: CurrentWeather,
+        pkg: FullWeatherPackage,
+        unitSystem: UnitSystem
+    ): List<VodStory> {
+        val isMetric = unitSystem == UnitSystem.METRIC
+        val kmhUnit = appContext?.getString(R.string.unit_kmh) ?: "km/h"
+        val mphUnit = appContext?.getString(R.string.unit_mph) ?: "mph"
+        val hpaUnit = appContext?.getString(R.string.unit_hpa) ?: "hPa"
+        val inhgUnit = appContext?.getString(R.string.unit_inhg) ?: "inHg"
+        val kmUnit = appContext?.getString(R.string.unit_km) ?: "km"
+        val miUnit = appContext?.getString(R.string.unit_mi) ?: "mi"
+        val mmUnit = appContext?.getString(R.string.unit_mm) ?: "mm"
+        val inUnit = appContext?.getString(R.string.unit_in) ?: "in"
+
+        fun fmtTemp(c: Double): String =
+            if (isMetric) "${c.roundToInt()}°C" else "${(c * 9.0 / 5.0 + 32.0).roundToInt()}°F"
+        fun fmtWind(kmh: Double): String =
+            if (isMetric) "${kmh.roundToInt()} $kmhUnit" else "${(kmh * 0.621371).roundToInt()} $mphUnit"
+        fun fmtPress(hpa: Double): String =
+            if (isMetric) "${hpa.roundToInt()} $hpaUnit" else String.format(Locale.getDefault(), "%.2f %s", hpa * 0.02953, inhgUnit)
+        fun fmtVis(km: Double): String =
+            if (isMetric) "${km.roundToInt()} $kmUnit" else "${(km * 0.621371).roundToInt()} $miUnit"
+        fun fmtPrecip(mm: Double): String =
+            if (isMetric) String.format(Locale.getDefault(), "%.1f %s", mm, mmUnit)
+            else String.format(Locale.getDefault(), "%.2f %s", mm * 0.0393701, inUnit)
+
+        val nowTimeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        val timestampLabel = appContext?.getString(R.string.vod_live_timestamp_fmt, nowTimeStr)
+            ?: "Live Telemetry • $nowTimeStr"
+
+        val conditionLocalized = appContext?.getString(getWeatherDescriptionRes(current.weatherCode))
+            ?: current.conditionText
+        val aqiStatusLocalized = appContext?.getString(getAqiStatusRes(current.aqi))
+            ?: current.aqiStatus
+        val moonLocalized = appContext?.getString(pkg.astronomical.moonPhaseResId)
+            ?: pkg.astronomical.moonPhaseName
+
+        val sevenDays = pkg.dailyDays.take(7)
+        val minWeekC = sevenDays.minOfOrNull { it.minTempC } ?: current.tempC
+        val maxWeekC = sevenDays.maxOfOrNull { it.maxTempC } ?: current.tempC
+        val totalWeekRainMm = sevenDays.sumOf { it.rainMm }
+
+        val catSevere = appContext?.getString(R.string.vod_cat_severe) ?: "Severe Weather"
+        val catForecasts = appContext?.getString(R.string.vod_cat_forecasts) ?: "Forecasts"
+        val catEarth = appContext?.getString(R.string.vod_cat_earth_sci) ?: "Earth Science"
+        val catClimate = appContext?.getString(R.string.vod_cat_climate) ?: "Climate & Nature"
+
+        return listOf(
+            VodStory(
+                id = "vod_severe_${location.name.lowercase(Locale.ROOT)}",
+                category = catSevere,
+                title = appContext?.getString(R.string.vod_live_severe_title, location.name)
+                    ?: "${location.name} Live Doppler & Convective Risk Analysis",
+                presenter = appContext?.getString(R.string.vod_live_presenter_ops)
+                    ?: "Horizon Doppler Operations Desk",
+                duration = "06:40",
+                timestamp = timestampLabel,
+                description = appContext?.getString(
+                    R.string.vod_live_severe_desc,
+                    location.name,
+                    conditionLocalized,
+                    fmtWind(current.windSpeedKmh),
+                    fmtWind(current.windGustsKmh),
+                    fmtPress(current.pressureHpa)
+                ) ?: "Real-time reflectivity sweep over ${location.name} tracking $conditionLocalized with surface winds at ${fmtWind(current.windSpeedKmh)} (peak gusts ${fmtWind(current.windGustsKmh)}) and barometric pressure at ${fmtPress(current.pressureHpa)}.",
+                videoUrl = "",
+                accentColorHex = 0xFFDC2626
+            ),
+            VodStory(
+                id = "vod_forecasts_${location.name.lowercase(Locale.ROOT)}",
+                category = catForecasts,
+                title = appContext?.getString(R.string.vod_live_forecast_title, location.name)
+                    ?: "${location.name} 7-Day Synoptic Temperature & Precipitation Outlook",
+                presenter = appContext?.getString(R.string.vod_live_presenter_synoptic)
+                    ?: "Synoptic Forecasting Division",
+                duration = "05:15",
+                timestamp = timestampLabel,
+                description = appContext?.getString(
+                    R.string.vod_live_forecast_desc,
+                    location.name,
+                    fmtTemp(minWeekC),
+                    fmtTemp(maxWeekC),
+                    fmtPrecip(totalWeekRainMm)
+                ) ?: "Multi-day numerical forecast for ${location.name} projecting temperatures between ${fmtTemp(minWeekC)} and ${fmtTemp(maxWeekC)} with ${fmtPrecip(totalWeekRainMm)} total 7-day precipitation accumulation.",
+                videoUrl = "",
+                accentColorHex = 0xFF10B981
+            ),
+            VodStory(
+                id = "vod_earth_${location.name.lowercase(Locale.ROOT)}",
+                category = catEarth,
+                title = appContext?.getString(R.string.vod_live_earth_title, location.name)
+                    ?: "${location.name} Boundary Layer Wind Shear & Barometric Profile",
+                presenter = appContext?.getString(R.string.vod_live_presenter_dynamics)
+                    ?: "Atmospheric Dynamics Lab",
+                duration = "07:30",
+                timestamp = timestampLabel,
+                description = appContext?.getString(
+                    R.string.vod_live_earth_desc,
+                    location.name,
+                    current.humidityPercent,
+                    fmtTemp(current.dewPointC),
+                    fmtVis(current.visibilityKm),
+                    current.cloudCoverPercent
+                ) ?: "Micro-telemetry breakdown of ${location.name} atmospheric column: ${current.humidityPercent}% relative humidity, dew point ${fmtTemp(current.dewPointC)}, visibility ${fmtVis(current.visibilityKm)}, and ${current.cloudCoverPercent}% cloud cover.",
+                videoUrl = "",
+                accentColorHex = 0xFF0284C7
+            ),
+            VodStory(
+                id = "vod_climate_${location.name.lowercase(Locale.ROOT)}",
+                category = catClimate,
+                title = appContext?.getString(R.string.vod_live_climate_title, location.name)
+                    ?: "${location.name} Solar Radiation, Lunar Phase & Air Quality Report",
+                presenter = appContext?.getString(R.string.vod_live_presenter_climate)
+                    ?: "Environmental & Air Quality Desk",
+                duration = "04:50",
+                timestamp = timestampLabel,
+                description = appContext?.getString(
+                    R.string.vod_live_climate_desc,
+                    location.name,
+                    current.aqi,
+                    aqiStatusLocalized,
+                    String.format(Locale.getDefault(), "%.1f", current.pm25),
+                    current.uvIndex.roundToInt(),
+                    current.sunriseTime,
+                    current.sunsetTime,
+                    moonLocalized
+                ) ?: "Environmental dispatch for ${location.name}: US AQI at ${current.aqi} ($aqiStatusLocalized, PM2.5 ${String.format(Locale.getDefault(), "%.1f", current.pm25)} µg/m³), UV index ${current.uvIndex.roundToInt()}/11, sunrise ${current.sunriseTime}, sunset ${current.sunsetTime} ($moonLocalized).",
+                videoUrl = "",
+                accentColorHex = 0xFF8B5CF6
+            )
         )
+    }
+
+    fun buildLiveBroadcastSchedule(
+        location: CityLocation,
+        current: CurrentWeather,
+        pkg: FullWeatherPackage,
+        vodStories: List<VodStory>,
+        unitSystem: UnitSystem,
+        nowMs: Long = System.currentTimeMillis()
+    ): List<BroadcastScheduleSlot> = BroadcastScheduleGenerator.buildLiveBroadcastSchedule(
+        context = appContext,
+        location = location,
+        current = current,
+        pkg = pkg,
+        vodStories = vodStories,
+        unitSystem = unitSystem,
+        nowMs = nowMs
     )
 
     companion object {

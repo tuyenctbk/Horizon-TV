@@ -8,9 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.R
+import com.example.data.repository.WeatherRepository
 import com.example.ui.theme.*
 
 @Composable
@@ -19,6 +21,7 @@ fun WeatherConditionIcon(
     isDay: Boolean = true,
     size: Dp = 32.dp,
     tint: Color? = null,
+    contentDescriptionOverride: String? = null,
     modifier: Modifier = Modifier
 ) {
     val (icon, defaultColor) = when (weatherCode) {
@@ -36,10 +39,15 @@ fun WeatherConditionIcon(
         else -> Pair(Icons.Default.WbCloudy, HorizonSky)
     }
 
+    val resolvedDescription = contentDescriptionOverride
+        ?: stringResource(WeatherRepository.getWeatherDescriptionRes(weatherCode))
+
     Icon(
         imageVector = icon,
-        contentDescription = stringResource(R.string.weather_condition_icon),
+        contentDescription = resolvedDescription,
         tint = tint ?: defaultColor,
-        modifier = modifier.size(size)
+        modifier = modifier
+            .size(size)
+            .semantics { contentDescription = resolvedDescription }
     )
 }

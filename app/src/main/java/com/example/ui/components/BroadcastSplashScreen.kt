@@ -22,6 +22,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,6 +75,9 @@ fun BroadcastSplashScreen(
         listOf(step1, step2, step3, step4)
     }
 
+    val networkTitle = stringResource(R.string.splash_network_title)
+    val connectingLabel = stringResource(R.string.loading_connecting)
+
     LaunchedEffect(isLoading) {
         if (isLoading) {
             while (true) {
@@ -109,7 +117,11 @@ fun BroadcastSplashScreen(
                     .border(2.dp, HorizonCyan.copy(alpha = 0.4f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .semantics { contentDescription = networkTitle }
+                ) {
                     val cx = size.width / 2f
                     val cy = size.height / 2f
                     val maxR = size.minDimension / 2f - 8.dp.toPx()
@@ -196,11 +208,12 @@ fun BroadcastSplashScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = stringResource(R.string.splash_network_title),
+                text = networkTitle,
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp
+                letterSpacing = 2.sp,
+                modifier = Modifier.semantics { heading() }
             )
 
             Text(
@@ -219,7 +232,9 @@ fun BroadcastSplashScreen(
                     shape = RoundedCornerShape(16.dp),
                     color = Color(0x33DC2626),
                     border = androidx.compose.foundation.BorderStroke(1.dp, SevereRed),
-                    modifier = Modifier.fillMaxWidth(0.85f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .semantics { liveRegion = LiveRegionMode.Assertive }
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -236,7 +251,8 @@ fun BroadcastSplashScreen(
                             text = stringResource(R.string.error_signal_interrupted),
                             color = Color.White,
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -249,7 +265,8 @@ fun BroadcastSplashScreen(
                         Button(
                             onClick = onRetry,
                             colors = ButtonDefaults.buttonColors(containerColor = SleekBluePrimary),
-                            shape = RoundedCornerShape(percent = 50)
+                            shape = RoundedCornerShape(percent = 50),
+                            modifier = Modifier.heightIn(min = 48.dp)
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.common_refresh), tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
@@ -261,7 +278,12 @@ fun BroadcastSplashScreen(
                 // Live Sync Status
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth(0.8f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .semantics(mergeDescendants = true) {
+                            liveRegion = LiveRegionMode.Polite
+                            contentDescription = "${syncSteps[syncStep]}. $connectingLabel"
+                        }
                 ) {
                     LinearProgressIndicator(
                         color = HorizonCyan,
@@ -270,6 +292,7 @@ fun BroadcastSplashScreen(
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp))
+                            .semantics { contentDescription = connectingLabel }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
@@ -283,7 +306,7 @@ fun BroadcastSplashScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = stringResource(R.string.loading_connecting),
+                        text = connectingLabel,
                         color = TextSecondarySilver,
                         fontSize = 10.sp
                     )

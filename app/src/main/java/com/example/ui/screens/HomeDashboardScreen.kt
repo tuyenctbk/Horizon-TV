@@ -20,6 +20,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,8 +36,9 @@ import com.example.data.repository.FullWeatherPackage
 import com.example.data.repository.WeatherRepository
 import com.example.ui.components.AstronomicalWidget
 import com.example.ui.components.RealTimeTelemetryVisualizer
+import com.example.ui.components.LottieWeatherAnimation
 import com.example.ui.components.RechartsFiveDayForecastView
-import com.example.ui.components.WeatherConditionIcon
+import com.example.ui.components.SevenDayForecastComponent
 import com.example.ui.theme.*
 import kotlin.math.roundToInt
 
@@ -49,6 +56,7 @@ fun HomeDashboardScreen(
     onOpenAlertModal: (SevereWeatherAlert) -> Unit,
     onRemoveCity: (CityLocation) -> Unit = {},
     onDismissAlert: (SevereWeatherAlert) -> Unit = {},
+    isOfflineMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -60,71 +68,19 @@ fun HomeDashboardScreen(
             .padding(16.dp)
     ) {
         if (currentWeather == null || weatherPackage == null) {
+            val loadingDesc = stringResource(R.string.seven_day_loading)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = HorizonCyan)
+                CircularProgressIndicator(
+                    color = HorizonCyan,
+                    modifier = Modifier.semantics { contentDescription = loadingDesc }
+                )
             }
             return
-        }
-
-        // Active Emergency Alert Ticker (if present)
-        if (weatherPackage.alerts.isNotEmpty()) {
-            val alert = weatherPackage.alerts.first()
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = SleekRedContainer,
-                border = androidx.compose.foundation.BorderStroke(1.dp, SleekRedText.copy(alpha = 0.3f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenAlertModal(alert) }
-                    .padding(bottom = 12.dp)
-                    .testTag("emergency_alert_banner")
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.common_warning), tint = SleekRedText, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "${stringResource(R.string.emergency_broadcast)}: ${alert.title}",
-                            color = SleekRedText,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                        Text(
-                            text = alert.summary,
-                            color = SleekTextPrimary,
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.home_view_protocol),
-                        color = SleekBluePrimary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(
-                        onClick = { onDismissAlert(alert) },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.emergency_dismiss),
-                            tint = SleekRedText,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
         }
 
         // Primary Grid: Left = Live TV Hero Player Card, Right = Micro-Climate 36H Snapshot
@@ -175,6 +131,105 @@ fun HomeDashboardScreen(
             currentWeather = currentWeather,
             unitSystem = unitSystem,
             hourlyPoints = weatherPackage.hourlyPoints
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // AI Meteorologist Broadcast Desk Spotlight Card
+        val aiCardTitle = stringResource(R.string.home_ai_card_title)
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = SleekSurface,
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, SleekBluePrimary.copy(alpha = 0.3f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                }
+                .clickable(onClickLabel = aiCardTitle) { onNavigate(TVScreen.AI_DESK) }
+                .testTag("home_ai_meteorologist_card")
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(SleekBlueContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = stringResource(R.string.home_ai_card_title),
+                            tint = SleekBluePrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Surface(
+                            shape = RoundedCornerShape(percent = 50),
+                            color = SleekGreenContainer
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_ai_card_badge),
+                                color = SleekGreenText,
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.home_ai_card_title),
+                            color = SleekTextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = stringResource(R.string.home_ai_card_desc),
+                            color = SleekTextSecondary,
+                            fontSize = 11.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Surface(
+                    shape = RoundedCornerShape(percent = 50),
+                    color = SleekBluePrimary
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_ai_card_cta),
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 7-Day Weather Forecast Component (Open-Meteo Public API)
+        SevenDayForecastComponent(
+            location = currentLocation,
+            unitSystem = unitSystem,
+            currentTempC = currentWeather.tempC,
+            initialForecast = weatherPackage.dailyDays,
+            isOfflineMode = isOfflineMode
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -286,7 +341,8 @@ fun HomeDashboardScreen(
                         color = SleekTextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
+                        modifier = Modifier.semantics { heading() }
                     )
                 }
                 Text(
@@ -294,20 +350,24 @@ fun HomeDashboardScreen(
                     color = SleekBluePrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onNavigate(TVScreen.SEARCH) }
+                    modifier = Modifier
+                        .semantics { role = Role.Button }
+                        .clickable { onNavigate(TVScreen.SEARCH) }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             if (favoriteCities.isEmpty()) {
+                val emptyFavTitle = stringResource(R.string.home_empty_favorites_title)
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = SleekSurfaceSecondary,
                     border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onNavigate(TVScreen.SEARCH) }
+                        .semantics(mergeDescendants = true) { role = Role.Button }
+                        .clickable(onClickLabel = emptyFavTitle) { onNavigate(TVScreen.SEARCH) }
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -320,12 +380,12 @@ fun HomeDashboardScreen(
                                 .background(SleekBlueContainer),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.AddLocationAlt, contentDescription = null, tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.AddLocationAlt, contentDescription = emptyFavTitle, tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = stringResource(R.string.home_empty_favorites_title),
+                                text = emptyFavTitle,
                                 color = SleekTextPrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
@@ -336,7 +396,7 @@ fun HomeDashboardScreen(
                                 fontSize = 10.sp
                             )
                         }
-                        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.ChevronRight, contentDescription = emptyFavTitle, tint = SleekBluePrimary, modifier = Modifier.size(18.dp))
                     }
                 }
             } else {
@@ -356,6 +416,10 @@ fun HomeDashboardScreen(
                                 if (isSelected) SleekBluePrimary else SleekBorder
                             ),
                             modifier = Modifier
+                                .semantics {
+                                    role = Role.Button
+                                    selected = isSelected
+                                }
                                 .clickable { onSelectCity(city) }
                                 .width(180.dp)
                                 .testTag("fav_city_${city.name}")
@@ -395,10 +459,15 @@ fun HomeDashboardScreen(
                                         )
                                     }
                                 }
+                                val regionLabel = listOf(city.region.take(14), city.countryCode)
+                                    .filter { it.isNotBlank() }
+                                    .joinToString(" • ")
                                 Text(
-                                    text = "${city.region.take(12)} • ${city.countryCode}",
+                                    text = regionLabel,
                                     color = if (isSelected) SleekBluePrimary else SleekTextSecondary,
-                                    fontSize = 10.sp
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
@@ -437,14 +506,17 @@ fun HomeDashboardScreen(
                     color = SleekTextPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.semantics { heading() }
                 )
                 Text(
                     text = stringResource(R.string.home_all_stories),
                     color = SleekBluePrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigate(TVScreen.VOD) }
+                    modifier = Modifier
+                        .semantics { role = Role.Button }
+                        .clickable { onNavigate(TVScreen.VOD) }
                 )
             }
 
@@ -460,7 +532,8 @@ fun HomeDashboardScreen(
                             .weight(1f)
                             .background(SleekSurfaceSecondary, RoundedCornerShape(16.dp))
                             .border(1.dp, SleekBorder, RoundedCornerShape(16.dp))
-                            .clickable { onPlayVodStory(story) }
+                            .semantics(mergeDescendants = true) { role = Role.Button }
+                            .clickable(onClickLabel = story.title) { onPlayVodStory(story) }
                             .padding(14.dp)
                     ) {
                         Surface(
@@ -523,8 +596,14 @@ private fun ActionShortcutCard(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = SleekSurface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
-        modifier = modifier.clickable { onClick() }
+        border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.25f)),
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                contentDescription = "$title, $subtitle"
+            }
+            .clickable(onClickLabel = title) { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -532,23 +611,23 @@ private fun ActionShortcutCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = SleekBlueContainer,
-                modifier = Modifier.size(42.dp)
+                color = accentColor.copy(alpha = 0.14f),
+                modifier = Modifier.size(44.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = title, tint = SleekOnBlueContainer, modifier = Modifier.size(22.dp))
+                    Icon(icon, contentDescription = title, tint = accentColor, modifier = Modifier.size(22.dp))
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = RoundedCornerShape(percent = 50), color = SleekBlueContainer) {
+                    Surface(shape = RoundedCornerShape(percent = 50), color = accentColor.copy(alpha = 0.14f)) {
                         Text(
                             text = badge,
-                            color = SleekOnBlueContainer,
+                            color = accentColor,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                         )
                     }
                 }
@@ -612,6 +691,7 @@ private fun LiveTvHeroCard(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        val switchBroadcastDesc = stringResource(R.string.home_switch_broadcast)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -619,14 +699,17 @@ private fun LiveTvHeroCard(
                 .clip(RoundedCornerShape(16.dp))
                 .background(SleekDarkContainer)
                 .border(1.dp, Color(0xFF333333), RoundedCornerShape(16.dp))
-                .clickable { onNavigate(TVScreen.LIVE_TV) },
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                }
+                .clickable(onClickLabel = switchBroadcastDesc) { onNavigate(TVScreen.LIVE_TV) },
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(12.dp)
             ) {
-                WeatherConditionIcon(weatherCode = currentWeather.weatherCode, isDay = currentWeather.isDay, size = 48.dp)
+                LottieWeatherAnimation(weatherCode = currentWeather.weatherCode, isDay = currentWeather.isDay, size = 48.dp)
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.home_meteorologist_duty),
@@ -711,7 +794,8 @@ private fun MicroClimateSnapshotCard(
                 color = SleekTextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.semantics { heading() }
             )
             Surface(
                 shape = RoundedCornerShape(4.dp),
@@ -766,7 +850,7 @@ private fun MicroClimateSnapshotCard(
                 )
             }
 
-            WeatherConditionIcon(
+            LottieWeatherAnimation(
                 weatherCode = currentWeather.weatherCode,
                 isDay = currentWeather.isDay,
                 size = 60.dp
@@ -776,8 +860,10 @@ private fun MicroClimateSnapshotCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val windUnit = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_kmh) else stringResource(R.string.unit_mph)
             val windVal = if (unitSystem == UnitSystem.METRIC) currentWeather.windSpeedKmh.roundToInt()
@@ -839,7 +925,7 @@ private fun MicroClimateSnapshotCard(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    WeatherConditionIcon(weatherCode = period.weatherCode, size = 18.dp)
+                    LottieWeatherAnimation(weatherCode = period.weatherCode, size = 18.dp)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = periodTemp,

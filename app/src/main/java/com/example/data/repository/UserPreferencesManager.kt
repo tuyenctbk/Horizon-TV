@@ -29,6 +29,18 @@ class UserPreferencesManager(context: Context) {
         private const val KEY_LAST_SHARE_PROMPT_MS = "key_last_share_prompt_ms"
         private const val KEY_SHARE_DISMISS_COUNT = "key_share_dismiss_count"
         private const val KEY_LAST_LOCATION = "key_last_location"
+        private const val KEY_BG_ALERTS_ENABLED = "key_bg_alerts_enabled"
+        private const val KEY_BG_SYNC_INTERVAL_MIN = "key_bg_sync_interval_min"
+        private const val KEY_LAST_BG_SYNC_MS = "key_last_bg_sync_ms"
+        private const val KEY_LAST_BG_SYNC_SUMMARY = "key_last_bg_sync_summary"
+        private const val KEY_NOTIFIED_ALERT_PREFIX = "key_notified_alert_"
+        private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
+    }
+
+    fun hasCompletedOnboarding(): Boolean = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, completed).apply()
     }
 
     fun incrementLaunchCount(): Int {
@@ -214,5 +226,46 @@ class UserPreferencesManager(context: Context) {
             prefs.edit().putString(KEY_LAST_LOCATION, obj.toString()).apply()
         } catch (_: Exception) {
         }
+    }
+
+    fun isBackgroundAlertsEnabled(): Boolean = prefs.getBoolean(KEY_BG_ALERTS_ENABLED, true)
+
+    fun setBackgroundAlertsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_BG_ALERTS_ENABLED, enabled).apply()
+    }
+
+    fun getBackgroundSyncIntervalMinutes(): Int =
+        prefs.getInt(KEY_BG_SYNC_INTERVAL_MIN, 30).coerceAtLeast(15)
+
+    fun setBackgroundSyncIntervalMinutes(minutes: Int) {
+        prefs.edit().putInt(KEY_BG_SYNC_INTERVAL_MIN, minutes.coerceAtLeast(15)).apply()
+    }
+
+    fun getLastBackgroundSyncMs(): Long = prefs.getLong(KEY_LAST_BG_SYNC_MS, 0L)
+
+    fun getLastBackgroundSyncSummary(): String =
+        prefs.getString(KEY_LAST_BG_SYNC_SUMMARY, "") ?: ""
+
+    fun recordBackgroundSyncResult(timestampMs: Long, summary: String) {
+        prefs.edit()
+            .putLong(KEY_LAST_BG_SYNC_MS, timestampMs)
+            .putString(KEY_LAST_BG_SYNC_SUMMARY, summary)
+            .apply()
+    }
+
+    fun shouldNotifySevereAlert(
+        alertKey: String,
+        cooldownMs: Long = 3L * 60L * 60L * 1000L,
+        nowMs: Long = System.currentTimeMillis()
+    ): Boolean {
+        val lastNotified = prefs.getLong("$KEY_NOTIFIED_ALERT_PREFIX$alertKey", 0L)
+        return lastNotified == 0L || (nowMs - lastNotified) >= cooldownMs
+    }
+
+    fun markSevereAlertNotified(
+        alertKey: String,
+        nowMs: Long = System.currentTimeMillis()
+    ) {
+        prefs.edit().putLong("$KEY_NOTIFIED_ALERT_PREFIX$alertKey", nowMs).apply()
     }
 }

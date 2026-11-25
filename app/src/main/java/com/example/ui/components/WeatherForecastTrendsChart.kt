@@ -17,6 +17,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +37,10 @@ fun WeatherForecastTrendsChart(
 ) {
     if (hourlyPoints.isEmpty()) return
 
+    val trendsTitle = stringResource(R.string.trends_title)
+    val tempLegend = stringResource(if (unitSystem == UnitSystem.METRIC) R.string.trends_temp_metric else R.string.trends_temp_imperial)
+    val rainLegend = stringResource(R.string.trends_rain_pop)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -47,17 +54,18 @@ fun WeatherForecastTrendsChart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.trends_title),
+                text = trendsTitle,
                 color = SleekTextPrimary,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(8.dp).background(SleekBluePrimary, CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = stringResource(if (unitSystem == UnitSystem.METRIC) R.string.trends_temp_metric else R.string.trends_temp_imperial),
+                        text = tempLegend,
                         color = SleekBluePrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
@@ -67,7 +75,7 @@ fun WeatherForecastTrendsChart(
                     Box(modifier = Modifier.size(8.dp).background(SleekBlueContainer, CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = stringResource(R.string.trends_rain_pop),
+                        text = rainLegend,
                         color = SleekTextSecondary,
                         fontSize = 11.sp
                     )
@@ -84,11 +92,13 @@ fun WeatherForecastTrendsChart(
         val minT = (temps.minOrNull() ?: 15.0) - 2.0
         val maxT = (temps.maxOrNull() ?: 25.0) + 2.0
         val tRange = (maxT - minT).coerceAtLeast(1.0)
+        val chartA11yDesc = "$trendsTitle: $tempLegend, $rainLegend"
 
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(140.dp)
+                .semantics { contentDescription = chartA11yDesc }
         ) {
             val w = size.width
             val h = size.height

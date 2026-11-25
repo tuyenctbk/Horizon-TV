@@ -18,6 +18,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,10 +64,16 @@ fun VirtualTVRemote(
                         color = SleekTextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
+                        modifier = Modifier.semantics { heading() }
                     )
                 }
-                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .size(28.dp)
+                ) {
                     Icon(Icons.Default.Close, contentDescription = stringResource(R.string.remote_close), tint = SleekTextSecondary)
                 }
             }
@@ -107,17 +118,22 @@ fun VirtualTVRemote(
                     onClick = { onDirectionClick("RIGHT") }
                 )
                 // OK / SELECT
+                val okLabel = stringResource(R.string.remote_ok)
                 Box(
                     modifier = Modifier
                         .size(54.dp)
                         .clip(CircleShape)
                         .background(SleekBluePrimary)
-                        .clickable { onDirectionClick("OK") }
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = okLabel
+                        }
+                        .clickable(onClickLabel = okLabel) { onDirectionClick("OK") }
                         .testTag("remote_ok_button"),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.remote_ok),
+                        text = okLabel,
                         color = Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -178,7 +194,9 @@ private fun RemoteDirectionButton(
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.size(40.dp)
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .size(40.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -197,7 +215,13 @@ private fun RemoteQuickAction(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                contentDescription = label
+            }
+            .clickable(onClickLabel = label) { onClick() }
     ) {
         Surface(
             shape = CircleShape,

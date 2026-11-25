@@ -1,6 +1,9 @@
 package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,11 +23,20 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.data.model.CityLocation
 import com.example.data.model.TVScreen
@@ -60,6 +72,15 @@ fun TVHeader(
         }
     }
 
+    val activeAlertLabel = stringResource(R.string.header_active_alert)
+    val unitTitleLabel = stringResource(R.string.settings_units_title)
+    val unitActiveLabel = if (unitSystem == UnitSystem.METRIC) {
+        stringResource(R.string.unit_toggle_metric)
+    } else {
+        stringResource(R.string.unit_toggle_imperial)
+    }
+    val remoteLabel = stringResource(R.string.header_remote)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -68,144 +89,304 @@ fun TVHeader(
             .border(width = 1.dp, color = SleekBorder)
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        // Top Broadcast Status Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Station Branding
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(SleekBlueContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.CloudQueue,
-                        contentDescription = stringResource(R.string.brand_title),
-                        tint = SleekOnBlueContainer,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.brand_title),
-                            color = SleekTextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.3).sp
-                        )
-                        Text(
-                            text = " " + stringResource(R.string.brand_subtitle),
-                            color = SleekBluePrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = SleekGreenContainer
-                        ) {
-                            Text(
-                                text = stringResource(R.string.badge_live_24_7),
-                                color = SleekGreenText,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                    Text(
-                        text = stringResource(R.string.header_telemetry_status),
-                        color = SleekTextSecondary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-
-            // Location Tag & Alert Indicator
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AnimatedVisibility(visible = hasAlerts) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = SleekRedContainer,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SleekRedText.copy(alpha = 0.3f)),
-                        modifier = Modifier
-                            .clickable { onOpenAlerts() }
-                            .padding(end = 12.dp)
+        // Top Broadcast Status Row (Responsive for compact phones vs tablets/TV)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val isCompact = maxWidth < 580.dp
+            if (isCompact) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics(mergeDescendants = true) { heading() }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(SleekBlueContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.CloudQueue,
+                                    contentDescription = stringResource(R.string.brand_title),
+                                    tint = SleekOnBlueContainer,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = stringResource(R.string.brand_title),
+                                    color = SleekTextPrimary,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.3).sp
+                                )
+                                Text(
+                                    text = " " + stringResource(R.string.brand_subtitle),
+                                    color = SleekBluePrimary,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = SleekGreenContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.badge_live_24_7),
+                                        color = SleekGreenText,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = currentTimeString,
+                            color = SleekBluePrimary,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics(mergeDescendants = true) { }
                         ) {
                             Icon(
-                                Icons.Default.Warning,
-                                contentDescription = stringResource(R.string.header_active_alert),
-                                tint = SleekRedText,
+                                Icons.Default.LocationOn,
+                                contentDescription = stringResource(R.string.header_current_location),
+                                tint = SleekBluePrimary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = stringResource(R.string.header_active_alert),
-                                color = SleekRedText,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black
+                                text = "${currentLocation.name.uppercase()}${if (currentLocation.region.isNotBlank()) ", ${currentLocation.region.uppercase()}" else ""}",
+                                color = SleekTextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
                             )
+                            if (currentLocation.isGpsDetected) {
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = SleekGreenContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.badge_gps),
+                                        color = SleekGreenText,
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        AnimatedVisibility(visible = hasAlerts) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = SleekRedContainer,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, SleekRedText.copy(alpha = 0.3f)),
+                                modifier = Modifier
+                                    .clickable(role = Role.Button) { onOpenAlerts() }
+                                    .padding(start = 8.dp)
+                                    .semantics(mergeDescendants = true) {
+                                        role = Role.Button
+                                        liveRegion = LiveRegionMode.Assertive
+                                        contentDescription = activeAlertLabel
+                                    }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = activeAlertLabel,
+                                        tint = SleekRedText,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = activeAlertLabel,
+                                        color = SleekRedText,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = stringResource(R.string.header_current_location),
-                    tint = SleekBluePrimary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${currentLocation.name.uppercase()}${if (currentLocation.region.isNotBlank()) ", ${currentLocation.region.uppercase()}" else ""}",
-                    color = SleekTextPrimary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                if (currentLocation.isGpsDetected) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = SleekGreenContainer
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Station Branding
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.semantics(mergeDescendants = true) { heading() }
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(SleekBlueContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.CloudQueue,
+                                contentDescription = stringResource(R.string.brand_title),
+                                tint = SleekOnBlueContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = stringResource(R.string.brand_title),
+                                    color = SleekTextPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.3).sp
+                                )
+                                Text(
+                                    text = " " + stringResource(R.string.brand_subtitle),
+                                    color = SleekBluePrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = SleekGreenContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.badge_live_24_7),
+                                        color = SleekGreenText,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = stringResource(R.string.header_telemetry_status),
+                                color = SleekTextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+
+                    // Location Tag & Alert Indicator
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AnimatedVisibility(visible = hasAlerts) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = SleekRedContainer,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, SleekRedText.copy(alpha = 0.3f)),
+                                modifier = Modifier
+                                    .clickable(role = Role.Button) { onOpenAlerts() }
+                                    .padding(end = 12.dp)
+                                    .semantics(mergeDescendants = true) {
+                                        role = Role.Button
+                                        liveRegion = LiveRegionMode.Assertive
+                                        contentDescription = activeAlertLabel
+                                    }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = activeAlertLabel,
+                                        tint = SleekRedText,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = activeAlertLabel,
+                                        color = SleekRedText,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                            }
+                        }
+
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = stringResource(R.string.header_current_location),
+                            tint = SleekBluePrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = stringResource(R.string.badge_gps),
-                            color = SleekGreenText,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            text = "${currentLocation.name.uppercase()}${if (currentLocation.region.isNotBlank()) ", ${currentLocation.region.uppercase()}" else ""}",
+                            color = SleekTextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (currentLocation.isGpsDetected) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = SleekGreenContainer
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.badge_gps),
+                                    color = SleekGreenText,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // Digital Clock
+                        Text(
+                            text = currentTimeString,
+                            color = SleekBluePrimary,
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = currentDateString,
+                            color = SleekTextSecondary,
+                            fontSize = 12.sp
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Digital Clock
-                Text(
-                    text = currentTimeString,
-                    color = SleekBluePrimary,
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = currentDateString,
-                    color = SleekTextSecondary,
-                    fontSize = 12.sp
-                )
             }
         }
 
@@ -233,6 +414,12 @@ fun TVHeader(
                     onClick = { onNavigate(TVScreen.FORECAST) }
                 )
                 TVNavButton(
+                    title = stringResource(R.string.nav_ai_desk),
+                    icon = Icons.Default.AutoAwesome,
+                    isSelected = currentScreen == TVScreen.AI_DESK,
+                    onClick = { onNavigate(TVScreen.AI_DESK) }
+                )
+                TVNavButton(
                     title = stringResource(R.string.nav_live_tv),
                     icon = Icons.Default.Tv,
                     isSelected = currentScreen == TVScreen.LIVE_TV,
@@ -249,6 +436,12 @@ fun TVHeader(
                     icon = Icons.Default.VideoLibrary,
                     isSelected = currentScreen == TVScreen.VOD,
                     onClick = { onNavigate(TVScreen.VOD) }
+                )
+                TVNavButton(
+                    title = stringResource(R.string.nav_schedule),
+                    icon = Icons.Default.ViewTimeline,
+                    isSelected = currentScreen == TVScreen.SCHEDULE,
+                    onClick = { onNavigate(TVScreen.SCHEDULE) }
                 )
                 TVNavButton(
                     title = stringResource(R.string.nav_search),
@@ -283,11 +476,16 @@ fun TVHeader(
                             scaleX = if (isUnitFocused) 1.05f else 1.0f
                             scaleY = if (isUnitFocused) 1.05f else 1.0f
                         }
-                        .clickable { onToggleUnits() }
+                        .clickable(role = Role.Button) { onToggleUnits() }
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = unitTitleLabel
+                            stateDescription = unitActiveLabel
+                        }
                         .testTag("unit_toggle_button")
                 ) {
                     Text(
-                        text = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_toggle_metric) else stringResource(R.string.unit_toggle_imperial),
+                        text = unitActiveLabel,
                         color = if (isUnitFocused) SleekOnBlueContainer else SleekTextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -307,7 +505,11 @@ fun TVHeader(
                             scaleX = if (isRemoteFocused) 1.05f else 1.0f
                             scaleY = if (isRemoteFocused) 1.05f else 1.0f
                         }
-                        .clickable { onOpenRemote() }
+                        .clickable(role = Role.Button) { onOpenRemote() }
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = remoteLabel
+                        }
                         .testTag("open_remote_button")
                 ) {
                     Row(
@@ -316,13 +518,13 @@ fun TVHeader(
                     ) {
                         Icon(
                             Icons.Default.SettingsRemote,
-                            contentDescription = stringResource(R.string.header_remote),
+                            contentDescription = remoteLabel,
                             tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = stringResource(R.string.header_remote).uppercase(),
+                            text = remoteLabel.uppercase(),
                             color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -342,6 +544,11 @@ fun TVNavButton(
     onClick: () -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isFocused) 1.06f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "navBtnScale"
+    )
     val bg = when {
         isFocused && isSelected -> SleekBlueActive
         isFocused -> SleekBlueContainer.copy(alpha = 0.6f)
@@ -367,10 +574,16 @@ fun TVNavButton(
         modifier = Modifier
             .onFocusChanged { isFocused = it.isFocused }
             .graphicsLayer {
-                scaleX = if (isFocused) 1.06f else 1.0f
-                scaleY = if (isFocused) 1.06f else 1.0f
+                scaleX = animatedScale
+                scaleY = animatedScale
             }
-            .clickable { onClick() }
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Tab) { onClick() }
+            .semantics(mergeDescendants = true) {
+                role = Role.Tab
+                selected = isSelected
+                contentDescription = title
+            }
             .testTag("nav_btn_$title")
     ) {
         Row(

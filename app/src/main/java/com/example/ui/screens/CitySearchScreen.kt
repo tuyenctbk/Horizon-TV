@@ -18,6 +18,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +57,8 @@ fun CitySearchScreen(
             color = Color.White,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = (-0.3).sp
+            letterSpacing = (-0.3).sp,
+            modifier = Modifier.semantics { heading() }
         )
         Text(
             text = stringResource(R.string.search_header_subtitle),
@@ -61,62 +68,138 @@ fun CitySearchScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Search Input Field & GPS Button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onQueryChange,
-                placeholder = { Text(stringResource(R.string.search_placeholder), color = SleekTextSecondary, fontSize = 13.sp) },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.common_search), tint = SleekBluePrimary)
-                },
-                trailingIcon = {
-                    if (isSearching) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = SleekBluePrimary, strokeWidth = 2.dp)
-                    } else if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_clear), tint = SleekTextSecondary)
+        // Search Input Field & GPS Button (Responsive on compact phones)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val isCompact = maxWidth < 460.dp
+            if (isCompact) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = onQueryChange,
+                        placeholder = { Text(stringResource(R.string.search_placeholder), color = SleekTextSecondary, fontSize = 13.sp) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = stringResource(R.string.common_search), tint = SleekBluePrimary)
+                        },
+                        trailingIcon = {
+                            if (isSearching) {
+                                val searchDesc = stringResource(R.string.common_search)
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .semantics { contentDescription = searchDesc },
+                                    color = SleekBluePrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { onQueryChange("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_clear), tint = SleekTextSecondary)
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = SleekBluePrimary,
+                            unfocusedBorderColor = SleekBorder,
+                            focusedTextColor = SleekTextPrimary,
+                            unfocusedTextColor = SleekTextPrimary,
+                            focusedContainerColor = SleekSurface,
+                            unfocusedContainerColor = SleekSurfaceSecondary
+                        ),
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("city_search_input")
+                    )
+
+                    Button(
+                        onClick = onAutoDetectGps,
+                        colors = ButtonDefaults.buttonColors(containerColor = SleekBluePrimary),
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("auto_detect_gps_button")
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.search_gps_button), tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.search_gps_button),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
                         }
                     }
-                },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SleekBluePrimary,
-                    unfocusedBorderColor = SleekBorder,
-                    focusedTextColor = SleekTextPrimary,
-                    unfocusedTextColor = SleekTextPrimary,
-                    focusedContainerColor = SleekSurface,
-                    unfocusedContainerColor = SleekSurfaceSecondary
-                ),
-                shape = RoundedCornerShape(percent = 50),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("city_search_input")
-            )
-
-            // Auto-Detect GPS Button
-            Button(
-                onClick = onAutoDetectGps,
-                colors = ButtonDefaults.buttonColors(containerColor = SleekBluePrimary),
-                shape = RoundedCornerShape(percent = 50),
-                modifier = Modifier
-                    .height(52.dp)
-                    .testTag("auto_detect_gps_button")
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.search_gps_button), tint = Color.White, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.search_gps_button),
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = onQueryChange,
+                        placeholder = { Text(stringResource(R.string.search_placeholder), color = SleekTextSecondary, fontSize = 13.sp) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = stringResource(R.string.common_search), tint = SleekBluePrimary)
+                        },
+                        trailingIcon = {
+                            if (isSearching) {
+                                val searchDesc = stringResource(R.string.common_search)
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .semantics { contentDescription = searchDesc },
+                                    color = SleekBluePrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { onQueryChange("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_clear), tint = SleekTextSecondary)
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = SleekBluePrimary,
+                            unfocusedBorderColor = SleekBorder,
+                            focusedTextColor = SleekTextPrimary,
+                            unfocusedTextColor = SleekTextPrimary,
+                            focusedContainerColor = SleekSurface,
+                            unfocusedContainerColor = SleekSurfaceSecondary
+                        ),
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("city_search_input")
                     )
+
+                    Button(
+                        onClick = onAutoDetectGps,
+                        colors = ButtonDefaults.buttonColors(containerColor = SleekBluePrimary),
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier
+                            .height(52.dp)
+                            .testTag("auto_detect_gps_button")
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.search_gps_button), tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.search_gps_button),
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -127,21 +210,36 @@ fun CitySearchScreen(
         if (searchQuery.trim().length >= 2) {
             Text(
                 text = stringResource(R.string.search_results_title, searchResults.size),
-                color = SleekBluePrimary,
+                color = Color(0xFF93C5FD),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.semantics { heading() }
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             if (searchResults.isEmpty() && !isSearching) {
-                Box(
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = SleekSurface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(vertical = 8.dp)
                 ) {
-                    Text(text = stringResource(R.string.search_no_results, searchQuery), color = SleekTextSecondary, fontSize = 13.sp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.search_no_results, searchQuery),
+                            color = SleekTextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
@@ -168,10 +266,11 @@ fun CitySearchScreen(
             ) {
                 Text(
                     text = stringResource(R.string.search_saved_title, favoriteCities.size),
-                    color = SleekBluePrimary,
+                    color = Color(0xFF93C5FD),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.semantics { heading() }
                 )
                 Text(
                     text = stringResource(R.string.search_saved_subtitle),
@@ -206,7 +305,7 @@ fun CitySearchScreen(
                         ) {
                             Icon(
                                 Icons.Default.BookmarkBorder,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.search_empty_bookmarks_title),
                                 tint = SleekTextSecondary,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -216,7 +315,8 @@ fun CitySearchScreen(
                             text = stringResource(R.string.search_empty_bookmarks_title),
                             color = SleekTextPrimary,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
@@ -232,7 +332,7 @@ fun CitySearchScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(favoriteCities, key = { it.name }) { city ->
+                    items(favoriteCities, key = { "${it.name}_${it.latitude}_${it.longitude}" }) { city ->
                         CityResultCard(
                             city = city,
                             isCurrent = city.name.equals(currentLocation.name, ignoreCase = true),
@@ -266,6 +366,10 @@ private fun CityResultCard(
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .semantics {
+                role = Role.Button
+                selected = isCurrent
+            }
             .clickable { onSelect() }
             .testTag("city_card_${city.name}")
     ) {

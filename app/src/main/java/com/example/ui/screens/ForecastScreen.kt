@@ -1,5 +1,12 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +29,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,8 +43,9 @@ import com.example.R
 import com.example.data.model.*
 import com.example.data.repository.WeatherRepository
 import com.example.data.repository.FullWeatherPackage
+import com.example.ui.components.LottieWeatherAnimation
 import com.example.ui.components.RechartsFiveDayForecastView
-import com.example.ui.components.WeatherConditionIcon
+import com.example.ui.components.SevenDayForecastComponent
 import com.example.ui.components.WeatherForecastTrendsChart
 import com.example.ui.theme.*
 import kotlin.math.roundToInt
@@ -42,16 +56,21 @@ fun ForecastScreen(
     currentWeather: CurrentWeather?,
     weatherPackage: FullWeatherPackage?,
     unitSystem: UnitSystem,
+    isOfflineMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (currentWeather == null || weatherPackage == null) {
+        val loadingDesc = stringResource(R.string.seven_day_loading)
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = HorizonCyan)
+            CircularProgressIndicator(
+                color = HorizonCyan,
+                modifier = Modifier.semantics { contentDescription = loadingDesc }
+            )
         }
         return
     }
 
-    var selectedTab by remember { mutableStateOf(0) } // 0: 36-Hour Detailed, 1: 24-Hour Chart, 2: 14-Day Outlook
+    var selectedTab by remember { mutableStateOf(0) } // 0: 7-Day, 1: 5-Day Chart, 2: Atmospheric, 3: 24h Trends, 4: 14-Day
 
     Column(
         modifier = modifier
@@ -68,7 +87,8 @@ fun ForecastScreen(
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.3).sp
+                        letterSpacing = (-0.3).sp,
+                        modifier = Modifier.semantics { heading() }
                     )
                     Text(
                         text = stringResource(R.string.forecast_numerical_prediction),
@@ -85,10 +105,11 @@ fun ForecastScreen(
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        ForecastTabButton(stringResource(R.string.forecast_tab_5day), isSelected = selectedTab == 0) { selectedTab = 0 }
-                        ForecastTabButton(stringResource(R.string.forecast_tab_36hour), isSelected = selectedTab == 1) { selectedTab = 1 }
-                        ForecastTabButton(stringResource(R.string.forecast_tab_24hour), isSelected = selectedTab == 2) { selectedTab = 2 }
-                        ForecastTabButton(stringResource(R.string.forecast_tab_14day), isSelected = selectedTab == 3) { selectedTab = 3 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_7day), isSelected = selectedTab == 0, tag = "forecast_tab_7day") { selectedTab = 0 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_5day), isSelected = selectedTab == 1, tag = "forecast_tab_5day") { selectedTab = 1 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_36hour), isSelected = selectedTab == 2, tag = "forecast_tab_36hour") { selectedTab = 2 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_24hour), isSelected = selectedTab == 3, tag = "forecast_tab_24hour") { selectedTab = 3 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_14day), isSelected = selectedTab == 4, tag = "forecast_tab_14day") { selectedTab = 4 }
                     }
                 }
             } else {
@@ -97,33 +118,42 @@ fun ForecastScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.forecast_meteorological_outlook, currentLocation.name),
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.3).sp
+                            letterSpacing = (-0.3).sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.semantics { heading() }
                         )
                         Text(
                             text = stringResource(R.string.forecast_numerical_prediction),
                             color = Color(0xFFCBD5E1),
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(12.dp))
 
                     // Segmented Tab Selector
                     Row(
                         modifier = Modifier
+                            .horizontalScroll(rememberScrollState())
                             .background(SleekSurfaceSecondary, RoundedCornerShape(percent = 50))
                             .border(1.dp, SleekBorder, RoundedCornerShape(percent = 50))
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        ForecastTabButton(stringResource(R.string.forecast_tab_5day), isSelected = selectedTab == 0) { selectedTab = 0 }
-                        ForecastTabButton(stringResource(R.string.forecast_tab_36hour), isSelected = selectedTab == 1) { selectedTab = 1 }
-                        ForecastTabButton(stringResource(R.string.forecast_tab_24hour), isSelected = selectedTab == 2) { selectedTab = 2 }
-                        ForecastTabButton(stringResource(R.string.forecast_tab_14day), isSelected = selectedTab == 3) { selectedTab = 3 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_7day), isSelected = selectedTab == 0, tag = "forecast_tab_7day") { selectedTab = 0 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_5day), isSelected = selectedTab == 1, tag = "forecast_tab_5day") { selectedTab = 1 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_36hour), isSelected = selectedTab == 2, tag = "forecast_tab_36hour") { selectedTab = 2 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_24hour), isSelected = selectedTab == 3, tag = "forecast_tab_24hour") { selectedTab = 3 }
+                        ForecastTabButton(stringResource(R.string.forecast_tab_14day), isSelected = selectedTab == 4, tag = "forecast_tab_14day") { selectedTab = 4 }
                     }
                 }
             }
@@ -131,11 +161,36 @@ fun ForecastScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when (selectedTab) {
-            0 -> RechartsFiveDayForecastView(weatherPackage.dailyDays, unitSystem)
-            1 -> ThirtySixHourDetailedView(currentWeather, weatherPackage, unitSystem)
-            2 -> HourlyTrendChartView(weatherPackage, unitSystem)
-            3 -> FourteenDayOutlookView(weatherPackage, unitSystem)
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                val forward = targetState > initialState
+                (fadeIn(tween(220)) + slideInHorizontally(tween(220)) { if (forward) it / 16 else -it / 16 }) togetherWith
+                    (fadeOut(tween(160)) + slideOutHorizontally(tween(160)) { if (forward) -it / 16 else it / 16 })
+            },
+            label = "forecastTabTransition",
+            modifier = Modifier.weight(1f)
+        ) { tab ->
+            when (tab) {
+                0 -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        SevenDayForecastComponent(
+                            location = currentLocation,
+                            unitSystem = unitSystem,
+                            currentTempC = currentWeather.tempC,
+                            initialForecast = weatherPackage.dailyDays,
+                            isOfflineMode = isOfflineMode
+                        )
+                    }
+                }
+                1 -> RechartsFiveDayForecastView(weatherPackage.dailyDays, unitSystem)
+                2 -> ThirtySixHourDetailedView(currentWeather, weatherPackage, unitSystem)
+                3 -> HourlyTrendChartView(weatherPackage, unitSystem)
+                4 -> FourteenDayOutlookView(weatherPackage, unitSystem)
+            }
         }
     }
 }
@@ -144,12 +199,19 @@ fun ForecastScreen(
 private fun ForecastTabButton(
     label: String,
     isSelected: Boolean,
+    tag: String = "",
     onClick: () -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(percent = 50),
         color = if (isSelected) SleekBluePrimary else Color.Transparent,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier
+            .then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)
+            .semantics(mergeDescendants = true) {
+                role = Role.Tab
+                selected = isSelected
+            }
+            .clickable { onClick() }
     ) {
         Text(
             text = label,
@@ -169,6 +231,12 @@ private fun ThirtySixHourDetailedView(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isCompact = maxWidth < 600.dp
+        val kmhUnit = stringResource(R.string.unit_kmh)
+        val mphUnit = stringResource(R.string.unit_mph)
+        val hpaUnit = stringResource(R.string.unit_hpa)
+        val inhgUnit = stringResource(R.string.unit_inhg)
+        val kmUnit = stringResource(R.string.unit_km)
+        val miUnit = stringResource(R.string.unit_mi)
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -219,7 +287,7 @@ private fun ThirtySixHourDetailedView(
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        WeatherConditionIcon(weatherCode = period.weatherCode, size = 30.dp)
+                                        LottieWeatherAnimation(weatherCode = period.weatherCode, size = 32.dp)
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Black)
                                         Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(period.weatherCode)), color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
@@ -273,7 +341,7 @@ private fun ThirtySixHourDetailedView(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(text = period.timeRange, color = SleekTextSecondary, fontSize = 10.sp)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                WeatherConditionIcon(weatherCode = period.weatherCode, size = 34.dp)
+                                LottieWeatherAnimation(weatherCode = period.weatherCode, size = 36.dp)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(text = pTemp, color = if (isCurr) SleekOnBlueContainer else SleekTextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Black)
                                 Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(period.weatherCode)), color = SolarGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
@@ -292,24 +360,25 @@ private fun ThirtySixHourDetailedView(
                     color = Color.White,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.semantics { heading() }
                 )
             }
 
             val dewStr = if (unitSystem == UnitSystem.METRIC) "${current.dewPointC.roundToInt()}°C"
             else "${(current.dewPointC * 9 / 5 + 32).roundToInt()}°F"
 
-            val pressStr = if (unitSystem == UnitSystem.METRIC) "${current.pressureHpa.roundToInt()} hPa"
-            else String.format(java.util.Locale.US, "%.2f inHg", current.pressureHpa * 0.02953)
+            val pressStr = if (unitSystem == UnitSystem.METRIC) "${current.pressureHpa.roundToInt()} $hpaUnit"
+            else String.format(java.util.Locale.getDefault(), "%.2f %s", current.pressureHpa * 0.02953, inhgUnit)
 
-            val windSpeedStr = if (unitSystem == UnitSystem.METRIC) "${current.windSpeedKmh.roundToInt()} km/h"
-            else "${(current.windSpeedKmh * 0.621371).roundToInt()} mph"
+            val windSpeedStr = if (unitSystem == UnitSystem.METRIC) "${current.windSpeedKmh.roundToInt()} $kmhUnit"
+            else "${(current.windSpeedKmh * 0.621371).roundToInt()} $mphUnit"
 
-            val peakGustStr = if (unitSystem == UnitSystem.METRIC) "${current.windGustsKmh.roundToInt()} km/h"
-            else "${(current.windGustsKmh * 0.621371).roundToInt()} mph"
+            val peakGustStr = if (unitSystem == UnitSystem.METRIC) "${current.windGustsKmh.roundToInt()} $kmhUnit"
+            else "${(current.windGustsKmh * 0.621371).roundToInt()} $mphUnit"
 
-            val visStr = if (unitSystem == UnitSystem.METRIC) "${current.visibilityKm.roundToInt()} km"
-            else "${(current.visibilityKm * 0.621371).roundToInt()} mi"
+            val visStr = if (unitSystem == UnitSystem.METRIC) "${current.visibilityKm.roundToInt()} $kmUnit"
+            else "${(current.visibilityKm * 0.621371).roundToInt()} $miUnit"
 
             val card1 = @Composable {
                 MetricDetailCard(
@@ -432,7 +501,8 @@ private fun HourlyTrendChartView(pkg: FullWeatherPackage, unitSystem: UnitSystem
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.semantics { heading() }
             )
         }
 
@@ -452,7 +522,7 @@ private fun HourlyTrendChartView(pkg: FullWeatherPackage, unitSystem: UnitSystem
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = pt.timeLabel, color = SleekBluePrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(14.dp))
-                    WeatherConditionIcon(weatherCode = pt.weatherCode, size = 20.dp)
+                    LottieWeatherAnimation(weatherCode = pt.weatherCode, size = 22.dp)
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(pt.weatherCode)), color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -469,83 +539,171 @@ private fun HourlyTrendChartView(pkg: FullWeatherPackage, unitSystem: UnitSystem
 
 @Composable
 private fun FourteenDayOutlookView(pkg: FullWeatherPackage, unitSystem: UnitSystem) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        item {
-            Text(
-                text = stringResource(R.string.forecast_14day_extended),
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            )
-        }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isCompact = maxWidth < 560.dp
 
-        items(pkg.dailyDays) { day ->
-            val maxT = if (unitSystem == UnitSystem.METRIC) "${day.maxTempC.roundToInt()}°"
-            else "${(day.maxTempC * 9 / 5 + 32).roundToInt()}°"
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Text(
+                    text = stringResource(R.string.forecast_14day_extended),
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.semantics { heading() }
+                )
+            }
 
-            val minT = if (unitSystem == UnitSystem.METRIC) "${day.minTempC.roundToInt()}°"
-            else "${(day.minTempC * 9 / 5 + 32).roundToInt()}°"
+            items(pkg.dailyDays) { day ->
+                val maxT = if (unitSystem == UnitSystem.METRIC) "${day.maxTempC.roundToInt()}°"
+                else "${(day.maxTempC * 9 / 5 + 32).roundToInt()}°"
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(SleekSurface, RoundedCornerShape(14.dp))
-                    .border(1.dp, SleekBorder, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Day Column
-                Column(modifier = Modifier.width(120.dp)) {
-                    Text(text = day.dayOfWeek, color = SleekTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Text(text = day.dateLabel, color = SleekTextSecondary, fontSize = 10.sp)
-                }
+                val minT = if (unitSystem == UnitSystem.METRIC) "${day.minTempC.roundToInt()}°"
+                else "${(day.minTempC * 9 / 5 + 32).roundToInt()}°"
 
-                // Condition Icon & Text
-                Row(modifier = Modifier.width(180.dp), verticalAlignment = Alignment.CenterVertically) {
-                    WeatherConditionIcon(weatherCode = day.weatherCode, size = 24.dp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(WeatherRepository.getWeatherDescriptionRes(day.weatherCode)), color = SleekTextPrimary, fontSize = 12.sp, maxLines = 1)
-                }
-
-                // Precipitation volume
-                Column(modifier = Modifier.width(100.dp)) {
-                    Text(text = stringResource(R.string.forecast_rain, day.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    if (day.rainMm > 0) {
-                        val rainUnit = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_mm) else stringResource(R.string.unit_in)
-                        val rainValue = if (unitSystem == UnitSystem.METRIC) {
-                            String.format(java.util.Locale.US, "%.1f", day.rainMm)
-                        } else {
-                            String.format(java.util.Locale.US, "%.2f", day.rainMm * 0.0393701)
-                        }
-                        Text(text = "$rainValue $rainUnit", color = SleekTextSecondary, fontSize = 10.sp)
-                    }
-                }
-
-                // Temperature Delta Bar
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Text(text = minT, color = SleekBluePrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Box(
+                if (isCompact) {
+                    Column(
                         modifier = Modifier
-                            .width(80.dp)
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(SleekBlueContainer, SolarGold, SevereRed.copy(alpha = 0.8f))
+                            .fillMaxWidth()
+                            .background(SleekSurface, RoundedCornerShape(14.dp))
+                            .border(1.dp, SleekBorder, RoundedCornerShape(14.dp))
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                LottieWeatherAnimation(weatherCode = day.weatherCode, size = 26.dp)
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "${day.dayOfWeek} • ${day.dateLabel}",
+                                        color = SleekTextPrimary,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = stringResource(WeatherRepository.getWeatherDescriptionRes(day.weatherCode)),
+                                        color = SleekTextSecondary,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = minT, color = SleekBluePrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .width(42.dp)
+                                        .height(5.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                colors = listOf(SleekBlueContainer, SolarGold, SevereRed.copy(alpha = 0.8f))
+                                            )
+                                        )
                                 )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = maxT, color = SleekTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Black)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.forecast_rain, day.popPercent),
+                                color = SleekBluePrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(text = maxT, color = SleekTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Black)
+                            if (day.rainMm > 0) {
+                                val rainUnit = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_mm) else stringResource(R.string.unit_in)
+                                val rainValue = if (unitSystem == UnitSystem.METRIC) {
+                                    String.format(java.util.Locale.US, "%.1f", day.rainMm)
+                                } else {
+                                    String.format(java.util.Locale.US, "%.2f", day.rainMm * 0.0393701)
+                                }
+                                Text(text = "$rainValue $rainUnit", color = SleekTextSecondary, fontSize = 10.sp)
+                            }
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(SleekSurface, RoundedCornerShape(14.dp))
+                            .border(1.dp, SleekBorder, RoundedCornerShape(14.dp))
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.width(120.dp)) {
+                            Text(text = day.dayOfWeek, color = SleekTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(text = day.dateLabel, color = SleekTextSecondary, fontSize = 10.sp)
+                        }
+
+                        Row(modifier = Modifier.width(180.dp), verticalAlignment = Alignment.CenterVertically) {
+                            LottieWeatherAnimation(weatherCode = day.weatherCode, size = 26.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(WeatherRepository.getWeatherDescriptionRes(day.weatherCode)),
+                                color = SleekTextPrimary,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Column(modifier = Modifier.width(100.dp)) {
+                            Text(text = stringResource(R.string.forecast_rain, day.popPercent), color = SleekBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            if (day.rainMm > 0) {
+                                val rainUnit = if (unitSystem == UnitSystem.METRIC) stringResource(R.string.unit_mm) else stringResource(R.string.unit_in)
+                                val rainValue = if (unitSystem == UnitSystem.METRIC) {
+                                    String.format(java.util.Locale.US, "%.1f", day.rainMm)
+                                } else {
+                                    String.format(java.util.Locale.US, "%.2f", day.rainMm * 0.0393701)
+                                }
+                                Text(text = "$rainValue $rainUnit", color = SleekTextSecondary, fontSize = 10.sp)
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(text = minT, color = SleekBluePrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            colors = listOf(SleekBlueContainer, SolarGold, SevereRed.copy(alpha = 0.8f))
+                                        )
+                                    )
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = maxT, color = SleekTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Black)
+                        }
+                    }
                 }
             }
         }
@@ -566,6 +724,9 @@ private fun MetricDetailCard(
             .background(SleekSurface, RoundedCornerShape(16.dp))
             .border(1.dp, SleekBorder, RoundedCornerShape(16.dp))
             .padding(16.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$title: $value, $detail"
+            }
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(

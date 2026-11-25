@@ -24,6 +24,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -123,7 +130,8 @@ fun RealTimeTelemetryVisualizer(
                         color = SleekTextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
+                        modifier = Modifier.semantics { heading() }
                     )
                     Text(
                         text = if (isLiveUpdating) stringResource(R.string.telemetry_live_status, updateCount) else stringResource(R.string.telemetry_paused_status),
@@ -133,11 +141,19 @@ fun RealTimeTelemetryVisualizer(
                 }
             }
 
+            val toggleLabel = if (isLiveUpdating) stringResource(R.string.telemetry_btn_pause) else stringResource(R.string.telemetry_btn_resume)
+            val liveStatusDesc = if (isLiveUpdating) stringResource(R.string.telemetry_live_status, updateCount) else stringResource(R.string.telemetry_paused_status)
             Surface(
                 shape = RoundedCornerShape(percent = 50),
                 color = if (isLiveUpdating) SleekGreenContainer else SleekSurfaceSecondary,
                 border = androidx.compose.foundation.BorderStroke(1.dp, if (isLiveUpdating) SleekGreenText.copy(alpha = 0.4f) else SleekBorder),
-                modifier = Modifier.clickable { isLiveUpdating = !isLiveUpdating }
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        stateDescription = liveStatusDesc
+                    }
+                    .clickable(onClickLabel = toggleLabel) { isLiveUpdating = !isLiveUpdating }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -151,7 +167,7 @@ fun RealTimeTelemetryVisualizer(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isLiveUpdating) stringResource(R.string.telemetry_btn_pause) else stringResource(R.string.telemetry_btn_resume),
+                        text = toggleLabel,
                         color = if (isLiveUpdating) SleekGreenText else SleekTextSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -162,33 +178,60 @@ fun RealTimeTelemetryVisualizer(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Three Column Metric Visualizer Gauges: Temperature, Humidity, Barometer
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 1. Temperature Gauge & Arc
-            TemperatureGaugeCard(
-                tempC = liveTempC,
-                unitSystem = unitSystem,
-                history = tempHistory,
-                modifier = Modifier.weight(1f)
-            )
-
-            // 2. Humidity & Moisture Ring
-            HumidityGaugeCard(
-                humidityPercent = liveHumidity,
-                history = humidityHistory,
-                modifier = Modifier.weight(1f)
-            )
-
-            // 3. Barometric Pressure Aneroid Dial
-            BarometerGaugeCard(
-                pressureHpa = livePressureHpa,
-                unitSystem = unitSystem,
-                history = pressureHistory,
-                modifier = Modifier.weight(1f)
-            )
+        // Metric Visualizer Gauges: Responsive 2+1 grid on compact phones, 3-column on tablets/TV
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            if (maxWidth < 520.dp) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        TemperatureGaugeCard(
+                            tempC = liveTempC,
+                            unitSystem = unitSystem,
+                            history = tempHistory,
+                            modifier = Modifier.weight(1f)
+                        )
+                        HumidityGaugeCard(
+                            humidityPercent = liveHumidity,
+                            history = humidityHistory,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    BarometerGaugeCard(
+                        pressureHpa = livePressureHpa,
+                        unitSystem = unitSystem,
+                        history = pressureHistory,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    TemperatureGaugeCard(
+                        tempC = liveTempC,
+                        unitSystem = unitSystem,
+                        history = tempHistory,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HumidityGaugeCard(
+                        humidityPercent = liveHumidity,
+                        history = humidityHistory,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BarometerGaugeCard(
+                        pressureHpa = livePressureHpa,
+                        unitSystem = unitSystem,
+                        history = pressureHistory,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
     }
 }
@@ -211,17 +254,33 @@ private fun TemperatureGaugeCard(
     }
 
     val normalizedTemp = ((tempC + 20f) / 60f).coerceIn(0f, 1f) // -20°C to +40°C range
+    val animatedNormTemp by animateFloatAsState(
+        targetValue = normalizedTemp,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "tempArcSweep"
+    )
     val animatedAngle by animateFloatAsState(
         targetValue = 150f + normalizedTemp * 240f,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "tempNeedle"
     )
 
+    val status = when {
+        tempC < 5f -> stringResource(R.string.telemetry_temp_chilly)
+        tempC < 25f -> stringResource(R.string.telemetry_temp_mild)
+        tempC < 32f -> stringResource(R.string.telemetry_temp_warm)
+        else -> stringResource(R.string.telemetry_temp_heat)
+    }
+    val tempLabel = stringResource(R.string.telemetry_temperature)
+
     Column(
         modifier = modifier
             .background(SleekSurfaceSecondary, RoundedCornerShape(16.dp))
             .border(1.dp, SleekBorder, RoundedCornerShape(16.dp))
-            .padding(12.dp),
+            .padding(12.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$tempLabel: $displayTemp, $status"
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -229,8 +288,8 @@ private fun TemperatureGaugeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(R.string.telemetry_temperature), color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.Thermostat, contentDescription = stringResource(R.string.telemetry_temperature), tint = SevereRed, modifier = Modifier.size(16.dp))
+            Text(tempLabel, color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Thermostat, contentDescription = tempLabel, tint = SevereRed, modifier = Modifier.size(16.dp))
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -242,7 +301,11 @@ private fun TemperatureGaugeCard(
                 .padding(4.dp),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .semantics { contentDescription = "$tempLabel: $displayTemp" }
+            ) {
                 val stroke = 8.dp.toPx()
                 val radius = (size.minDimension - stroke) / 2f
                 val center = Offset(size.width / 2f, size.height / 2f)
@@ -267,7 +330,7 @@ private fun TemperatureGaugeCard(
                         1.0f to Color(0xFFEF4444)
                     ),
                     startAngle = 150f,
-                    sweepAngle = normalizedTemp * 240f,
+                    sweepAngle = animatedNormTemp * 240f,
                     useCenter = false,
                     topLeft = Offset(center.x - radius, center.y - radius),
                     size = Size(radius * 2, radius * 2),
@@ -299,12 +362,6 @@ private fun TemperatureGaugeCard(
             fontFamily = FontFamily.Monospace
         )
 
-        val status = when {
-            tempC < 5f -> stringResource(R.string.telemetry_temp_chilly)
-            tempC < 25f -> stringResource(R.string.telemetry_temp_mild)
-            tempC < 32f -> stringResource(R.string.telemetry_temp_warm)
-            else -> stringResource(R.string.telemetry_temp_heat)
-        }
         Text(text = status, color = SleekBluePrimary, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -329,11 +386,23 @@ private fun HumidityGaugeCard(
         label = "humiditySweep"
     )
 
+    val moistureStatus = when {
+        humidityPercent < 30f -> stringResource(R.string.telemetry_hum_dry)
+        humidityPercent < 60f -> stringResource(R.string.telemetry_hum_ideal)
+        humidityPercent < 80f -> stringResource(R.string.telemetry_hum_humid)
+        else -> stringResource(R.string.telemetry_hum_high)
+    }
+    val humidityLabel = stringResource(R.string.telemetry_humidity)
+    val humidityRhText = stringResource(R.string.telemetry_humidity_rh, humidityPercent.toInt())
+
     Column(
         modifier = modifier
             .background(SleekSurfaceSecondary, RoundedCornerShape(16.dp))
             .border(1.dp, SleekBorder, RoundedCornerShape(16.dp))
-            .padding(12.dp),
+            .padding(12.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$humidityLabel: $humidityRhText, $moistureStatus"
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -341,8 +410,8 @@ private fun HumidityGaugeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(R.string.telemetry_humidity), color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.WaterDrop, contentDescription = stringResource(R.string.telemetry_humidity), tint = SleekBluePrimary, modifier = Modifier.size(16.dp))
+            Text(humidityLabel, color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.WaterDrop, contentDescription = humidityLabel, tint = SleekBluePrimary, modifier = Modifier.size(16.dp))
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -354,7 +423,11 @@ private fun HumidityGaugeCard(
                 .padding(4.dp),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .semantics { contentDescription = "$humidityLabel: $humidityRhText" }
+            ) {
                 val stroke = 8.dp.toPx()
                 val radius = (size.minDimension - stroke) / 2f
                 val center = Offset(size.width / 2f, size.height / 2f)
@@ -393,19 +466,13 @@ private fun HumidityGaugeCard(
         }
 
         Text(
-            text = stringResource(R.string.telemetry_humidity_rh, humidityPercent.toInt()),
+            text = humidityRhText,
             color = SleekTextPrimary,
             fontSize = 18.sp,
             fontWeight = FontWeight.Black,
             fontFamily = FontFamily.Monospace
         )
 
-        val moistureStatus = when {
-            humidityPercent < 30f -> stringResource(R.string.telemetry_hum_dry)
-            humidityPercent < 60f -> stringResource(R.string.telemetry_hum_ideal)
-            humidityPercent < 80f -> stringResource(R.string.telemetry_hum_humid)
-            else -> stringResource(R.string.telemetry_hum_high)
-        }
         Text(text = moistureStatus, color = SleekGreenText, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -440,11 +507,21 @@ private fun BarometerGaugeCard(
         label = "pressureAngle"
     )
 
+    val tendency = when {
+        pressureHpa < 1000f -> stringResource(R.string.telemetry_press_low)
+        pressureHpa < 1018f -> stringResource(R.string.telemetry_press_normal)
+        else -> stringResource(R.string.telemetry_press_high)
+    }
+    val barometerLabel = stringResource(R.string.telemetry_barometer)
+
     Column(
         modifier = modifier
             .background(SleekSurfaceSecondary, RoundedCornerShape(16.dp))
             .border(1.dp, SleekBorder, RoundedCornerShape(16.dp))
-            .padding(12.dp),
+            .padding(12.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$barometerLabel: $displayPressure, $tendency"
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -452,8 +529,8 @@ private fun BarometerGaugeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(R.string.telemetry_barometer), color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.Speed, contentDescription = stringResource(R.string.telemetry_barometer), tint = SolarGold, modifier = Modifier.size(16.dp))
+            Text(barometerLabel, color = SleekTextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Speed, contentDescription = barometerLabel, tint = SolarGold, modifier = Modifier.size(16.dp))
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -465,7 +542,11 @@ private fun BarometerGaugeCard(
                 .padding(4.dp),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .semantics { contentDescription = "$barometerLabel: $displayPressure" }
+            ) {
                 val stroke = 6.dp.toPx()
                 val radius = (size.minDimension - stroke) / 2f
                 val center = Offset(size.width / 2f, size.height / 2f)
@@ -536,11 +617,6 @@ private fun BarometerGaugeCard(
             maxLines = 1
         )
 
-        val tendency = when {
-            pressureHpa < 1000f -> stringResource(R.string.telemetry_press_low)
-            pressureHpa < 1018f -> stringResource(R.string.telemetry_press_normal)
-            else -> stringResource(R.string.telemetry_press_high)
-        }
         Text(text = tendency, color = SolarGold, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -559,7 +635,7 @@ private fun MiniSparkline(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    Canvas(modifier = modifier) {
+    Canvas(modifier = modifier.clearAndSetSemantics { }) {
         if (data.size < 2) return@Canvas
         val w = size.width
         val h = size.height

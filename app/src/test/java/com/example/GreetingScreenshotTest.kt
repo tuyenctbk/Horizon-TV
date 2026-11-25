@@ -130,5 +130,23 @@ class GreetingScreenshotTest {
 
     composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/settings_screen_units.png")
   }
+
+  @Test
+  fun broadcast_onboarding_modal_screenshot() {
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        com.example.ui.components.BroadcastOnboardingModal(
+          isVisible = true,
+          unitSystem = UnitSystem.METRIC,
+          isCrtGrainEnabled = true,
+          onSelectUnitSystem = {},
+          onToggleCrtGrain = {},
+          onComplete = {}
+        )
+      }
+    }
+
+    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/broadcast_onboarding_modal.png")
+  }
 }
 

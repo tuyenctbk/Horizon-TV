@@ -3,7 +3,6 @@ package com.example.ui.components
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,11 +22,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.data.model.AlertSeverity
 import com.example.data.model.SevereWeatherAlert
@@ -69,6 +75,10 @@ fun EmergencyBroadcastBanner(
             label = "pulseAlpha"
         )
 
+        val emergencyBroadcastLabel = stringResource(R.string.emergency_broadcast)
+        val expiresLabel = stringResource(R.string.emergency_exp, alert.expiresTime)
+        val safetyProtocolLabel = stringResource(R.string.emergency_safety_protocol)
+
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = SleekSurface,
@@ -77,12 +87,18 @@ fun EmergencyBroadcastBanner(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                .semantics {
+                    liveRegion = LiveRegionMode.Assertive
+                }
                 .testTag("reactive_emergency_alert_banner")
         ) {
             Row(
                 modifier = Modifier
                     .background(severityColor.copy(alpha = pulseAlpha * 0.35f))
-                    .clickable { onOpenModal(alert) }
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = safetyProtocolLabel
+                    ) { onOpenModal(alert) }
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -96,7 +112,7 @@ fun EmergencyBroadcastBanner(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Warning,
-                        contentDescription = stringResource(R.string.emergency_broadcast),
+                        contentDescription = emergencyBroadcastLabel,
                         tint = severityColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -105,14 +121,20 @@ fun EmergencyBroadcastBanner(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 // Alert details
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = "$emergencyBroadcastLabel: ${alert.title}. ${alert.summary}. $expiresLabel"
+                        }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(percent = 50),
                             color = severityColor
                         ) {
                             Text(
-                                text = stringResource(R.string.emergency_broadcast),
+                                text = emergencyBroadcastLabel,
                                 color = Color.White,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Black,
@@ -121,7 +143,7 @@ fun EmergencyBroadcastBanner(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.emergency_exp, alert.expiresTime),
+                            text = expiresLabel,
                             color = SleekTextSecondary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold
@@ -154,10 +176,15 @@ fun EmergencyBroadcastBanner(
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
                     color = severityColor,
-                    modifier = Modifier.clickable { onOpenModal(alert) }
+                    modifier = Modifier
+                        .clickable(role = Role.Button) { onOpenModal(alert) }
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = safetyProtocolLabel
+                        }
                 ) {
                     Text(
-                        text = stringResource(R.string.emergency_safety_protocol),
+                        text = safetyProtocolLabel,
                         color = Color.White,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -167,8 +194,18 @@ fun EmergencyBroadcastBanner(
 
                 Spacer(modifier = Modifier.width(6.dp))
 
-                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.emergency_dismiss), tint = SleekTextSecondary, modifier = Modifier.size(16.dp))
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .size(36.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(R.string.emergency_dismiss),
+                        tint = SleekTextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

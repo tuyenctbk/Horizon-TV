@@ -21,6 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -78,7 +82,10 @@ fun SuggestionPromptModal(
                     ) {
                         Icon(
                             imageVector = if (suggestionType == SuggestionType.RATE) Icons.Default.Star else Icons.Default.Share,
-                            contentDescription = null,
+                            contentDescription = stringResource(
+                                if (suggestionType == SuggestionType.RATE) R.string.suggestion_rate_title
+                                else R.string.suggestion_share_title
+                            ),
                             tint = if (suggestionType == SuggestionType.RATE) SolarGold else SleekBluePrimary,
                             modifier = Modifier.size(28.dp)
                         )
@@ -86,7 +93,9 @@ fun SuggestionPromptModal(
 
                     IconButton(
                         onClick = { onLaterAction(suggestionType) },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -101,14 +110,17 @@ fun SuggestionPromptModal(
 
                 // Five Star indicator for rating
                 if (suggestionType == SuggestionType.RATE) {
+                    val fiveStarsLabel = stringResource(R.string.suggestion_rate_positive)
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .clearAndSetSemantics { contentDescription = fiveStarsLabel }
                     ) {
                         repeat(5) {
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = null,
+                                contentDescription = fiveStarsLabel,
                                 tint = SolarGold,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -125,7 +137,8 @@ fun SuggestionPromptModal(
                     color = SleekTextPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { heading() }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -169,7 +182,7 @@ fun SuggestionPromptModal(
                             if (suggestionType == SuggestionType.RATE) R.string.suggestion_rate_positive
                             else R.string.suggestion_share_positive
                         ),
-                        color = Color.Black,
+                        color = if (suggestionType == SuggestionType.RATE) Color(0xFF1A1C1E) else Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -184,7 +197,7 @@ fun SuggestionPromptModal(
                     border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp)
+                        .height(48.dp)
                         .testTag("suggestion_later_button")
                 ) {
                     Text(

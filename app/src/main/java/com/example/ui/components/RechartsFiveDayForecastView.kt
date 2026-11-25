@@ -25,6 +25,12 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,59 +70,75 @@ fun RechartsFiveDayForecastView(
             .padding(18.dp)
             .testTag("five_day_forecast_recharts")
     ) {
-        // Top Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = SleekBlueContainer
-                    ) {
+        // Top Header (Responsive)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val isCompact = maxWidth < 520.dp
+            val titleBlock = @Composable {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = SleekBlueContainer
+                        ) {
+                            Text(
+                                text = stringResource(R.string.recharts_badge),
+                                color = SleekOnBlueContainer,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.recharts_badge),
-                            color = SleekOnBlueContainer,
-                            fontSize = 9.sp,
+                            text = stringResource(R.string.recharts_title),
+                            color = SleekTextPrimary,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            letterSpacing = 0.5.sp,
+                            modifier = Modifier.semantics { heading() }
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = stringResource(R.string.recharts_title),
-                        color = SleekTextPrimary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        text = stringResource(R.string.recharts_subtitle),
+                        color = SleekTextSecondary,
+                        fontSize = 11.sp
                     )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = stringResource(R.string.recharts_subtitle),
-                    color = SleekTextSecondary,
-                    fontSize = 11.sp
-                )
+            }
+            val modeTabs = @Composable {
+                Row(
+                    modifier = Modifier
+                        .background(SleekSurfaceSecondary, RoundedCornerShape(percent = 50))
+                        .border(1.dp, SleekBorder, RoundedCornerShape(percent = 50))
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    RechartsModeTab(stringResource(R.string.recharts_tab_all), isSelected = displayMode == RechartsDisplayMode.COMBINED, testTag = "recharts_tab_all") {
+                        displayMode = RechartsDisplayMode.COMBINED
+                    }
+                    RechartsModeTab(stringResource(R.string.recharts_tab_temp), isSelected = displayMode == RechartsDisplayMode.TEMPERATURE_ONLY, testTag = "recharts_tab_temp") {
+                        displayMode = RechartsDisplayMode.TEMPERATURE_ONLY
+                    }
+                    RechartsModeTab(stringResource(R.string.recharts_tab_rain), isSelected = displayMode == RechartsDisplayMode.PRECIPITATION_ONLY, testTag = "recharts_tab_rain") {
+                        displayMode = RechartsDisplayMode.PRECIPITATION_ONLY
+                    }
+                }
             }
 
-            // Segmented mode toggle buttons
-            Row(
-                modifier = Modifier
-                    .background(SleekSurfaceSecondary, RoundedCornerShape(percent = 50))
-                    .border(1.dp, SleekBorder, RoundedCornerShape(percent = 50))
-                    .padding(3.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                RechartsModeTab(stringResource(R.string.recharts_tab_all), isSelected = displayMode == RechartsDisplayMode.COMBINED, testTag = "recharts_tab_all") {
-                    displayMode = RechartsDisplayMode.COMBINED
+            if (isCompact) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    titleBlock()
+                    modeTabs()
                 }
-                RechartsModeTab(stringResource(R.string.recharts_tab_temp), isSelected = displayMode == RechartsDisplayMode.TEMPERATURE_ONLY, testTag = "recharts_tab_temp") {
-                    displayMode = RechartsDisplayMode.TEMPERATURE_ONLY
-                }
-                RechartsModeTab(stringResource(R.string.recharts_tab_rain), isSelected = displayMode == RechartsDisplayMode.PRECIPITATION_ONLY, testTag = "recharts_tab_rain") {
-                    displayMode = RechartsDisplayMode.PRECIPITATION_ONLY
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    titleBlock()
+                    modeTabs()
                 }
             }
         }
@@ -142,6 +164,8 @@ fun RechartsFiveDayForecastView(
 
                 val dayName = if (index == 0) stringResource(R.string.recharts_today) else day.dayOfWeek.take(3).uppercase()
 
+                val dayConditionDesc = stringResource(WeatherRepository.getWeatherDescriptionRes(day.weatherCode))
+
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = if (isSelected) SleekBlueContainer else SleekSurfaceSecondary,
@@ -152,6 +176,11 @@ fun RechartsFiveDayForecastView(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(14.dp))
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Tab
+                            selected = isSelected
+                            contentDescription = "$dayName, ${day.dateLabel}, $dayConditionDesc, $maxTempDisplay / $minTempDisplay, ${day.popPercent}%"
+                        }
                         .clickable { selectedDayIndex = index }
                         .testTag("forecast_day_$index")
                 ) {
@@ -171,7 +200,7 @@ fun RechartsFiveDayForecastView(
                             fontSize = 9.sp
                         )
                         Spacer(modifier = Modifier.height(6.dp))
-                        WeatherConditionIcon(weatherCode = day.weatherCode, size = 26.dp)
+                        LottieWeatherAnimation(weatherCode = day.weatherCode, size = 26.dp)
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -228,6 +257,7 @@ fun RechartsFiveDayForecastView(
         val globalMaxTemp = (allTemps.maxOrNull() ?: 30.0) + 3.0
         val tempRange = (globalMaxTemp - globalMinTemp).coerceAtLeast(1.0)
 
+        val chartSummaryDesc = "${stringResource(R.string.recharts_title)}: ${stringResource(R.string.recharts_subtitle)}"
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -237,7 +267,11 @@ fun RechartsFiveDayForecastView(
                 .border(1.dp, SleekBorder, RoundedCornerShape(14.dp))
                 .padding(top = 16.dp, bottom = 10.dp, start = 12.dp, end = 12.dp)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .semantics { contentDescription = chartSummaryDesc }
+            ) {
                 val w = size.width
                 val h = size.height
 
@@ -470,11 +504,11 @@ fun RechartsFiveDayForecastView(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
-                                WeatherConditionIcon(weatherCode = activeDay.weatherCode, size = 16.dp)
+                                LottieWeatherAnimation(weatherCode = activeDay.weatherCode, size = 18.dp)
                             }
                             Text(
                                 text = stringResource(WeatherRepository.getWeatherDescriptionRes(activeDay.weatherCode)),
-                                color = SleekBluePrimary,
+                                color = Color(0xFF7DD3FC),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -526,24 +560,43 @@ fun RechartsFiveDayForecastView(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Bottom Legend Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                LegendIndicator(color = SolarGold, label = stringResource(R.string.recharts_legend_high, tempUnit))
-                LegendIndicator(color = HorizonCyan, label = stringResource(R.string.recharts_legend_low, tempUnit))
-                LegendIndicator(color = HorizonCyan.copy(alpha = 0.5f), label = stringResource(R.string.recharts_legend_pop))
-            }
+        // Bottom Legend Row (Responsive)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val isCompact = maxWidth < 500.dp
+            if (isCompact) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LegendIndicator(color = SolarGold, label = stringResource(R.string.recharts_legend_high, tempUnit))
+                        LegendIndicator(color = HorizonCyan, label = stringResource(R.string.recharts_legend_low, tempUnit))
+                        LegendIndicator(color = HorizonCyan.copy(alpha = 0.5f), label = stringResource(R.string.recharts_legend_pop))
+                    }
+                    Text(
+                        text = stringResource(R.string.recharts_hint),
+                        color = SleekTextSecondary,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        LegendIndicator(color = SolarGold, label = stringResource(R.string.recharts_legend_high, tempUnit))
+                        LegendIndicator(color = HorizonCyan, label = stringResource(R.string.recharts_legend_low, tempUnit))
+                        LegendIndicator(color = HorizonCyan.copy(alpha = 0.5f), label = stringResource(R.string.recharts_legend_pop))
+                    }
 
-            Text(
-                text = stringResource(R.string.recharts_hint),
-                color = SleekTextSecondary,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+                    Text(
+                        text = stringResource(R.string.recharts_hint),
+                        color = SleekTextSecondary,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
     }
 }
@@ -560,6 +613,10 @@ private fun RechartsModeTab(
         color = if (isSelected) SleekBluePrimary else Color.Transparent,
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
+            .semantics(mergeDescendants = true) {
+                role = Role.Tab
+                selected = isSelected
+            }
             .clickable { onClick() }
             .testTag(testTag)
     ) {

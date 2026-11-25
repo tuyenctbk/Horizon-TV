@@ -179,4 +179,20 @@ class UserPreferencesAndSuggestionTest {
         assertNull(viewModel.uiState.value.activeSuggestion)
         assertTrue(preferencesManager.isRatingDeclinedPermanently())
     }
+
+    @Test
+    fun testOnboardingFlowPersistenceAndViewModelActions() {
+        assertFalse("Fresh install should not have onboarding marked completed", preferencesManager.hasCompletedOnboarding())
+
+        val viewModel = WeatherViewModel(ApplicationProvider.getApplicationContext())
+        assertTrue("Onboarding modal should be visible on first launch", viewModel.uiState.value.isOnboardingVisible)
+
+        viewModel.completeOnboarding()
+        assertFalse("Onboarding modal should hide after completion", viewModel.uiState.value.isOnboardingVisible)
+        assertTrue("Onboarding completion should persist in preferences", preferencesManager.hasCompletedOnboarding())
+
+        // Re-opening onboarding tour from Settings
+        viewModel.openOnboardingTour()
+        assertTrue("User should be able to replay onboarding tour from Settings", viewModel.uiState.value.isOnboardingVisible)
+    }
 }

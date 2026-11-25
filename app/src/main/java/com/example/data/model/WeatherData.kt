@@ -13,9 +13,11 @@ enum class UnitSystem {
 enum class TVScreen {
     HOME,
     FORECAST,
+    AI_DESK,
     LIVE_TV,
     RADAR,
     VOD,
+    SCHEDULE,
     SEARCH,
     SETTINGS
 }
@@ -200,8 +202,8 @@ data class HourlyPoint(
 )
 
 data class DailyForecastDay(
-    val dateLabel: String,     // "Tomorrow", "Wed Sep 05"
-    val dayOfWeek: String,     // "Wednesday"
+    val dateLabel: String,     // "Wed, Sep 5"
+    val dayOfWeek: String,     // "Today", "Tomorrow", "Wednesday"
     val maxTempC: Double,
     val minTempC: Double,
     val weatherCode: Int,
@@ -209,8 +211,23 @@ data class DailyForecastDay(
     val rainMm: Double,
     val popPercent: Int,
     val maxUvIndex: Double,
-    val maxWindKmh: Double
+    val maxWindKmh: Double,
+    val apparentMaxTempC: Double = maxTempC,
+    val apparentMinTempC: Double = minTempC,
+    val sunriseTime: String = "",
+    val sunsetTime: String = "",
+    val maxWindGustsKmh: Double = maxWindKmh
 )
+
+sealed interface SevenDayForecastUiState {
+    data object Loading : SevenDayForecastUiState
+    data class Success(
+        val days: List<DailyForecastDay>,
+        val fetchedAtMs: Long = System.currentTimeMillis(),
+        val isCached: Boolean = false
+    ) : SevenDayForecastUiState
+    data class Error(val message: String) : SevenDayForecastUiState
+}
 
 data class SevereWeatherAlert(
     val id: String,
@@ -220,7 +237,7 @@ data class SevereWeatherAlert(
     val safetyInstructions: String,
     val effectiveTime: String,
     val expiresTime: String,
-    val source: String = "National Meteorology Center Broadcast"
+    val source: String = ""
 )
 
 enum class AlertSeverity {
@@ -242,7 +259,7 @@ data class AstronomicalData(
 
 data class VodStory(
     val id: String,
-    val category: String, // "Severe Weather", "Forecasts", "Earth Science", "Climate & Nature"
+    val category: String,
     val title: String,
     val presenter: String,
     val duration: String,
@@ -251,3 +268,64 @@ data class VodStory(
     val videoUrl: String,
     val accentColorHex: Long
 )
+
+data class BroadcastScheduleSlot(
+    val id: String,
+    val channelIndex: Int,
+    val channelNumber: String,
+    @StringRes val channelNameRes: Int,
+    val programTitle: String,
+    val programSynopsis: String,
+    val presenter: String,
+    val categoryId: String,
+    val categoryLabel: String,
+    val startEpochMs: Long,
+    val endEpochMs: Long,
+    val durationMinutes: Int,
+    val weatherCode: Int,
+    val isDay: Boolean = true,
+    val accentColorHex: Long,
+    val linkedVodStory: VodStory
+)
+
+// RainViewer Real-Time Doppler Radar & Satellite IR API Models
+@JsonClass(generateAdapter = true)
+data class RainViewerMapsResponse(
+    val version: String? = null,
+    val generated: Long = 0L,
+    val host: String = "https://tilecache.rainviewer.com",
+    val radar: RainViewerRadarSection? = null,
+    val satellite: RainViewerSatelliteSection? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class RainViewerRadarSection(
+    val past: List<RainViewerFrame> = emptyList(),
+    val nowcast: List<RainViewerFrame> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class RainViewerSatelliteSection(
+    val infrared: List<RainViewerFrame> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class RainViewerFrame(
+    val time: Long = 0L,
+    val path: String = ""
+)
+
+data class RadarTimelineFrame(
+    val timestampSec: Long,
+    val tilePath: String,
+    val isNowcast: Boolean,
+    val isSatellite: Boolean = false
+)
+
+data class LiveRadarPackage(
+    val host: String,
+    val precipitationFrames: List<RadarTimelineFrame>,
+    val satelliteFrames: List<RadarTimelineFrame>,
+    val fetchedAtMs: Long = System.currentTimeMillis()
+)
+

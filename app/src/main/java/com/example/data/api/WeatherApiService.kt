@@ -4,6 +4,7 @@ import com.example.data.model.GeocodingResponse
 import com.example.data.model.IpApiResponse
 import com.example.data.model.OpenMeteoAirQualityResponse
 import com.example.data.model.OpenMeteoWeatherResponse
+import com.example.data.model.RainViewerMapsResponse
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -22,6 +23,16 @@ interface WeatherApiService {
         @Query("current") current: String = "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index",
         @Query("hourly") hourly: String = "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,pressure_msl,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index",
         @Query("daily") daily: String = "weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max",
+        @Query("forecast_days") forecastDays: Int = 14,
+        @Query("timezone") timezone: String = "auto"
+    ): OpenMeteoWeatherResponse
+
+    @GET("v1/forecast")
+    suspend fun getSevenDayForecast(
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double,
+        @Query("daily") daily: String = "weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max",
+        @Query("forecast_days") forecastDays: Int = 7,
         @Query("timezone") timezone: String = "auto"
     ): OpenMeteoWeatherResponse
 }
@@ -48,6 +59,11 @@ interface GeocodingApiService {
 interface IpLocationApiService {
     @GET("json/")
     suspend fun detectIpLocation(): IpApiResponse
+}
+
+interface RainViewerApiService {
+    @GET("public/weather-maps.json")
+    suspend fun getWeatherMaps(): RainViewerMapsResponse
 }
 
 object ApiClient {
@@ -99,5 +115,14 @@ object ApiClient {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(IpLocationApiService::class.java)
+    }
+
+    val rainViewerService: RainViewerApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.rainviewer.com/")
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(RainViewerApiService::class.java)
     }
 }

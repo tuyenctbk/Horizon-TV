@@ -3,8 +3,10 @@ package com.example.ui.screens
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +26,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,7 +41,7 @@ import com.example.R
 import com.example.data.model.*
 import com.example.data.repository.FullWeatherPackage
 import com.example.data.repository.WeatherRepository
-import com.example.ui.components.WeatherConditionIcon
+import com.example.ui.components.LottieWeatherAnimation
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -55,8 +63,12 @@ fun LiveTVBroadcastScreen(
     modifier: Modifier = Modifier
 ) {
     if (currentWeather == null || weatherPackage == null) {
+        val loadingDesc = stringResource(R.string.seven_day_loading)
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = SleekBluePrimary)
+            CircularProgressIndicator(
+                color = SleekBluePrimary,
+                modifier = Modifier.semantics { contentDescription = loadingDesc }
+            )
         }
         return
     }
@@ -95,6 +107,7 @@ fun LiveTVBroadcastScreen(
             if (isCompact) {
                 // Compact Vertical Layout: Broadcast Radar Stage on Top, L-Bar Telemetry below
                 BroadcastStage(
+                    currentWeather = currentWeather,
                     sweepAngle = sweepAngle,
                     isAudioPlaying = isAudioPlaying,
                     onToggleAudio = onToggleAudio,
@@ -146,6 +159,7 @@ fun LiveTVBroadcastScreen(
                     }
 
                     BroadcastStage(
+                        currentWeather = currentWeather,
                         sweepAngle = sweepAngle,
                         isAudioPlaying = isAudioPlaying,
                         onToggleAudio = onToggleAudio,
@@ -157,68 +171,16 @@ fun LiveTVBroadcastScreen(
                 }
             }
 
-            // Bottom News Crawl Ticker & 12-Hour Timeline Scrubber
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(SleekSurface)
-                    .border(1.dp, SleekBorder)
-            ) {
-                // News Crawl Banner
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(SleekSurfaceSecondary)
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(percent = 50),
-                        color = SleekBluePrimary
-                    ) {
-                        Text(
-                            text = stringResource(R.string.lbar_horizon_dispatch),
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    val headlineText = weatherPackage.headlines.joinToString("   ■   ")
-                    Text(
-                        text = headlineText,
-                        color = SleekTextPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip
-                    )
-                }
-
-                // 12-Hour Timeline Scrubber along bottom
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    weatherPackage.hourlyPoints.take(8).forEach { pt ->
-                        val t = if (unitSystem == UnitSystem.METRIC) "${pt.tempC.roundToInt()}°"
-                        else "${(pt.tempC * 9 / 5 + 32).roundToInt()}°"
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(text = pt.timeLabel, color = SleekTextSecondary, fontSize = 10.sp)
-                            WeatherConditionIcon(weatherCode = pt.weatherCode, size = 16.dp)
-                            Text(text = t, color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
+            // Reusable 24/7 News Channel Bottom Broadcast L-Bar (Ticker + Live Time + 12-Hour Strip)
+            com.example.ui.components.BroadcastLBar(
+                currentLocation = currentLocation,
+                currentWeather = currentWeather,
+                headlines = weatherPackage.headlines,
+                hourlyPoints = weatherPackage.hourlyPoints,
+                unitSystem = unitSystem,
+                activeAlerts = weatherPackage.alerts,
+                onAlertClick = onOpenAlertModal
+            )
         }
     }
 }
@@ -282,10 +244,14 @@ private fun LBarContent(
             text = currentLocation.name.uppercase(),
             color = SleekTextPrimary,
             fontSize = 15.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.semantics { heading() }
         )
+        val locSub = listOf(currentLocation.region.uppercase(), currentLocation.countryCode)
+            .filter { it.isNotBlank() }
+            .joinToString(" • ")
         Text(
-            text = "${currentLocation.region.uppercase()} • ${currentLocation.countryCode}",
+            text = locSub,
             color = SleekTextSecondary,
             fontSize = 10.sp
         )
@@ -317,7 +283,7 @@ private fun LBarContent(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            WeatherConditionIcon(weatherCode = currentWeather.weatherCode, isDay = currentWeather.isDay, size = 42.dp)
+            LottieWeatherAnimation(weatherCode = currentWeather.weatherCode, isDay = currentWeather.isDay, size = 44.dp)
         }
 
         Text(
@@ -329,11 +295,18 @@ private fun LBarContent(
         )
 
         // Current Metrics Rows
-        val windVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.windSpeedKmh.roundToInt()} km/h"
-        else "${(currentWeather.windSpeedKmh * 0.621371).roundToInt()} mph"
+        val kmhUnit = stringResource(R.string.unit_kmh)
+        val mphUnit = stringResource(R.string.unit_mph)
+        val hpaUnit = stringResource(R.string.unit_hpa)
+        val inhgUnit = stringResource(R.string.unit_inhg)
+        val kmUnit = stringResource(R.string.unit_km)
+        val miUnit = stringResource(R.string.unit_mi)
 
-        val baroVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.pressureHpa.roundToInt()} hPa"
-        else String.format(java.util.Locale.US, "%.2f inHg", currentWeather.pressureHpa * 0.02953)
+        val windVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.windSpeedKmh.roundToInt()} $kmhUnit"
+        else "${(currentWeather.windSpeedKmh * 0.621371).roundToInt()} $mphUnit"
+
+        val baroVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.pressureHpa.roundToInt()} $hpaUnit"
+        else String.format(java.util.Locale.getDefault(), "%.2f %s", currentWeather.pressureHpa * 0.02953, inhgUnit)
 
         val dewVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.dewPointC.roundToInt()}°C"
         else "${(currentWeather.dewPointC * 9 / 5 + 32).roundToInt()}°F"
@@ -344,8 +317,10 @@ private fun LBarContent(
         LBarMetricRow(label = stringResource(R.string.home_dew_point), value = dewVal)
         val aqiStatusStr = stringResource(WeatherRepository.getAqiStatusRes(currentWeather.aqi))
         LBarMetricRow(label = stringResource(R.string.lbar_aqi), value = "${currentWeather.aqi} ($aqiStatusStr)")
+        val visVal = if (unitSystem == UnitSystem.METRIC) "${currentWeather.visibilityKm.roundToInt()} $kmUnit"
+        else "${(currentWeather.visibilityKm * 0.621371).roundToInt()} $miUnit"
         LBarMetricRow(label = stringResource(R.string.lbar_uv_index), value = "${currentWeather.uvIndex.roundToInt()} / 11+")
-        LBarMetricRow(label = stringResource(R.string.lbar_visibility), value = "${currentWeather.visibilityKm.roundToInt()} km")
+        LBarMetricRow(label = stringResource(R.string.lbar_visibility), value = visVal)
 
         HorizontalDivider(color = SleekBorder, modifier = Modifier.padding(vertical = 8.dp))
 
@@ -356,7 +331,9 @@ private fun LBarContent(
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp,
-            modifier = Modifier.padding(bottom = 6.dp)
+            modifier = Modifier
+                .padding(bottom = 6.dp)
+                .semantics { heading() }
         )
 
         weatherPackage.diurnalPeriods.forEach { p ->
@@ -376,7 +353,7 @@ private fun LBarContent(
                     Text(text = stringResource(R.string.forecast_rain, p.popPercent), color = SleekBluePrimary, fontSize = 9.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    WeatherConditionIcon(weatherCode = p.weatherCode, size = 16.dp)
+                    LottieWeatherAnimation(weatherCode = p.weatherCode, size = 18.dp)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(text = pTemp, color = SleekTextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
@@ -387,6 +364,7 @@ private fun LBarContent(
 
 @Composable
 private fun BroadcastStage(
+    currentWeather: CurrentWeather,
     sweepAngle: Float,
     isAudioPlaying: Boolean,
     onToggleAudio: () -> Unit,
@@ -397,12 +375,18 @@ private fun BroadcastStage(
         modifier = modifier
             .background(Color(0xFF030712))
     ) {
-        // Live Radar Simulation Canvas
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        // Live Telemetry Radar Scope Canvas driven by currentWeather
+        val radarScopeDesc = "${stringResource(R.string.livetv_live_broadcast)}: ${stringResource(R.string.livetv_doppler_specs)}"
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .semantics { contentDescription = radarScopeDesc }
+        ) {
             val w = size.width
             val h = size.height
             val cx = w / 2f
             val cy = h / 2f
+            val scopeRadius = minOf(w, h) * 0.44f
 
             // Deep atmospheric gradient
             drawRect(
@@ -414,10 +398,10 @@ private fun BroadcastStage(
             )
 
             // Concentric Radar Range Rings
-            listOf(0.2f, 0.4f, 0.6f, 0.8f).forEach { fraction ->
+            listOf(0.25f, 0.5f, 0.75f, 1.0f).forEach { fraction ->
                 drawCircle(
-                    color = HorizonCyan.copy(alpha = 0.2f),
-                    radius = (minOf(w, h) / 2f) * fraction,
+                    color = Color(0xFF38BDF8).copy(alpha = 0.22f),
+                    radius = scopeRadius * fraction,
                     center = Offset(cx, cy),
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2f)
                 )
@@ -425,27 +409,62 @@ private fun BroadcastStage(
 
             // Crosshair vectors
             drawLine(
-                color = HorizonCyan.copy(alpha = 0.15f),
+                color = Color(0xFF38BDF8).copy(alpha = 0.16f),
                 start = Offset(0f, cy),
                 end = Offset(w, cy),
                 strokeWidth = 1f
             )
             drawLine(
-                color = HorizonCyan.copy(alpha = 0.15f),
+                color = Color(0xFF38BDF8).copy(alpha = 0.16f),
                 start = Offset(cx, 0f),
                 end = Offset(cx, h),
                 strokeWidth = 1f
             )
 
+            // Cloud / humidity atmospheric density halo derived from real live data
+            val cloudFraction = (currentWeather.cloudCoverPercent / 100f).coerceIn(0.08f, 1f)
+            val humidityFraction = (currentWeather.humidityPercent / 100f).coerceIn(0.1f, 1f)
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF38BDF8).copy(alpha = 0.18f * humidityFraction),
+                        Color(0xFF0EA5E9).copy(alpha = 0.08f * cloudFraction),
+                        Color.Transparent
+                    ),
+                    center = Offset(cx, cy),
+                    radius = scopeRadius * (0.45f + 0.5f * cloudFraction)
+                ),
+                radius = scopeRadius * (0.45f + 0.5f * cloudFraction),
+                center = Offset(cx, cy)
+            )
+
+            // Live Wind Bearing Vector derived from real Open-Meteo windDirectionDeg & windSpeedKmh
+            val windRad = Math.toRadians((currentWeather.windDirectionDeg - 90.0))
+            val windNorm = (currentWeather.windSpeedKmh / 60.0).toFloat().coerceIn(0.25f, 0.92f)
+            val windLen = scopeRadius * windNorm
+            val windEndX = cx + (windLen * cos(windRad)).toFloat()
+            val windEndY = cy + (windLen * sin(windRad)).toFloat()
+
+            drawLine(
+                color = SolarGold.copy(alpha = 0.85f),
+                start = Offset(cx, cy),
+                end = Offset(windEndX, windEndY),
+                strokeWidth = 3f
+            )
+            drawCircle(
+                color = SolarGold,
+                radius = 5f,
+                center = Offset(windEndX, windEndY)
+            )
+
             // Active Sweep Line
             val rad = Math.toRadians(sweepAngle.toDouble())
-            val sweepLength = minOf(w, h) * 0.45f
-            val endX = cx + (sweepLength * cos(rad)).toFloat()
-            val endY = cy + (sweepLength * sin(rad)).toFloat()
+            val endX = cx + (scopeRadius * cos(rad)).toFloat()
+            val endY = cy + (scopeRadius * sin(rad)).toFloat()
 
             drawLine(
                 brush = Brush.linearGradient(
-                    colors = listOf(HorizonCyan, Color.Transparent),
+                    colors = listOf(Color(0xFF38BDF8), Color.Transparent),
                     start = Offset(cx, cy),
                     end = Offset(endX, endY)
                 ),
@@ -454,13 +473,8 @@ private fun BroadcastStage(
                 strokeWidth = 3f
             )
 
-            // Simulated weather storm cells on screen
-            drawCircle(color = RadarGreen.copy(alpha = 0.4f), radius = 45f, center = Offset(cx + 120f, cy - 80f))
-            drawCircle(color = SolarGold.copy(alpha = 0.45f), radius = 25f, center = Offset(cx + 130f, cy - 75f))
-            drawCircle(color = SevereRed.copy(alpha = 0.5f), radius = 12f, center = Offset(cx + 135f, cy - 72f))
-
-            drawCircle(color = RadarGreen.copy(alpha = 0.35f), radius = 60f, center = Offset(cx - 160f, cy + 90f))
-            drawCircle(color = SolarGold.copy(alpha = 0.35f), radius = 30f, center = Offset(cx - 150f, cy + 95f))
+            // Station center marker
+            drawCircle(color = Color(0xFF38BDF8), radius = 4.5f, center = Offset(cx, cy))
         }
 
         // Broadcast HUD Overlays
@@ -499,11 +513,18 @@ private fun BroadcastStage(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            val audioStateLabel = if (isAudioPlaying) stringResource(R.string.livetv_audio_on) else stringResource(R.string.livetv_muted)
             Surface(
                 shape = RoundedCornerShape(6.dp),
                 color = Color.Black.copy(alpha = 0.7f),
                 border = androidx.compose.foundation.BorderStroke(1.dp, TVCardBorder),
-                modifier = Modifier.clickable { onToggleAudio() }
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        stateDescription = audioStateLabel
+                    }
+                    .clickable { onToggleAudio() }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -517,7 +538,7 @@ private fun BroadcastStage(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isAudioPlaying) stringResource(R.string.livetv_audio_on) else stringResource(R.string.livetv_muted),
+                        text = audioStateLabel,
                         color = TextPrimaryWhite,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -525,11 +546,17 @@ private fun BroadcastStage(
                 }
             }
 
+            val pipLabel = stringResource(R.string.livetv_pip_mode)
             Surface(
                 shape = RoundedCornerShape(6.dp),
                 color = Color.Black.copy(alpha = 0.7f),
                 border = androidx.compose.foundation.BorderStroke(1.dp, TVCardBorder),
-                modifier = Modifier.clickable { onTogglePip() }
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                    }
+                    .clickable(onClickLabel = pipLabel) { onTogglePip() }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -537,12 +564,12 @@ private fun BroadcastStage(
                 ) {
                     Icon(
                         Icons.Default.PictureInPictureAlt,
-                        contentDescription = stringResource(R.string.livetv_pip_mode),
+                        contentDescription = pipLabel,
                         tint = HorizonCyan,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.livetv_pip_mode), color = TextPrimaryWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(pipLabel, color = TextPrimaryWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -577,7 +604,10 @@ private fun LBarMetricRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 2.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$label: $value"
+            },
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = label, color = SleekTextSecondary, fontSize = 11.sp)

@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -191,7 +192,11 @@ fun WeatherParticleCanvas(
         }
     }
 
-    Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .clearAndSetSemantics { }
+    ) {
         val w = size.width
         val h = size.height
         if (w <= 0f || h <= 0f) return@Canvas
